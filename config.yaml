@@ -1,0 +1,37 @@
+web:
+# port: 3000 # The port the webserver listens to
+
+paths:
+  - ../test-device
+  - ../growatt-3ph-mod-tl3-x # This should be commented out ;)
+
+mqtt:
+  host: mosquitto.local.x256.nl # The host of your MQTT broker
+# port: 1883 # The port your MQTT broker is listening on
+# username: # The username to authenticate with
+# password: # The password to authenticate with
+# protocol: mqtt # The protocol to use for MQTT, can be mqtt or ws
+# validate_certificate: true # Whether to validate the certificate of the MQTT broker
+# base_topic: quantumhub # The base topic to use for MQTT
+
+modules:
+  - package: growatt-3ph-mod-tl3-x
+    identifier: quantumhub_growatt_3ph_mod_tl3_x
+    name: Growatt 3ph Mod TL3-X
+    host: 10.210.5.12
+    port: 502
+    unitId: 1
+    updateInterval: 5
+    solarman: false
+  - package: internal-test
+    identifier: quantumhub_new_york_clock
+    name: New York Clock
+    timezone: America/New_York
+  - package: internal-test
+    identifier: quantumhub_amsterdam_clock
+    name: Amsterdam Clock
+    timezone: Europe/Amsterdam
+
+homeassistant:
+# availability: true # Whether to publish availability messages
+# base_topic: homeassistant # The base topic to use for Home Assistant discovery
