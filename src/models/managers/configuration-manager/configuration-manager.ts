@@ -85,6 +85,7 @@ export class ConfigurationManager {
       log: {
         level: 'INFO',
         excluded_modules: [],
+        included_modules: [],
       },
     };
 

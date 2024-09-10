@@ -2,8 +2,8 @@ import { Logger as ILogger } from 'quantumhub-sdk';
 import { LogConfig } from '../managers/configuration-manager/config/log-config';
 
 export class Logger implements ILogger {
-  private name?: string;
-  private config?: LogConfig;
+  private name: string;
+  private config: LogConfig;
   private configLevel: number;
 
   levels = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'];
@@ -18,13 +18,18 @@ export class Logger implements ILogger {
   private write(color: number, level: string, message?: any, ...messages: any[]) {
     const levelIndex = this.levels.indexOf(level);
 
-    if (
-      this.config &&
-      this.name &&
-      !this.config.excluded_modules.includes(this.name) &&
-      levelIndex >= this.configLevel
-    ) {
-      console.log(`\x1b[${color}m`, `[${level}]`, '\x1b[0m', `[${this.name}]`, ...[message, ...messages]);
+    let shouldLog = this.config.included_modules.length === 0 || (this.config.included_modules.length > 0 && this.config.included_modules.includes(this.name));
+
+    if (shouldLog && this.config.excluded_modules.includes(this.name)) {
+      shouldLog = false;
+    }
+
+    if (shouldLog && levelIndex < this.configLevel) {
+      shouldLog = false;
+    }
+
+    if (shouldLog) {
+      console.log(`\x1b[${color}m[${level}]\x1b[0m`, `[${this.name}]`, ...[message, ...messages]);
     }
   }
 

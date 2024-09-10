@@ -7,6 +7,10 @@ paths:
 
 log:
   level: INFO
+  # included_modules:
+  #  - growatt-3ph-mod-tl3-x
+  # excluded_modules:
+  #  - MqttManager
 
 mqtt:
   host: mosquitto.local.x256.nl # The host of your MQTT broker
