@@ -28,6 +28,10 @@ export class StateManager {
     this.logger.info('Initializing state manager');
   }
 
+  getAttributes(provider: ModuleProvider): { [attribute: string]: any } {
+    return this.states[provider.config.identifier];
+  }
+
   async setAttributeValue(
     provider: ModuleProvider,
     attribute: string,

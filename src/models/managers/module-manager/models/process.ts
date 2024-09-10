@@ -1,16 +1,15 @@
+import { ModuleProvider } from './module-provider';
 import { Status } from './status';
 
 export class Process {
   uuid: string;
-  module: any;
-  config: any;
+  provider: ModuleProvider;
   status: Status = Status.LOADED;
   startTime?: Date;
   stopTime?: Date;
 
-  constructor(uuid: string, module: any, config: any) {
+  constructor(uuid: string, provider: ModuleProvider) {
     this.uuid = uuid;
-    this.module = module;
-    this.config = config;
+    this.provider = provider;
   }
 }

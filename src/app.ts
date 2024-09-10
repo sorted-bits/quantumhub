@@ -25,8 +25,11 @@ function exitHandler() {
 function exitRouter(options: any) {
   if (options.exit) {
     logger.info('Closing down services');
-    home.state.publishBridgeStatus(false).finally(() => {
-      process.exit();
+
+    home.modules.stopAll().finally(() => {
+      home.state.publishBridgeStatus(false).finally(() => {
+        process.exit();
+      });
     });
   }
 }
@@ -68,6 +71,23 @@ initializeModules()
 
     app.get('/', (req, res) => {
       res.send(`QuantumHub`);
+    });
+
+    app.get('/processes', (req, res) => {
+      const data = home.modules.data();
+      res.send(data);
+    });
+
+    app.get('/processes/:identifier/states', (req, res) => {
+      const identifier = req.params.identifier;
+      const process = home.modules.process(identifier);
+
+      if (!process) {
+        return res.status(404).send('Process not found');
+      }
+
+      const states = home.state.getAttributes(process.provider);
+      res.send(states);
     });
 
     app.listen(port, () => {

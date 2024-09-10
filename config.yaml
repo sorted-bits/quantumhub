@@ -23,6 +23,7 @@ modules:
     unitId: 1
     updateInterval: 5
     solarman: false
+
   - package: internal-test
     identifier: quantumhub_new_york_clock
     name: New York Clock

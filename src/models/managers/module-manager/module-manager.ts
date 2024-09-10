@@ -13,6 +13,7 @@ import { Process } from './models/process';
 import { Device } from 'quantumhub-sdk';
 import { Logger } from '../../logger/logger';
 import { ModuleProvider } from './models/module-provider';
+import { Status } from './models/status';
 
 export class ModuleManager {
   private folders: string[] = [];
@@ -50,17 +51,16 @@ export class ModuleManager {
       const { name, main, description, author } = output;
 
       const attributes = this.readAttributes(`${folder}/attributes.yaml`);
-      const entryPath = `${folder}/${main}`;
+      const path = `${folder}/${main}`;
 
-      const definition = new Definition(
-        entryPath,
+      const definition: Definition = {
+        path,
         name,
         main,
         description,
-        author
-      );
-
-      definition.attributes = attributes;
+        author,
+        attributes,
+      };
 
       this.logger.info('Loaded module definition:', definition.name);
       this.definitions.push(definition);
@@ -126,24 +126,39 @@ export class ModuleManager {
       JSON.stringify(config)
     );
 
-    const loadedModule = await import(definition.path);
-    const device = new loadedModule.default() as Device;
-    const logger = this.createLoggerForModule(definition);
-    const provider = new ModuleProvider(this.home, config, definition, device);
+    try {
+      const loadedModule = await import(definition.path);
+      const device = new loadedModule.default() as Device;
+      const logger = this.createLoggerForModule(definition);
+      const provider = new ModuleProvider(
+        this.home,
+        config,
+        definition,
+        device
+      );
 
-    const result = await device.init(provider, logger);
+      const process = new Process(uuid, provider);
+      this.processes[uuid] = process;
+      process.status = Status.LOADED;
 
-    if (!result) {
-      this.logger.error('Failed to initialize module:', definition.name);
+      const result = await device.init(provider, logger);
+
+      if (!result) {
+        this.logger.error('Failed to initialize module:', definition.name);
+        return false;
+      }
+
+      process.status = Status.INITIALIZED;
+
+      await device.start();
+
+      process.status = Status.RUNNING;
+
+      return true;
+    } catch (error) {
+      this.logger.error('Error starting module:', definition.name, error);
       return false;
     }
-
-    const process = new Process(uuid, device, config);
-    this.processes[uuid] = process;
-
-    await device.start();
-
-    return true;
   }
 
   async startAll(): Promise<void> {
@@ -165,6 +180,59 @@ export class ModuleManager {
 
       await this.startProcess(module, config);
     }
+  }
+
+  async stopAll(): Promise<void> {
+    this.logger.info('Stopping all processes', Object.keys(this.processes));
+
+    for (const uuid in this.processes) {
+      this.logger.info('Stopping process:', uuid);
+      await this.stopProcess(uuid);
+    }
+  }
+
+  async stopProcess(uuid: string): Promise<void> {
+    const process = this.processes[uuid];
+    if (!process) {
+      this.logger.error('Process not found:', uuid);
+      return;
+    }
+
+    this.logger.info('Stopping:', process.provider.definition.name);
+    try {
+      await process.provider.device.stop();
+    } catch (error) {
+      this.logger.error(
+        'Error stopping module:',
+        process.provider.definition.name,
+        error
+      );
+    }
+    process.status = Status.STOPPED;
+  }
+
+  data = () => {
+    const result: any = {};
+    result.data = [];
+
+    for (const uuid in this.processes) {
+      const process = this.processes[uuid];
+      result.data.push({
+        uuid: process.uuid,
+        status: process.status,
+        config: process.provider.config,
+        definition: process.provider.definition,
+      });
+    }
+
+    return result;
+  };
+
+  process(identifier: string): Process | undefined {
+    const process = Object.values(this.processes).find(
+      (elm) => elm.provider.config.identifier === identifier
+    );
+    return process;
   }
 
   private createLoggerForModule(module: Definition): ILogger {
