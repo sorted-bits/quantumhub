@@ -8,7 +8,7 @@ const configFile = parseArguments(process.argv);
 
 const home = new Home(configFile);
 
-const logger = new Logger().setName('App');
+const logger = new Logger('App', home.config.log);
 
 logger.info('Starting QuantumHub');
 
@@ -36,11 +36,9 @@ function exitRouter(options: any) {
 
 // Catching all other exit codes and route to process.exit() ('exit' code)
 // Then handler exit code to do cleanup
-[`SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach(
-  (eventType) => {
-    process.on(eventType, exitRouter.bind(null, { exit: true }));
-  }
-);
+[`SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
+  process.on(eventType, exitRouter.bind(null, { exit: true }));
+});
 
 process.on('exit', exitHandler);
 
@@ -55,7 +53,7 @@ const initializeModules = async () => {
     const scanResult = await home.modules.scanFolder(folder);
 
     if (scanResult) {
-      logger.info('Scanned folder:', folder);
+      logger.trace('Scanned folder:', folder);
     }
   }
 
@@ -91,7 +89,7 @@ initializeModules()
     });
 
     app.listen(port, () => {
-      return logger.info(`Express is listening at http://localhost:${port}`);
+      return logger.info(`Webserver is listening at http://localhost:${port}`);
     });
   })
   .catch((err) => {

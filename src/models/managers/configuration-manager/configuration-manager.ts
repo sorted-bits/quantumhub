@@ -4,7 +4,6 @@ import YAML from 'yaml';
 import { Logger as ILogger } from 'quantumhub-sdk';
 
 import { Home } from '../../home';
-import { Logger } from '../../logger/logger';
 import { Config } from './config/config';
 
 export class ConfigurationManager {
@@ -15,7 +14,7 @@ export class ConfigurationManager {
 
   constructor(home: Home, configPath: string) {
     this.home = home;
-    this.logger = new Logger().setName('ConfigurationManager');
+    this.logger = this.home.createLogger('ConfigurationManager', this.defaults().log);
     this.configPath = configPath;
   }
 
@@ -26,7 +25,7 @@ export class ConfigurationManager {
     return this.config;
   }
 
-  async initialize(): Promise<boolean> {
+  initialize(): boolean {
     try {
       const content = fs.readFileSync(this.configPath, 'utf8');
       const output = YAML.parse(content, {});
@@ -48,9 +47,13 @@ export class ConfigurationManager {
           ...defaults.web,
           ...output.web,
         },
+        log: {
+          ...defaults.log,
+          ...output.log,
+        },
       };
 
-      this.logger.info('Read config file:', this.config);
+      this.logger.trace('Read config file:', this.config);
 
       return true;
     } catch (err) {
@@ -78,6 +81,10 @@ export class ConfigurationManager {
       paths: [],
       web: {
         port: 3000,
+      },
+      log: {
+        level: 'INFO',
+        excluded_modules: [],
       },
     };
 

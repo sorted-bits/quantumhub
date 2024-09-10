@@ -11,7 +11,6 @@ import { Definition } from './models/definition';
 import { Process } from './models/process';
 
 import { Device } from 'quantumhub-sdk';
-import { Logger } from '../../logger/logger';
 import { ModuleProvider } from './models/module-provider';
 import { Status } from './models/status';
 
@@ -24,7 +23,7 @@ export class ModuleManager {
 
   constructor(home: Home) {
     this.home = home;
-    this.logger = new Logger().setName('ModuleManager');
+    this.logger = this.home.createLogger('ModuleManager');
   }
 
   async scanFolder(inputFolder: string): Promise<boolean> {
@@ -36,13 +35,11 @@ export class ModuleManager {
     }
 
     if (!this.folders.includes(folder)) {
-      this.logger.info('Adding folder:', folder);
+      this.logger.trace('Adding folder:', folder);
       this.folders.push(folder);
     }
 
-    const files = fs
-      .readdirSync(folder)
-      .filter((elm) => elm.match(/package\.json$/gi));
+    const files = fs.readdirSync(folder).filter((elm) => elm.match(/package\.json$/gi));
 
     for (const file of files) {
       const packageJson = `${folder}/${file}`;
@@ -62,7 +59,7 @@ export class ModuleManager {
         attributes,
       };
 
-      this.logger.info('Loaded module definition:', definition.name);
+      this.logger.trace('Loaded module definition:', definition.name);
       this.definitions.push(definition);
     }
 
@@ -84,16 +81,7 @@ export class ModuleManager {
 
     for (const key in output) {
       const data = output[key];
-      const {
-        name,
-        type,
-        device_class,
-        unit_of_measurement,
-        state_class,
-        optimistic,
-        on,
-        off,
-      } = data;
+      const { name, type, device_class, unit_of_measurement, state_class, optimistic, on, off } = data;
 
       const attribute: Attribute = {
         identifier: key,
@@ -110,7 +98,7 @@ export class ModuleManager {
         attribute.state_class = state_class;
       }
 
-      this.logger.info('Loaded attribute:', attribute);
+      this.logger.trace('Loaded attribute:', attribute);
 
       result.push(attribute);
     }
@@ -119,23 +107,13 @@ export class ModuleManager {
 
   async startProcess(definition: Definition, config: any): Promise<boolean> {
     const uuid = v4();
-    this.logger.info(
-      'Instantiating module:',
-      definition.name,
-      'with config',
-      JSON.stringify(config)
-    );
+    this.logger.trace('Instantiating module:', definition.name, 'with config', JSON.stringify(config));
 
     try {
       const loadedModule = await import(definition.path);
       const device = new loadedModule.default() as Device;
       const logger = this.createLoggerForModule(definition);
-      const provider = new ModuleProvider(
-        this.home,
-        config,
-        definition,
-        device
-      );
+      const provider = new ModuleProvider(this.home, config, definition, device);
 
       const process = new Process(uuid, provider);
       this.processes[uuid] = process;
@@ -170,9 +148,7 @@ export class ModuleManager {
     const modules = this.home.config.modules;
 
     for (const config of modules) {
-      const module = this.definitions.find(
-        (elm) => elm.name === config.package
-      );
+      const module = this.definitions.find((elm) => elm.name === config.package);
       if (!module) {
         this.logger.error('Module not found:', config.package);
         continue;
@@ -183,10 +159,10 @@ export class ModuleManager {
   }
 
   async stopAll(): Promise<void> {
-    this.logger.info('Stopping all processes', Object.keys(this.processes));
+    this.logger.trace('Stopping all processes', Object.keys(this.processes));
 
     for (const uuid in this.processes) {
-      this.logger.info('Stopping process:', uuid);
+      this.logger.trace('Stopping process:', uuid);
       await this.stopProcess(uuid);
     }
   }
@@ -198,15 +174,11 @@ export class ModuleManager {
       return;
     }
 
-    this.logger.info('Stopping:', process.provider.definition.name);
+    this.logger.trace('Stopping:', process.provider.config.identifier);
     try {
       await process.provider.device.stop();
     } catch (error) {
-      this.logger.error(
-        'Error stopping module:',
-        process.provider.definition.name,
-        error
-      );
+      this.logger.error('Error stopping module:', process.provider.definition.name, error);
     }
     process.status = Status.STOPPED;
   }
@@ -229,13 +201,11 @@ export class ModuleManager {
   };
 
   process(identifier: string): Process | undefined {
-    const process = Object.values(this.processes).find(
-      (elm) => elm.provider.config.identifier === identifier
-    );
+    const process = Object.values(this.processes).find((elm) => elm.provider.config.identifier === identifier);
     return process;
   }
 
   private createLoggerForModule(module: Definition): ILogger {
-    return new Logger().setName(module.name);
+    return this.home.createLogger(module.name);
   }
 }

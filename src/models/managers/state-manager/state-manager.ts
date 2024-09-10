@@ -1,6 +1,5 @@
 import { Logger as ILogger } from 'quantumhub-sdk';
 import { Home } from '../../home';
-import { Logger } from '../../logger/logger';
 import { Attribute } from '../module-manager/models/attribute';
 import { DeviceClass } from '../module-manager/models/device-class';
 import { DeviceType } from '../module-manager/models/device-type';
@@ -22,7 +21,7 @@ export class StateManager {
 
   constructor(home: Home) {
     this.home = home;
-    this.logger = new Logger().setName('StateManager');
+    this.logger = this.home.createLogger('StateManager');
   }
 
   async initialize(): Promise<void> {
@@ -55,7 +54,7 @@ export class StateManager {
     const key = provider.config.identifier; //device.config.identifier;
 
     if (!this.states[key]) {
-      this.logger.info('Creating state for:', key);
+      this.logger.trace('Creating state for:', key);
       this.states[key] = {};
     }
 
@@ -93,9 +92,9 @@ export class StateManager {
     const payload = online ? 'online' : 'offline';
     const json = JSON.stringify({ state: payload });
 
-    this.logger.info('Publishing bridge status:', json);
+    this.logger.trace('Publishing bridge status:', json);
     await this.home.mqtt.publish(topic, json);
-    this.logger.info('Bridge status published');
+    this.logger.trace('Bridge status published');
   }
 
   async subscribeToAttribute(provider: ModuleProvider, attribute: Attribute, topic: string): Promise<void> {
@@ -199,7 +198,7 @@ export class StateManager {
       config.state_class = attribute.state_class;
     }
 
-    this.logger.info('Publishing device description:', topic);
+    this.logger.trace('Publishing device description:', topic);
 
     await this.home.mqtt.publish(topic, JSON.stringify(config));
 

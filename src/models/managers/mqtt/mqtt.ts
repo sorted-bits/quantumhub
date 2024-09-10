@@ -1,7 +1,6 @@
 import { connect, MqttClient } from 'mqtt';
 import { Logger as ILogger } from 'quantumhub-sdk';
 import { Home } from '../../home';
-import { Logger } from '../../logger/logger';
 import { MqttConfig } from '../configuration-manager/config/mqtt-config';
 
 export class MQTT {
@@ -17,28 +16,21 @@ export class MQTT {
 
   constructor(home: Home) {
     this.home = home;
-    this.logger = new Logger().setName('MqttManager');
+    this.logger = this.home.createLogger('MqttManager');
   }
 
   async connect(configuration: MqttConfig): Promise<boolean> {
     this.config = configuration;
 
-    const {
-      host,
-      port,
-      username,
-      password,
-      protocol,
-      validate_certificate: validateCertificate,
-    } = this.config;
+    const { host, port, username, password, protocol, validate_certificate: validateCertificate } = this.config;
 
     if (this.client && this.client.connected) {
-      this.logger.info('Already connected, reconnecting');
+      this.logger.trace('Already connected, reconnecting');
       this.client.end();
     }
 
     const brokerUrl = `${protocol ?? 'mqtt'}://${host}:${port ?? 1883}`;
-    this.logger.info('Connecting to broker:', brokerUrl);
+    this.logger.trace('Connecting to broker:', brokerUrl);
 
     return new Promise((resolve, reject) => {
       this.client = connect(`${protocol ?? 'mqtt'}://${host}`, {
@@ -52,7 +44,7 @@ export class MQTT {
         this.logger.info('Connected to broker:', brokerUrl);
 
         this.home.state.publishBridgeStatus(true).then(() => {
-          this.logger.info('Bridge status published');
+          this.logger.trace('Bridge status published');
 
           resolve(true);
         });
@@ -68,17 +60,13 @@ export class MQTT {
       });
 
       this.client.on('message', (topic, message) => {
-        this.logger.info('Received message:', topic, message.toString());
+        this.logger.trace('Received message:', topic, message.toString());
         this.onMessage(topic, message);
       });
     });
   }
 
-  async publish(
-    topic: string,
-    message: string,
-    retain: boolean = true
-  ): Promise<void> {
+  async publish(topic: string, message: string, retain: boolean = true): Promise<void> {
     return new Promise((resolve) => {
       if (!this.client) {
         this.logger.error('Not connected to broker');
@@ -106,7 +94,7 @@ export class MQTT {
       }
 
       this.client.subscribe(topic, () => {
-        this.logger.info('Subscribing to:', topic);
+        this.logger.trace('Subscribing to:', topic);
         resolve();
       });
     });
