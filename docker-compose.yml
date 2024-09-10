@@ -9,8 +9,7 @@ services:
     volumes:
       - ./src:/home/node/app/src
       - ./nodemon.json:/home/node/app/nodemon.json
-      - /Volumes/Projects/quantumhub/test-device:/home/node/test-device
-      - /Volumes/Projects/quantumhub/modbus-solarman:/home/node/modbus-solarman
+      - /Volumes/Projects/quantumhub/modules:/home/node/modules
     container_name: ts-node-docker
     expose:
       - '3000'
