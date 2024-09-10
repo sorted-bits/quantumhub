@@ -14,6 +14,7 @@ export interface ProviderAttribute {
 export class StateManager {
   private logger: ILogger;
   private states: { [id: string]: { [attribute: string]: any } } = {};
+  private deviceAvailability: { [id: string]: boolean } = {};
   private deviceDescriptionsPublished: string[] = [];
   private home: Home;
 
@@ -32,17 +33,29 @@ export class StateManager {
     return this.states[provider.config.identifier];
   }
 
+  async setAvailability(provider: ModuleProvider, availability: boolean): Promise<void> {
+    this.deviceAvailability[provider.config.identifier] = availability;
+
+    //    this.publishDeviceStates(provider);
+  }
+
   async setAttributeValue(
     provider: ModuleProvider,
     attribute: string,
     value: any,
     force: boolean = false
   ): Promise<void> {
+    const attributeDefinition = provider.definition.attributes.find((a) => a.identifier === attribute);
+
+    if (!attributeDefinition) {
+      this.logger.error('Attribute not found:', attribute);
+      return;
+    }
+
     const key = provider.config.identifier; //device.config.identifier;
 
     if (!this.states[key]) {
       this.logger.info('Creating state for:', key);
-
       this.states[key] = {};
     }
 
@@ -55,10 +68,10 @@ export class StateManager {
     this.states[key][attribute] = value;
 
     this.publishDeviceDescription(provider, attribute);
-    this.updateDeviceState(provider);
+    this.publishDeviceStates(provider);
   }
 
-  async updateDeviceState(provider: ModuleProvider): Promise<void> {
+  async publishDeviceStates(provider: ModuleProvider): Promise<void> {
     const state = this.states[provider.config.identifier];
     if (!state) {
       this.logger.error('State not found for:', provider.config.identifier);
@@ -71,10 +84,7 @@ export class StateManager {
     if (this.home.config.homeassistant.availability) {
       const availabilityTopic = `${topic}/availability`;
 
-      await this.home.mqtt.publish(
-        availabilityTopic,
-        JSON.stringify({ state: 'online' })
-      );
+      await this.home.mqtt.publish(availabilityTopic, JSON.stringify({ state: 'online' }));
     }
   }
 
@@ -88,11 +98,7 @@ export class StateManager {
     this.logger.info('Bridge status published');
   }
 
-  async subscribeToAttribute(
-    provider: ModuleProvider,
-    attribute: Attribute,
-    topic: string
-  ): Promise<void> {
+  async subscribeToAttribute(provider: ModuleProvider, attribute: Attribute, topic: string): Promise<void> {
     if (!this.subscriptions[topic]) {
       this.subscriptions[topic] = [];
       this.home.mqtt.subscribe(topic);
@@ -135,13 +141,8 @@ export class StateManager {
     });
   }
 
-  async publishDeviceDescription(
-    provider: ModuleProvider,
-    attributeIdentifier: string
-  ): Promise<void> {
-    const attribute = provider.definition.attributes.find(
-      (a) => a.identifier === attributeIdentifier
-    );
+  async publishDeviceDescription(provider: ModuleProvider, attributeIdentifier: string): Promise<void> {
+    const attribute = provider.definition.attributes.find((a) => a.identifier === attributeIdentifier);
 
     if (!attribute) {
       this.logger.error('Definition not found for:', attribute);
@@ -162,13 +163,13 @@ export class StateManager {
 
       enabled_by_default: true,
       name: attribute.name,
-      object_id: `${provider.config.identifier}_${attribute}`,
+      object_id: `${provider.config.identifier}_${attributeIdentifier}`,
 
       ...this.originAttribute(),
 
       state_topic: stateTopic,
-      unique_id: `${provider.config.identifier}_${attribute}`,
-      value_template: `{{ value_json.${attribute} }}`,
+      unique_id: `${provider.config.identifier}_${attributeIdentifier}`,
+      value_template: `{{ value_json.${attributeIdentifier} }}`,
     };
 
     if (attribute.type === DeviceType.switch) {

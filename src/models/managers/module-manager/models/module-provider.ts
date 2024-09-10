@@ -8,12 +8,7 @@ export class ModuleProvider implements Provider {
   definition: Definition;
   device: Device;
 
-  constructor(
-    home: Home,
-    config: ModuleConfig,
-    definition: Definition,
-    device: Device
-  ) {
+  constructor(home: Home, config: ModuleConfig, definition: Definition, device: Device) {
     this.config = config;
     this.home = home;
     this.definition = definition;
@@ -22,6 +17,10 @@ export class ModuleProvider implements Provider {
 
   setAttributeValue(attribute: string, value: any): Promise<void> {
     return this.home.state.setAttributeValue(this, attribute, value);
+  }
+
+  async setAvailability(availability: boolean): Promise<void> {
+    return this.home.state.setAvailability(this, availability);
   }
 
   getConfig(): any {

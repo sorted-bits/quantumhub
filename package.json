@@ -26,6 +26,6 @@
     "yaml": "2.5.1",
     "uuid": "10.0.0",
     "mqtt": "5.10.1",
-    "quantumhub-sdk": "1.0.0"
+    "quantumhub-sdk": "1.0.1"
   }
 }
