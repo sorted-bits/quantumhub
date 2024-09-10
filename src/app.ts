@@ -26,7 +26,13 @@ function exitHandler() {
  * @param {object} options
  * @param {number|string} exitCode
  */
-function exitRouter(options: any) {
+function exitRouter(error: any, options: any) {
+  if (error && home.logger) {
+    home.logger.error('Error:', error);
+  } else if (error && !home.logger) {
+    console.log('Error:', error);
+  }
+
   if (options.exit) {
     logger.info('Closing down services');
 
@@ -41,7 +47,9 @@ function exitRouter(options: any) {
 // Catching all other exit codes and route to process.exit() ('exit' code)
 // Then handler exit code to do cleanup
 [`SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
-  process.on(eventType, exitRouter.bind(null, { exit: true }));
+  process.on(eventType, (error, source) => {
+    exitRouter(error, { exit: true, eventType: eventType });
+  });
 });
 
 process.on('exit', exitHandler);
@@ -68,6 +76,9 @@ initializeModules()
 
     const app = express();
     const port = home.config.web.port;
+    app.on('error', (err) => {
+      logger.error('Webserver error:', err);
+    });
 
     app.get('/', (req, res) => {
       res.send(`QuantumHub`);
@@ -90,9 +101,11 @@ initializeModules()
       res.send(states);
     });
 
-    app.listen(port, () => {
+    const server = app.listen(port, () => {
       return logger.info(`Webserver is listening at http://localhost:${port}`);
     });
+
+    home.logger.debug('Webserver started', server);
   })
   .catch((err) => {
     logger.error('Error loading modules:', err);
