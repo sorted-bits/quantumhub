@@ -42,7 +42,7 @@ export class ConfigurationManager {
           ...output.homeassistant,
         },
         modules: [...defaults.modules, ...output.modules],
-        paths: [...defaults.paths, ...output.paths],
+        modules_path: output.modules_path || defaults.modules_path,
         web: {
           ...defaults.web,
           ...output.web,
@@ -78,7 +78,7 @@ export class ConfigurationManager {
         base_topic: 'homeassistant',
       },
       modules: [],
-      paths: [],
+      modules_path: 'modules',
       web: {
         port: 3000,
       },

@@ -6,6 +6,10 @@ import { parseArguments } from './models/parse-arguments';
 
 const configFile = parseArguments(process.argv);
 
+if (!configFile) {
+  throw new Error('No configuration file provided');
+}
+
 const home = new Home(configFile);
 
 const logger = new Logger('App', home.config.log);
@@ -49,12 +53,10 @@ const initializeModules = async () => {
     throw new Error('Failed to initialize home');
   }
 
-  for (const folder of home.config.paths) {
-    const scanResult = await home.modules.scanFolder(folder);
+  const scanResult = await home.modules.scanFolder(home.config.modules_path);
 
-    if (scanResult) {
-      logger.trace('Scanned folder:', folder);
-    }
+  if (scanResult) {
+    logger.trace('Scanned folder:', home.config.modules_path);
   }
 
   await home.modules.startAll();

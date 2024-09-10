@@ -15,7 +15,6 @@ import { ModuleProvider } from './models/module-provider';
 import { Status } from './models/status';
 
 export class ModuleManager {
-  private folders: string[] = [];
   private definitions: Definition[] = [];
   private logger: ILogger;
   private processes: { [id: string]: Process } = {};
@@ -34,21 +33,36 @@ export class ModuleManager {
       return false;
     }
 
-    if (!this.folders.includes(folder)) {
-      this.logger.trace('Adding folder:', folder);
-      this.folders.push(folder);
-    }
-
-    const files = fs.readdirSync(folder).filter((elm) => elm.match(/package\.json$/gi));
+    const files = fs.readdirSync(folder); //.filter((elm) => elm.match(/package\.json$/gi));
 
     for (const file of files) {
-      const packageJson = `${folder}/${file}`;
+      const directoryName = `${folder}/${file}`;
 
-      const output = await this.readPackage(packageJson);
+      if (!fs.lstatSync(directoryName).isDirectory()) {
+        continue;
+      }
+
+      this.logger.trace('Scanning directory:', directoryName);
+
+      const packageFile = `${directoryName}/package.json`;
+
+      if (!fs.existsSync(packageFile)) {
+        this.logger.error('No package.json found in:', directoryName);
+        continue;
+      }
+
+      if (!fs.existsSync(`${directoryName}/attributes.yaml`)) {
+        this.logger.error('No attributes.yaml found in:', directoryName);
+        continue;
+      }
+
+      const output = await this.readPackage(packageFile);
       const { name, main, description, author } = output;
 
-      const attributes = this.readAttributes(`${folder}/attributes.yaml`);
-      const path = `${folder}/${main}`;
+      const attributes = this.readAttributes(`${directoryName}/attributes.yaml`);
+      const path = `${directoryName}/${main}`;
+
+      this.logger.trace('Found entry file', path);
 
       const definition: Definition = {
         path,

@@ -8,10 +8,11 @@ interface WebConfig {
 }
 
 export interface Config {
+  modules_path: string;
+
   web: WebConfig;
   log: LogConfig;
   mqtt: MqttConfig;
-  paths: string[];
   modules: ModuleConfig[];
   homeassistant: HomeAssistantConfig;
 }
