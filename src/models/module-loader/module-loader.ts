@@ -5,27 +5,27 @@ import YAML from 'yaml';
 
 import { Logger as ILogger } from 'quantumhub-sdk';
 
-import { Home } from '../../home';
-import { Attribute } from './models/attribute';
-import { Definition } from './models/definition';
-import { Process } from './models/process';
+import { Hub } from '../hub';
+import { Attribute } from './interfaces/attribute';
+import { Definition } from './interfaces/definition';
+import { Process } from './interfaces/process';
 
 import { Device } from 'quantumhub-sdk';
+import { ProcessStatus } from './enums/status';
 import { ModuleProvider } from './models/module-provider';
-import { Status } from './models/status';
 
-export class ModuleManager {
+export class ModuleLoader {
   private definitions: Definition[] = [];
   private logger: ILogger;
   private processes: { [id: string]: Process } = {};
-  private home: Home;
+  private hub: Hub;
 
-  constructor(home: Home) {
-    this.home = home;
-    this.logger = this.home.createLogger('ModuleManager');
+  constructor(hub: Hub) {
+    this.hub = hub;
+    this.logger = this.hub.createLogger('ModuleLoader');
   }
 
-  async scanFolder(inputFolder: string): Promise<boolean> {
+  scanFolder = async (inputFolder: string): Promise<boolean> => {
     const folder = path.resolve(inputFolder);
 
     if (!fs.existsSync(folder)) {
@@ -44,94 +44,73 @@ export class ModuleManager {
 
       this.logger.trace('Scanning directory:', directoryName);
 
-      const packageFile = `${directoryName}/package.json`;
-
-      if (!fs.existsSync(packageFile)) {
-        this.logger.error('No package.json found in:', directoryName);
-        continue;
-      }
-
-      if (!fs.existsSync(`${directoryName}/attributes.yaml`)) {
+      if (!fs.existsSync(`${directoryName}/config.yaml`)) {
         this.logger.error('No attributes.yaml found in:', directoryName);
         continue;
       }
 
-      const output = await this.readPackage(packageFile);
-      const { name, main, description, author } = output;
-
-      const attributes = this.readAttributes(`${directoryName}/attributes.yaml`);
-      const path = `${directoryName}/${main}`;
-
-      this.logger.trace('Found entry file', path);
-
-      const definition: Definition = {
-        path,
-        name,
-        main,
-        description,
-        author,
-        attributes,
-      };
+      const definition = this.readModuleConfig(directoryName, `${directoryName}/config.yaml`);
 
       this.logger.trace('Loaded module definition:', definition.name);
       this.definitions.push(definition);
     }
 
     return true;
-  }
+  };
 
-  async readPackage(filename: string): Promise<any> {
+  readPackage = async (filename: string): Promise<any> => {
     const content = fs.readFileSync(filename, 'utf8');
     const output = JSON.parse(content);
 
     return output;
-  }
+  };
 
-  readAttributes(filename: string): Attribute[] {
-    const result: Attribute[] = [];
-
+  readModuleConfig = (directoryName: string, filename: string): Definition => {
     const content = fs.readFileSync(filename, 'utf8');
     const output = YAML.parse(content, {});
 
-    for (const key in output) {
-      const data = output[key];
-      const { name, type, device_class, unit_of_measurement, state_class, optimistic, on, off } = data;
+    const { name, entry, version, description, author } = output.module;
+    const path = `${directoryName}/${entry}`;
 
-      const attribute: Attribute = {
-        identifier: key,
-        name,
-        type,
-        device_class: device_class,
-        unit: unit_of_measurement,
-        optimistic,
-        on,
-        off,
-      };
+    const attributes: Attribute[] = [];
+    for (const key in output.attributes) {
+      const data = output.attributes[key];
+      data.key = key;
 
-      if (state_class) {
-        attribute.state_class = state_class;
-      }
+      this.logger.trace('Loaded attribute:', data);
 
-      this.logger.trace('Loaded attribute:', attribute);
-
-      result.push(attribute);
+      attributes.push(data);
     }
-    return result;
-  }
 
-  async startProcess(definition: Definition, config: any): Promise<boolean> {
+    const definition: Definition = {
+      path,
+      name,
+      entry,
+      description,
+      author,
+      version,
+      attributes,
+    };
+    return definition;
+  };
+
+  startProcess = async (definition: Definition, config: any): Promise<boolean> => {
     const uuid = v4();
     this.logger.trace('Instantiating module:', definition.name, 'with config', JSON.stringify(config));
 
     try {
       const loadedModule = await import(definition.path);
       const device = new loadedModule.default() as Device;
-      const logger = this.createLoggerForModule(definition);
-      const provider = new ModuleProvider(this.home, config, definition, device);
+      const provider = new ModuleProvider(this.hub, config, definition, device);
+      const logger = this.hub.createLogger(provider.config.identifier); // this.createLoggerForModule(definition);
 
-      const process = new Process(uuid, provider);
+      const process = {
+        uuid,
+        provider,
+        status: ProcessStatus.LOADED,
+      };
+
       this.processes[uuid] = process;
-      process.status = Status.LOADED;
 
       const result = await device.init(provider, logger);
 
@@ -140,26 +119,26 @@ export class ModuleManager {
         return false;
       }
 
-      process.status = Status.INITIALIZED;
+      process.status = ProcessStatus.INITIALIZED;
 
       await device.start();
 
-      process.status = Status.RUNNING;
+      process.status = ProcessStatus.RUNNING;
 
       return true;
     } catch (error) {
       this.logger.error('Error starting module:', definition.name, error);
       return false;
     }
-  }
+  };
 
-  async startAll(): Promise<void> {
-    if (!this.home.config.modules) {
+  startAll = async (): Promise<void> => {
+    if (!this.hub.config.modules) {
       this.logger.error('No modules found in config');
       return;
     }
 
-    const modules = this.home.config.modules;
+    const modules = this.hub.config.modules;
 
     for (const config of modules) {
       const module = this.definitions.find((elm) => elm.name === config.package);
@@ -170,18 +149,18 @@ export class ModuleManager {
 
       await this.startProcess(module, config);
     }
-  }
+  };
 
-  async stopAll(): Promise<void> {
+  stopAll = async (): Promise<void> => {
     this.logger.trace('Stopping all processes', Object.keys(this.processes));
 
     for (const uuid in this.processes) {
       this.logger.trace('Stopping process:', uuid);
       await this.stopProcess(uuid);
     }
-  }
+  };
 
-  async stopProcess(uuid: string): Promise<void> {
+  stopProcess = async (uuid: string): Promise<void> => {
     const process = this.processes[uuid];
     if (!process) {
       this.logger.error('Process not found:', uuid);
@@ -194,8 +173,8 @@ export class ModuleManager {
     } catch (error) {
       this.logger.error('Error stopping module:', process.provider.definition.name, error);
     }
-    process.status = Status.STOPPED;
-  }
+    process.status = ProcessStatus.STOPPED;
+  };
 
   data = () => {
     const result: any = {};
@@ -214,12 +193,8 @@ export class ModuleManager {
     return result;
   };
 
-  process(identifier: string): Process | undefined {
+  process = (identifier: string): Process | undefined => {
     const process = Object.values(this.processes).find((elm) => elm.provider.config.identifier === identifier);
     return process;
-  }
-
-  private createLoggerForModule(module: Definition): ILogger {
-    return this.home.createLogger(module.name);
-  }
+  };
 }

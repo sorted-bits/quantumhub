@@ -1,38 +1,23 @@
 import fs from 'fs';
+import { Logger as ILogger } from 'quantumhub-sdk';
 import YAML from 'yaml';
 
-import { Logger as ILogger } from 'quantumhub-sdk';
+import { BaseConfig } from './interfaces/base-config';
 
-import { Home } from '../../home';
-import { Config } from './config/config';
-
-export class ConfigurationManager {
-  private configPath: string;
-  private config?: Config;
-  private logger: ILogger;
-  private home: Home;
-
-  constructor(home: Home, configPath: string) {
-    this.home = home;
-    this.logger = this.home.createLogger('ConfigurationManager', this.defaults().log);
-    this.configPath = configPath;
-  }
-
-  get configuration(): Config {
-    if (!this.config) {
-      throw new Error('Configuration not loaded');
-    }
-    return this.config;
-  }
-
-  initialize(): boolean {
+export class ConfigLoader {
+  loadConfig = (file: string, logger: ILogger): BaseConfig => {
     try {
-      const content = fs.readFileSync(this.configPath, 'utf8');
+      const defaults = this.defaults;
+
+      if (!fs.existsSync(file)) {
+        logger.error('Config file does not exist, loading defaults:', file);
+        return defaults;
+      }
+
+      const content = fs.readFileSync(file, 'utf8');
       const output = YAML.parse(content, {});
 
-      const defaults = this.defaults();
-
-      this.config = {
+      const result = {
         mqtt: {
           ...defaults.mqtt,
           ...output.mqtt,
@@ -53,17 +38,16 @@ export class ConfigurationManager {
         },
       };
 
-      this.logger.trace('Read config file:', this.config);
-
-      return true;
+      logger.trace('Read config file:', result);
+      return result;
     } catch (err) {
-      this.logger.error('Error reading config file:', err);
-      return false;
+      logger.error('Error reading config file:', err);
+      throw new Error('Error reading config file');
     }
-  }
+  };
 
-  private defaults(): Config {
-    const defaultValues: Config = {
+  get defaults(): BaseConfig {
+    const defaultValues: BaseConfig = {
       mqtt: {
         host: 'localhost',
         port: 1883,

@@ -1,8 +1,8 @@
 import express from 'express';
 
-import { Home } from './models/home';
+import { parseArguments } from './models/helpers/parse-arguments';
+import { Hub } from './models/hub';
 import { Logger } from './models/logger/logger';
-import { parseArguments } from './models/parse-arguments';
 
 const configFile = parseArguments(process.argv);
 
@@ -10,15 +10,15 @@ if (!configFile) {
   throw new Error('No configuration file provided');
 }
 
-const home = new Home(configFile);
+const home = new Hub(configFile);
 
 const logger = new Logger('App', home.config.log);
 
 logger.info('Starting QuantumHub');
 
-function exitHandler() {
+const exitHandler = () => {
   logger.info('Exiting QuantumHub');
-}
+};
 
 /**
  * Route all other exit cases to 'exit' to handle
@@ -26,7 +26,7 @@ function exitHandler() {
  * @param {object} options
  * @param {number|string} exitCode
  */
-function exitRouter(error: any, options: any) {
+const exitRouter = (error: any, options: any) => {
   if (error && home.logger) {
     home.logger.error('Error:', error);
   } else if (error && !home.logger) {
@@ -42,7 +42,7 @@ function exitRouter(error: any, options: any) {
       });
     });
   }
-}
+};
 
 // Catching all other exit codes and route to process.exit() ('exit' code)
 // Then handler exit code to do cleanup
@@ -105,7 +105,7 @@ initializeModules()
       return logger.info(`Webserver is listening at http://localhost:${port}`);
     });
 
-    home.logger.debug('Webserver started', server);
+    home.logger.trace('Webserver started');
   })
   .catch((err) => {
     logger.error('Error loading modules:', err);

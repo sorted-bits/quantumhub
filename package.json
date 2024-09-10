@@ -4,10 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npx ts-node src/app.ts --config=config.yaml",
+    "start": "nodemon src/app.ts --config=config.yaml",
     "lint": "eslint .",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/app.ts --config=config.yaml"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -17,17 +16,18 @@
     "@types/express": "^4.17.1",
     "@types/uuid": "10.0.0",
     "eslint": "^9.10.0",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
     "globals": "^15.9.0",
-    "typescript": "5.6.2",
-    "typescript-eslint": "^8.4.0",
-    "ts-node": "^10.9.2",
-    "nodemon": "3.1.4"
+    "typescript-eslint": "^8.4.0"
   },
   "dependencies": {
     "express": "^4.17.1",
-    "yaml": "2.5.1",
-    "uuid": "10.0.0",
     "mqtt": "5.10.1",
-    "quantumhub-sdk": "1.0.3"
+    "nodemon": "3.1.4",
+    "quantumhub-sdk": "1.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "5.6.2",
+    "uuid": "10.0.0",
+    "yaml": "2.5.1"
   }
 }

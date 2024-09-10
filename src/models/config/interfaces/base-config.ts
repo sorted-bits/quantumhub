@@ -1,13 +1,10 @@
-import { HomeAssistantConfig } from './home-assistant';
+import { HomeAssistantConfig } from './home-assistant-config';
 import { LogConfig } from './log-config';
 import { ModuleConfig } from './module-config';
 import { MqttConfig } from './mqtt-config';
+import { WebConfig } from './web-config';
 
-interface WebConfig {
-  port: number;
-}
-
-export interface Config {
+export interface BaseConfig {
   modules_path: string;
 
   web: WebConfig;

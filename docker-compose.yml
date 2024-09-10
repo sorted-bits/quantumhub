@@ -2,17 +2,14 @@ version: '3.7'
 
 services:
   ts-node-docker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: base
     volumes:
       - ./src:/home/node/app/src
-      - ./nodemon.json:/home/node/app/nodemon.json
-      - /Volumes/Projects/quantumhub/modules:/home/node/modules
-    container_name: ts-node-docker
+      - ../modules:/home/node/modules
+#      - /Volumes/Projects/quantumhub/quantumhub/config.yaml:/home/node/app/src/config.yaml
+    container_name: quantumhub
     expose:
       - '3000'
     ports:
       - '3000:3000'
     command: npm run dev
+    image: quantumhub

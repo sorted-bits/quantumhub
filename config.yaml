@@ -7,7 +7,7 @@ modules_path: ../modules
 log:
   level: info
   # included_modules:
-  #  - growatt-3ph-mod-tl3-x
+  #  - quantumhub_afore_af_xk_th
   # excluded_modules:
   #  - MqttManager
 
@@ -43,11 +43,11 @@ modules:
     solarman: false
     serial: 3518024876 # This is needed when you are connecting through solarman
 
-  - package: internal-test
+  - package: test-device
     identifier: quantumhub_new_york_clock
     name: New York Clock
     timezone: America/New_York
-  - package: internal-test
+  - package: test-device
     identifier: quantumhub_amsterdam_clock
     name: Amsterdam Clock
     timezone: Europe/Amsterdam
