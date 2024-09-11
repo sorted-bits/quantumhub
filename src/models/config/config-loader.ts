@@ -26,6 +26,7 @@ export class ConfigLoader {
           ...defaults.homeassistant,
           ...output.homeassistant,
         },
+        instance_name: output.instance_name || defaults.instance_name,
         modules: [...defaults.modules, ...output.modules],
         modules_path: output.modules_path || defaults.modules_path,
         web: {
@@ -63,6 +64,7 @@ export class ConfigLoader {
       },
       modules: [],
       modules_path: 'modules',
+      instance_name: 'quantumhub',
       web: {
         port: 3000,
       },

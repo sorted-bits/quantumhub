@@ -3,6 +3,7 @@ web:
 
 # The root path for the folder containing the modules (each in their own folder)
 modules_path: ../modules
+instance_name: quantumhub
 
 log:
   level: info
@@ -21,28 +22,6 @@ mqtt:
 # base_topic: quantumhub # The base topic to use for MQTT
 
 modules:
-  - package: modbus-solarman
-    identifier: quantumhub_growatt_3ph_mod_tl3_x
-    name: Growatt 3PH MOD TL3-X series
-    device: growatt-tl3
-    host: 10.210.5.12
-    port: 502
-    unitId: 1
-    updateInterval: 5
-    solarman: false
-    # serial: 123456789 # This is needed when you are connecting through solarman
-
-  - package: modbus-solarman
-    identifier: quantumhub_afore_af_xk_th
-    name: Afore AF XK-TH Inverter
-    device: af-xk-th-three-phase-hybrid
-    host: 10.210.5.19
-    port: 8899
-    unitId: 1
-    updateInterval: 5
-    solarman: false
-    serial: 3518024876 # This is needed when you are connecting through solarman
-
   - package: test-device
     identifier: quantumhub_new_york_clock
     name: New York Clock

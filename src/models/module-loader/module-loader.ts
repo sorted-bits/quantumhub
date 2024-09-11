@@ -77,7 +77,7 @@ export class ModuleLoader {
       const data = output.attributes[key];
       data.key = key;
 
-      this.logger.trace('Loaded attribute:', data);
+      this.logger.trace('Loaded attribute:', JSON.stringify(data));
 
       attributes.push(data);
     }

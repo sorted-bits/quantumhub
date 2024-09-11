@@ -5,6 +5,7 @@ import { MqttConfig } from './mqtt-config';
 import { WebConfig } from './web-config';
 
 export interface BaseConfig {
+  instance_name: string;
   modules_path: string;
 
   web: WebConfig;

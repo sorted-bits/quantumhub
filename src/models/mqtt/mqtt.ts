@@ -94,7 +94,7 @@ export class MQTT {
   subscribeToAttribute = async (provider: ModuleProvider, attribute: Attribute, topic: string): Promise<void> => {
     if (!this.subscriptions[topic]) {
       this.subscriptions[topic] = [];
-      this.subscribe(topic);
+      await this.subscribe(topic);
     }
 
     this.subscriptions[topic].push({ provider, attribute: attribute });
