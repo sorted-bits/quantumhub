@@ -96,7 +96,7 @@ export class ModuleLoader {
 
   startProcess = async (definition: Definition, config: any): Promise<boolean> => {
     const uuid = v4();
-    this.logger.trace('Instantiating module:', definition.name, 'with config', JSON.stringify(config));
+    this.logger.trace(`Instantiating module: ${definition.name} (v${definition.version}) with config`, JSON.stringify(config));
 
     try {
       const loadedModule = await import(definition.path);
