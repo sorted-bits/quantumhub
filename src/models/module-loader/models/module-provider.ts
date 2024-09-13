@@ -1,4 +1,4 @@
-import { Device, ModuleConfig, Provider } from 'quantumhub-sdk';
+import { Device, Logger as ILogger, ModuleConfig, Provider } from 'quantumhub-sdk';
 import { Hub } from '../../hub';
 import { DeviceType } from '../enums/device-type';
 import { Definition } from '../interfaces/definition';
@@ -8,6 +8,7 @@ export class ModuleProvider implements Provider {
   hub: Hub;
   definition: Definition;
   device: Device;
+  deviceLogger: ILogger;
 
   constructor(hub: Hub, config: ModuleConfig, definition: Definition, device: Device) {
     this.config = config;
@@ -15,7 +16,13 @@ export class ModuleProvider implements Provider {
     this.definition = definition;
     this.device = device;
 
+    this.deviceLogger = this.hub.createLogger(this.config.identifier);
+
     this.registerAttributes();
+  }
+
+  get logger(): ILogger {
+    return this.deviceLogger;
   }
 
   /**

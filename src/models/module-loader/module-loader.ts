@@ -102,7 +102,6 @@ export class ModuleLoader {
       const loadedModule = await import(definition.path);
       const device = new loadedModule.default() as Device;
       const provider = new ModuleProvider(this.hub, config, definition, device);
-      const logger = this.hub.createLogger(provider.config.identifier); // this.createLoggerForModule(definition);
 
       const process = {
         uuid,
@@ -112,7 +111,7 @@ export class ModuleLoader {
 
       this.processes[uuid] = process;
 
-      const result = await device.init(provider, logger);
+      const result = await device.init(provider);
 
       if (!result) {
         this.logger.error('Failed to initialize module:', definition.name);
