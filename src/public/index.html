@@ -1,0 +1,59 @@
+<html>
+  <head>
+    <title>QuantumHub Processes</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <script src="script/api.js"></script>
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+  </head>
+  <body>
+    <h1 class="text-3xl font-bold underline">QuantumHub</h1>
+  </body>
+
+  <script>
+    // Get the processes from the API
+    getProcesses().then((processes) => {
+      console.log(processes);
+      // Create a table with the processes
+      const table = document.createElement('table');
+      table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Process Name</th>
+              <th>Process Status</th>
+              <th>Process Start time</th>
+              <th/>
+            </tr>
+            </thead>
+          `;
+      processes.data.forEach((process) => {
+        const row = document.createElement('tr');
+
+        var startEnabled = process.status.toLowerCase() !== 'running' ? '' : 'disabled=""';
+        var stopEnabled = process.status.toLowerCase() === 'running' ? '' : 'disabled=""';
+
+        var statusColor = process.status.toLowerCase() === 'running' ? 'positive' : 'negative';
+
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        const time = new Date(process.startTime).toLocaleTimeString('en', { timeStyle: 'short', hour12: false, timeZone: timeZone });
+        const date = new Date(process.startTime).toLocaleDateString('en', { dateStyle: 'short', hour12: false, timeZone: timeZone });
+
+        row.innerHTML = `
+              <td><a href="/api/processes/${process.identifier}/states">${process.name}</a></td>
+              <td>
+                <button class="p-chip--${statusColor} is-dense is-small">
+                  <span class="p-chip__value">${process.status}</span>
+                </button>
+              </td>
+              <td>${date} ${time}</td>
+              <td>
+                <button ${startEnabled} class="p-button--positive is-dense is-small" onclick="startProcess('${process.identifier}')">Start</button>
+                <button ${stopEnabled} class="p-button--negative is-dense is-small" type="" class="bg-sky-500" onclick="stopProcess('${process.identifier}')">Stop</button>
+              </td>
+            `;
+        table.appendChild(row);
+      });
+      document.body.appendChild(table);
+    });
+  </script>
+</html>

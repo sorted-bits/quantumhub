@@ -94,7 +94,7 @@ export class ModuleLoader {
     return definition;
   };
 
-  startProcess = async (definition: Definition, config: any): Promise<boolean> => {
+  initializeProcess = async (definition: Definition, config: any): Promise<boolean> => {
     const uuid = v4();
     this.logger.trace(`Instantiating module: ${definition.name} (v${definition.version}) with config`, JSON.stringify(config));
 
@@ -103,8 +103,10 @@ export class ModuleLoader {
       const device = new loadedModule.default() as Device;
       const provider = new ModuleProvider(this.hub, config, definition, device);
 
-      const process = {
+      const process: Process = {
         uuid,
+        identifier: config.identifier,
+        name: config.name,
         provider,
         status: ProcessStatus.LOADED,
       };
@@ -120,15 +122,26 @@ export class ModuleLoader {
 
       process.status = ProcessStatus.INITIALIZED;
 
-      await device.start();
-
-      process.status = ProcessStatus.RUNNING;
-
-      return true;
+      return await this.startProcess(uuid);
     } catch (error) {
       this.logger.error('Error starting module:', definition.name, error);
       return false;
     }
+  };
+
+  startProcess = async (uuid: string): Promise<boolean> => {
+    const process = this.processes[uuid];
+
+    if (!process) {
+      this.logger.error('Process not found:', uuid);
+      return false;
+    }
+
+    await process.provider.device.start();
+
+    process.status = ProcessStatus.RUNNING;
+    process.startTime = new Date();
+    return true;
   };
 
   startAll = async (): Promise<void> => {
@@ -146,7 +159,7 @@ export class ModuleLoader {
         continue;
       }
 
-      await this.startProcess(module, config);
+      await this.initializeProcess(module, config);
     }
   };
 
@@ -183,9 +196,12 @@ export class ModuleLoader {
       const process = this.processes[uuid];
       result.data.push({
         uuid: process.uuid,
+        identifier: process.provider.config.identifier,
+        name: process.name,
         status: process.status,
         config: process.provider.config,
         definition: process.provider.definition,
+        startTime: process.startTime,
       });
     }
 

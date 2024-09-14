@@ -1,5 +1,7 @@
 import express from 'express';
 
+import path from 'path';
+
 import { parseArguments } from './models/helpers/parse-arguments';
 import { Hub } from './models/hub';
 import { Logger } from './models/logger/logger';
@@ -75,21 +77,20 @@ initializeModules()
     logger.info('Modules loaded');
 
     const app = express();
+
+    app.use('/', express.static(path.join(__dirname, 'public')));
+
     const port = home.config.web.port;
     app.on('error', (err) => {
       logger.error('Webserver error:', err);
     });
 
-    app.get('/', (req, res) => {
-      res.send(`QuantumHub`);
-    });
-
-    app.get('/processes', (req, res) => {
+    app.get('/api/processes', (req, res) => {
       const data = home.modules.data();
       res.send(data);
     });
 
-    app.get('/processes/:identifier/states', (req, res) => {
+    app.get('/api/processes/:identifier/states', (req, res) => {
       const identifier = req.params.identifier;
       const process = home.modules.process(identifier);
 
@@ -99,6 +100,24 @@ initializeModules()
 
       const states = home.state.getAttributes(process.provider);
       res.send(states);
+    });
+
+    app.post('/api/processes/:identifier/states/:state', (req, res) => {
+      const identifier = req.params.identifier;
+      const state = req.params.state;
+      const process = home.modules.process(identifier);
+
+      if (!process) {
+        return res.status(404).send('Process not found');
+      }
+
+      if (state === 'start') {
+        home.modules.startProcess(process.uuid);
+      } else if (state === 'stop') {
+        home.modules.stopProcess(process.uuid);
+      }
+
+      res.send('OK');
     });
 
     const server = app.listen(port, () => {

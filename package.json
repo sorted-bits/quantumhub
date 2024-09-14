@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon src/app.ts --config=config.yaml",
+    "build-css": "sass -w --load-path=node_modules scss:src/public/css --style=compressed",
     "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,7 +19,9 @@
     "eslint": "^9.10.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "globals": "^15.9.0",
-    "typescript-eslint": "^8.4.0"
+    "typescript-eslint": "^8.4.0",
+    "vanilla-framework": "4.16.0",
+    "sass": "1.78.0"
   },
   "dependencies": {
     "express": "^4.17.1",
