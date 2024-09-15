@@ -15,7 +15,7 @@ import { ProcessStatus } from './enums/status';
 import { ModuleProvider } from './models/module-provider';
 
 export class ModuleLoader {
-  private definitions: Definition[] = [];
+  private moduleDefinitions: Definition[] = [];
   private logger: ILogger;
   private processes: { [id: string]: Process } = {};
   private hub: Hub;
@@ -23,6 +23,10 @@ export class ModuleLoader {
   constructor(hub: Hub) {
     this.hub = hub;
     this.logger = this.hub.createLogger('ModuleLoader');
+  }
+
+  get definitions(): Definition[] {
+    return this.moduleDefinitions;
   }
 
   scanFolder = async (inputFolder: string): Promise<boolean> => {
@@ -52,7 +56,7 @@ export class ModuleLoader {
       const definition = this.readModuleConfig(directoryName, `${directoryName}/config.yaml`);
 
       this.logger.trace('Loaded module definition:', definition.name);
-      this.definitions.push(definition);
+      this.moduleDefinitions.push(definition);
     }
 
     return true;
@@ -153,7 +157,7 @@ export class ModuleLoader {
     const modules = this.hub.config.modules;
 
     for (const config of modules) {
-      const module = this.definitions.find((elm) => elm.name === config.package);
+      const module = this.moduleDefinitions.find((elm) => elm.name === config.package);
       if (!module) {
         this.logger.error('Module not found:', config.package);
         continue;

@@ -6,7 +6,7 @@ modules_path: ../modules
 instance_name: quantumhub
 
 log:
-  level: info
+  level: trace
   # included_modules:
   #  - quantumhub_afore_af_xk_th
   # excluded_modules:
