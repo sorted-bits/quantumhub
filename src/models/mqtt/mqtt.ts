@@ -2,8 +2,8 @@ import { connect, MqttClient } from 'mqtt';
 import { Logger as ILogger } from 'quantumhub-sdk';
 import { MqttConfig } from '../config/interfaces/mqtt-config';
 import { Hub } from '../hub';
-import { Attribute } from '../module-loader/interfaces/attribute';
-import { ModuleProvider } from '../module-loader/models/module-provider';
+import { Attribute } from '../package-loader/interfaces/attribute';
+import { PackageProvider } from '../package-loader/models/package-provider';
 import { ProviderAttribute } from './interfaces/provider-attribute';
 
 export class MQTT {
@@ -14,7 +14,7 @@ export class MQTT {
   private hub: Hub;
 
   private attributeSubscriptions: { [topic: string]: ProviderAttribute[] } = {};
-  private topicSubscription: { [topic: string]: ModuleProvider[] } = {};
+  private topicSubscription: { [topic: string]: PackageProvider[] } = {};
   private disconnecting: boolean = false;
 
   get isConnected(): boolean {
@@ -92,7 +92,7 @@ export class MQTT {
     });
   };
 
-  subscribeToTopic = async (topic: string, provider: ModuleProvider): Promise<void> => {
+  subscribeToTopic = async (topic: string, provider: PackageProvider): Promise<void> => {
     if (!this.topicSubscription[topic]) {
       this.topicSubscription[topic] = [];
       await this.subscribe(topic);
@@ -101,7 +101,7 @@ export class MQTT {
     this.topicSubscription[topic].push(provider);
   };
 
-  subscribeToAttribute = async (provider: ModuleProvider, attribute: Attribute, topic: string): Promise<void> => {
+  subscribeToAttribute = async (provider: PackageProvider, attribute: Attribute, topic: string): Promise<void> => {
     if (!this.attributeSubscriptions[topic]) {
       this.attributeSubscriptions[topic] = [];
       await this.subscribe(topic);

@@ -1,7 +1,7 @@
-import { Attribute } from '../../module-loader/interfaces/attribute';
-import { ModuleProvider } from '../../module-loader/models/module-provider';
+import { Attribute } from '../../package-loader/interfaces/attribute';
+import { PackageProvider } from '../../package-loader/models/package-provider';
 
 export interface ProviderAttribute {
-  provider: ModuleProvider;
+  provider: PackageProvider;
   attribute: Attribute;
 }

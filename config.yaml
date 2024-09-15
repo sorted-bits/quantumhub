@@ -1,12 +1,11 @@
 web:
 # port: 3000 # The port the webserver listens to
 
-# The root path for the folder containing the modules (each in their own folder)
-modules_path: ../modules
+# The root path for the folder containing the packages (each in their own folder)
 instance_name: quantumhub
 
 log:
-  level: trace
+  level: info
   # included_modules:
   #  - quantumhub_afore_af_xk_th
   # excluded_modules:
@@ -21,15 +20,17 @@ mqtt:
 # validate_certificate: true # Whether to validate the certificate of the MQTT broker
 # base_topic: quantumhub # The base topic to use for MQTT
 
-modules:
-  - package: test-device
-    identifier: quantumhub_new_york_clock
-    name: New York Clock
-    timezone: America/New_York
-  - package: test-device
-    identifier: quantumhub_amsterdam_clock
-    name: Amsterdam Clock
-    timezone: Europe/Amsterdam
+packages:
+  root: ./packages
+  configuration:
+    - package: test-device
+      identifier: quantumhub_new_york_clock
+      name: New York Clock
+      timezone: America/New_York
+    - package: test-device
+      identifier: quantumhub_amsterdam_clock
+      name: Amsterdam Clock
+      timezone: Europe/Amsterdam
 
 homeassistant:
 # availability: true # Whether to publish availability messages

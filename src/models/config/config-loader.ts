@@ -17,7 +17,7 @@ export class ConfigLoader {
       const content = fs.readFileSync(file, 'utf8');
       const output = YAML.parse(content, {});
 
-      const result = {
+      const result: BaseConfig = {
         mqtt: {
           ...defaults.mqtt,
           ...output.mqtt,
@@ -27,8 +27,10 @@ export class ConfigLoader {
           ...output.homeassistant,
         },
         instance_name: output.instance_name || defaults.instance_name,
-        modules: [...defaults.modules, ...output.modules],
-        modules_path: output.modules_path || defaults.modules_path,
+        packages: {
+          root: output.packages.root || defaults.packages.root,
+          configuration: [...defaults.packages.configuration, ...output.packages.configuration],
+        },
         web: {
           ...defaults.web,
           ...output.web,
@@ -62,16 +64,18 @@ export class ConfigLoader {
         availability: true,
         base_topic: 'homeassistant',
       },
-      modules: [],
-      modules_path: 'modules',
+      packages: {
+        root: 'packages',
+        configuration: [],
+      },
       instance_name: 'quantumhub',
       web: {
         port: 3000,
       },
       log: {
         level: 'INFO',
-        excluded_modules: [],
-        included_modules: [],
+        excluded_packages: [],
+        included_packages: [],
       },
     };
 

@@ -1,0 +1,3 @@
+[submodule "packages/test-device"]
+	path = packages/test-device
+	url = https://github.com/sorted-bits/test-device.git

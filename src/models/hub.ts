@@ -3,8 +3,8 @@ import { ConfigLoader } from './config/config-loader';
 import { BaseConfig } from './config/interfaces/base-config';
 import { LogConfig } from './config/interfaces/log-config';
 import { Logger } from './logger/logger';
-import { ModuleLoader } from './module-loader/module-loader';
 import { MQTT } from './mqtt/mqtt';
+import { PackageLoader } from './package-loader/package-loader';
 import { StateManager } from './state-manager/state-manager';
 import { Webserver } from './webserver/webserver';
 
@@ -15,7 +15,7 @@ interface ConfigOptions {
 export class Hub {
   mqtt: MQTT;
   state: StateManager;
-  modules: ModuleLoader;
+  packages: PackageLoader;
   logger: ILogger;
   server: Webserver;
 
@@ -35,7 +35,7 @@ export class Hub {
     this.logger = this.createLogger('Hub');
     this.state = new StateManager(this);
     this.mqtt = new MQTT(this);
-    this.modules = new ModuleLoader(this);
+    this.packages = new PackageLoader(this);
     this.server = new Webserver(this);
   }
 
@@ -50,10 +50,10 @@ export class Hub {
       return false;
     }
 
-    this.logger.info('Starting modules', this.config.modules_path);
-    const scanResult = await this.modules.scanFolder(this.config.modules_path);
+    this.logger.info('Starting packages', this.config.packages.configuration);
+    const scanResult = await this.packages.scanFolder(this.config.packages.root);
     if (scanResult) {
-      this.logger.trace('Scanned folder:', this.config.modules_path);
+      this.logger.trace('Scanned folder:', this.config.packages);
     } else {
       return false;
     }
@@ -66,13 +66,13 @@ export class Hub {
       return false;
     }
 
-    await this.modules.startAll();
+    await this.packages.startAll();
 
     return true;
   };
 
   stop = async (): Promise<void> => {
-    await this.modules.stopAll();
+    await this.packages.stopAll();
     await this.state.publishBridgeStatus(false);
     await this.server.stop();
   };

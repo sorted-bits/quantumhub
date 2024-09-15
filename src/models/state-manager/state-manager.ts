@@ -1,9 +1,9 @@
 import { Logger as ILogger } from 'quantumhub-sdk';
 import { Hub } from '../hub';
-import { DeviceClass } from '../module-loader/enums/device-class';
-import { DeviceType } from '../module-loader/enums/device-type';
-import { Attribute, DeviceAutomationAttribute, NumberAttribute, SwitchAttribute } from '../module-loader/interfaces/attribute';
-import { ModuleProvider } from '../module-loader/models/module-provider';
+import { DeviceClass } from '../package-loader/enums/device-class';
+import { DeviceType } from '../package-loader/enums/device-type';
+import { Attribute, DeviceAutomationAttribute, NumberAttribute, SwitchAttribute } from '../package-loader/interfaces/attribute';
+import { PackageProvider } from '../package-loader/models/package-provider';
 
 export class StateManager {
   private logger: ILogger;
@@ -21,11 +21,11 @@ export class StateManager {
     this.logger.info('Initializing state manager');
   };
 
-  getAttributes = (provider: ModuleProvider): { [attribute: string]: any } => {
+  getAttributes = (provider: PackageProvider): { [attribute: string]: any } => {
     return this.states[provider.config.identifier];
   };
 
-  setAvailability = async (provider: ModuleProvider, availability: boolean): Promise<void> => {
+  setAvailability = async (provider: PackageProvider, availability: boolean): Promise<void> => {
     this.logger.trace('Setting availability:', provider.config.identifier, availability);
 
     this.deviceAvailability[provider.config.identifier] = availability;
@@ -33,7 +33,7 @@ export class StateManager {
     await this.publishDeviceStatus(provider, availability);
   };
 
-  setAttributeValue = async (provider: ModuleProvider, attribute: string, value: any, force: boolean = false): Promise<void> => {
+  setAttributeValue = async (provider: PackageProvider, attribute: string, value: any, force: boolean = false): Promise<void> => {
     const attributeDefinition = provider.definition.attributes.find((a) => a.key === attribute);
 
     if (!attributeDefinition) {
@@ -60,7 +60,7 @@ export class StateManager {
     this.publishDeviceStates(provider);
   };
 
-  publishDeviceStates = async (provider: ModuleProvider): Promise<void> => {
+  publishDeviceStates = async (provider: PackageProvider): Promise<void> => {
     const state = this.states[provider.config.identifier];
     if (!state) {
       this.logger.error('State not found for:', provider.config.identifier);
@@ -77,7 +77,7 @@ export class StateManager {
     }
   };
 
-  publishDeviceStatus = async (provider: ModuleProvider, online: boolean): Promise<void> => {
+  publishDeviceStatus = async (provider: PackageProvider, online: boolean): Promise<void> => {
     const topic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}/availability`;
     const payload = online ? 'online' : 'offline';
     const json = JSON.stringify({ state: payload });
@@ -97,7 +97,7 @@ export class StateManager {
     this.logger.trace('Bridge status published');
   };
 
-  onMessage = async (provider: ModuleProvider, attribute: Attribute, payload: string): Promise<void> => {
+  onMessage = async (provider: PackageProvider, attribute: Attribute, payload: string): Promise<void> => {
     switch (attribute.type) {
       case DeviceType.switch: {
         const switchAttribute = attribute as SwitchAttribute;
@@ -126,7 +126,7 @@ export class StateManager {
     }
   };
 
-  publishDeviceDescription = async (provider: ModuleProvider, attributeIdentifier: string): Promise<void> => {
+  publishDeviceDescription = async (provider: PackageProvider, attributeIdentifier: string): Promise<void> => {
     const attribute = provider.definition.attributes.find((a) => a.key === attributeIdentifier);
 
     if (!attribute) {
@@ -218,7 +218,7 @@ export class StateManager {
     this.deviceDescriptionsPublished.push(topic);
   };
 
-  private deviceDetailsAttribute = (provider: ModuleProvider): any => {
+  private deviceDetailsAttribute = (provider: PackageProvider): any => {
     return {
       device: {
         identifiers: [provider.config.identifier],
@@ -228,7 +228,7 @@ export class StateManager {
     };
   };
 
-  private availabilityAttributes = (provider: ModuleProvider): any => {
+  private availabilityAttributes = (provider: PackageProvider): any => {
     const deviceAvailabilityTopic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}/availability`;
     return {
       availability: [

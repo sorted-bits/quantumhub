@@ -1,11 +1,11 @@
 import { ProcessStatus } from '../enums/status';
-import { ModuleProvider } from '../models/module-provider';
+import { PackageProvider } from '../models/package-provider';
 
 export interface Process {
   uuid: string;
   name: string;
   identifier: string;
-  provider: ModuleProvider;
+  provider: PackageProvider;
   status: ProcessStatus;
   startTime?: Date;
   stopTime?: Date;

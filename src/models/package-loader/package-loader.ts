@@ -12,21 +12,21 @@ import { Process, processToDto } from './interfaces/process';
 
 import { Device } from 'quantumhub-sdk';
 import { ProcessStatus } from './enums/status';
-import { ModuleProvider } from './models/module-provider';
+import { PackageProvider } from './models/package-provider';
 
-export class ModuleLoader {
-  private moduleDefinitions: Definition[] = [];
+export class PackageLoader {
+  private _definitions: Definition[] = [];
   private logger: ILogger;
   private processes: { [id: string]: Process } = {};
   private hub: Hub;
 
   constructor(hub: Hub) {
     this.hub = hub;
-    this.logger = this.hub.createLogger('ModuleLoader');
+    this.logger = this.hub.createLogger('PackageLoader');
   }
 
   get definitions(): Definition[] {
-    return this.moduleDefinitions;
+    return this._definitions;
   }
 
   scanFolder = async (inputFolder: string): Promise<boolean> => {
@@ -53,10 +53,10 @@ export class ModuleLoader {
         continue;
       }
 
-      const definition = this.readModuleConfig(directoryName, `${directoryName}/config.yaml`);
+      const definition = this.readPackageConfig(directoryName, `${directoryName}/config.yaml`);
 
-      this.logger.trace('Loaded module definition:', definition.name);
-      this.moduleDefinitions.push(definition);
+      this.logger.trace('Loaded package definition:', definition.name);
+      this._definitions.push(definition);
     }
 
     return true;
@@ -69,11 +69,11 @@ export class ModuleLoader {
     return output;
   };
 
-  readModuleConfig = (directoryName: string, filename: string): Definition => {
+  readPackageConfig = (directoryName: string, filename: string): Definition => {
     const content = fs.readFileSync(filename, 'utf8');
     const output = YAML.parse(content, {});
 
-    const { name, entry, version, description, author } = output.module;
+    const { name, entry, version, description, author } = output.package;
     const path = `${directoryName}/${entry}`;
 
     const attributes: Attribute[] = [];
@@ -100,12 +100,12 @@ export class ModuleLoader {
 
   initializeProcess = async (definition: Definition, config: any): Promise<boolean> => {
     const uuid = v4();
-    this.logger.trace(`Instantiating module: ${definition.name} (v${definition.version}) with config`, JSON.stringify(config));
+    this.logger.trace(`Instantiating package: ${definition.name} (v${definition.version}) with config`, JSON.stringify(config));
 
     try {
-      const loadedModule = await import(definition.path);
-      const device = new loadedModule.default() as Device;
-      const provider = new ModuleProvider(this.hub, config, definition, device);
+      const loadedPackage = await import(definition.path);
+      const device = new loadedPackage.default() as Device;
+      const provider = new PackageProvider(this.hub, config, definition, device);
 
       const process: Process = {
         uuid,
@@ -120,7 +120,7 @@ export class ModuleLoader {
       const result = await device.init(provider);
 
       if (!result) {
-        this.logger.error('Failed to initialize module:', definition.name);
+        this.logger.error('Failed to initialize package:', definition.name);
         return false;
       }
 
@@ -130,7 +130,7 @@ export class ModuleLoader {
 
       return await this.startProcess(uuid);
     } catch (error) {
-      this.logger.error('Error starting module:', definition.name, error);
+      this.logger.error('Error starting package:', definition.name, error);
       return false;
     }
   };
@@ -154,21 +154,21 @@ export class ModuleLoader {
   };
 
   startAll = async (): Promise<void> => {
-    if (!this.hub.config.modules) {
-      this.logger.error('No modules found in config');
+    if (!this.hub.config.packages) {
+      this.logger.error('No packages found in config');
       return;
     }
 
-    const modules = this.hub.config.modules;
+    const configurations = this.hub.config.packages.configuration;
 
-    for (const config of modules) {
-      const module = this.moduleDefinitions.find((elm) => elm.name === config.package);
-      if (!module) {
-        this.logger.error('Module not found:', config.package);
+    for (const config of configurations) {
+      const definition = this._definitions.find((elm) => elm.name === config.package);
+      if (!definition) {
+        this.logger.error('Package not found:', config.package);
         continue;
       }
 
-      await this.initializeProcess(module, config);
+      await this.initializeProcess(definition, config);
     }
   };
 
@@ -192,7 +192,7 @@ export class ModuleLoader {
     try {
       await process.provider.device.stop();
     } catch (error) {
-      this.logger.error('Error stopping module:', process.provider.definition.name, error);
+      this.logger.error('Error stopping package:', process.provider.definition.name, error);
     }
     process.status = ProcessStatus.STOPPED;
 

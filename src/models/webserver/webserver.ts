@@ -7,7 +7,7 @@ import * as ws from 'ws';
 import { WebConfig } from '../config/interfaces/web-config';
 import { Hub } from '../hub';
 import { getLevelIndex, LogData } from '../logger/logger';
-import { Process, processToDto } from '../module-loader/interfaces/process';
+import { Process, processToDto } from '../package-loader/interfaces/process';
 
 interface LoggingWebsocket {
   websocket: ws.WebSocket;
@@ -41,7 +41,6 @@ export class Webserver {
 
   sendProcessUpdate = (process: Process): void => {
     if (this.processStatusWebsockets.length === 0) {
-      this.logger.warn('No websocket connected');
       return;
     }
 
@@ -90,8 +89,6 @@ export class Webserver {
         this.processStatusWebsockets = this.processStatusWebsockets.filter((socket) => socket !== ws);
         this.logger.info('Websocket disconnected');
       });
-
-      this.logger.info('Process status socket connected', req);
     });
 
     ws.app.ws('/api/process/:identifier/log/:level', (ws, req) => {
@@ -111,13 +108,13 @@ export class Webserver {
     });
 
     this.express.get('/api/processes', (req, res) => {
-      const data = this.hub.modules.data();
+      const data = this.hub.packages.data();
       res.send(data);
     });
 
     this.express.get('/api/process/:identifier', (req, res) => {
       const identifier = req.params.identifier;
-      const process = this.hub.modules.getProcess(identifier);
+      const process = this.hub.packages.getProcess(identifier);
 
       if (!process) {
         return res.status(404).send('Process not found');
@@ -128,7 +125,7 @@ export class Webserver {
 
     this.express.get('/api/process/:identifier/config', (req, res) => {
       const identifier = req.params.identifier;
-      const process = this.hub.modules.getProcess(identifier);
+      const process = this.hub.packages.getProcess(identifier);
 
       if (!process) {
         return res.status(404).send('Process not found');
@@ -138,23 +135,23 @@ export class Webserver {
     });
 
     this.express.get('/api/definitions', (req, res) => {
-      const data = this.hub.modules.definitions;
+      const data = this.hub.packages.definitions;
       res.send(data);
     });
 
     this.express.post('/api/processes/:identifier/states/:state', (req, res) => {
       const identifier = req.params.identifier;
       const state = req.params.state;
-      const process = this.hub.modules.getProcess(identifier);
+      const process = this.hub.packages.getProcess(identifier);
 
       if (!process) {
         return res.status(404).send('Process not found');
       }
 
       if (state === 'start') {
-        this.hub.modules.startProcess(process.uuid);
+        this.hub.packages.startProcess(process.uuid);
       } else if (state === 'stop') {
-        this.hub.modules.stopProcess(process.uuid);
+        this.hub.packages.stopProcess(process.uuid);
       }
 
       res.send('OK');
@@ -166,7 +163,7 @@ export class Webserver {
 
     this.express.get('/api/processes/:identifier/states', (req, res) => {
       const identifier = req.params.identifier;
-      const process = this.hub.modules.getProcess(identifier);
+      const process = this.hub.packages.getProcess(identifier);
 
       if (!process) {
         return res.status(404).send('Process not found');

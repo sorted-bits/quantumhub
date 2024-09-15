@@ -1,16 +1,16 @@
-import { Device, Logger as ILogger, ModuleConfig, Provider } from 'quantumhub-sdk';
+import { Device, Logger as ILogger, PackageConfig, Provider } from 'quantumhub-sdk';
 import { Hub } from '../../hub';
 import { DeviceType } from '../enums/device-type';
 import { Definition } from '../interfaces/definition';
 
-export class ModuleProvider implements Provider {
-  config: ModuleConfig;
+export class PackageProvider implements Provider {
+  config: PackageConfig;
   hub: Hub;
   definition: Definition;
   device: Device;
   deviceLogger: ILogger;
 
-  constructor(hub: Hub, config: ModuleConfig, definition: Definition, device: Device) {
+  constructor(hub: Hub, config: PackageConfig, definition: Definition, device: Device) {
     this.config = config;
     this.hub = hub;
     this.definition = definition;
@@ -30,7 +30,7 @@ export class ModuleProvider implements Provider {
    *
    * @param {string} attribute The name of the attribute
    * @param {*} value The value of the attribute
-   * @memberof ModuleProvider
+   * @memberof PackageProvider
    */
   setAttributeValue = (attribute: string, value: any): Promise<void> => {
     return this.hub.state.setAttributeValue(this, attribute, value);
@@ -40,7 +40,7 @@ export class ModuleProvider implements Provider {
    * Sets the availability of the device and publishes the changes to MQTT
    *
    * @param {boolean} availability The availability of the device
-   * @memberof ModuleProvider
+   * @memberof PackageProvider
    */
   setAvailability = async (availability: boolean): Promise<void> => {
     return this.hub.state.setAvailability(this, availability);
@@ -50,7 +50,7 @@ export class ModuleProvider implements Provider {
    * Returns the configuration of the device as defined in the configuration file
    *
    * @returns {*} The configuration of the device
-   * @memberof ModuleProvider
+   * @memberof PackageProvider
    */
   getConfig = (): any => {
     return this.config as any;
@@ -61,7 +61,7 @@ export class ModuleProvider implements Provider {
    *
    * @param {string} topic The topic to subscribe to
    * @returns {Promise<void>}
-   * @memberof ModuleProvider
+   * @memberof PackageProvider
    */
   subscribeToTopic = (topic: string): Promise<void> => {
     return this.hub.mqtt.subscribeToTopic(topic, this);
@@ -74,7 +74,7 @@ export class ModuleProvider implements Provider {
    * @param {string} message The message to publish
    * @param {boolean} retain Whether the message should be retained
    * @returns {Promise<void>}
-   * @memberof ModuleProvider
+   * @memberof PackageProvider
    */
   publishToTopic = (topic: string, message: string, retain: boolean): Promise<void> => {
     return this.hub.mqtt.publish(topic, message, retain);

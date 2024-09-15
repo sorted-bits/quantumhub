@@ -56,9 +56,9 @@ export class Logger implements ILogger {
 
     const levelIndex = getLevelIndex(level);
 
-    let shouldLog = this.config.included_modules.length === 0 || (this.config.included_modules.length > 0 && this.config.included_modules.includes(this.name));
+    let shouldLog = this.config.included_packages.length === 0 || (this.config.included_packages.length > 0 && this.config.included_packages.includes(this.name));
 
-    if (shouldLog && this.config.excluded_modules.includes(this.name)) {
+    if (shouldLog && this.config.excluded_packages.includes(this.name)) {
       shouldLog = false;
     }
 
