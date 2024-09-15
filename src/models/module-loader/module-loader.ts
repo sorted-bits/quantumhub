@@ -8,7 +8,7 @@ import { Logger as ILogger } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { Attribute } from './interfaces/attribute';
 import { Definition } from './interfaces/definition';
-import { Process } from './interfaces/process';
+import { Process, processToDto } from './interfaces/process';
 
 import { Device } from 'quantumhub-sdk';
 import { ProcessStatus } from './enums/status';
@@ -205,21 +205,13 @@ export class ModuleLoader {
 
     for (const uuid in this.processes) {
       const process = this.processes[uuid];
-      result.data.push({
-        uuid: process.uuid,
-        identifier: process.provider.config.identifier,
-        name: process.name,
-        status: process.status,
-        config: process.provider.config,
-        definition: process.provider.definition,
-        startTime: process.startTime,
-      });
+      result.data.push(processToDto(process));
     }
 
     return result;
   };
 
-  process = (identifier: string): Process | undefined => {
+  getProcess = (identifier: string): Process | undefined => {
     const process = Object.values(this.processes).find((elm) => elm.provider.config.identifier === identifier);
     return process;
   };

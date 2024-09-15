@@ -10,3 +10,10 @@ export interface Process {
   startTime?: Date;
   stopTime?: Date;
 }
+
+export const processToDto = (process: Process): any => {
+  return {
+    ...process,
+    provider: undefined,
+  };
+};

@@ -38,3 +38,14 @@ function processStatusSubscription(callback) {
     callback(data);
   };
 }
+
+function processLogsSubscription(identifier, level, callback) {
+  console.log('Starting logs subscription', identifier);
+
+  let ws = new WebSocket(`/api/process/${identifier}/log/${level}`);
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    callback(data);
+  };
+  return ws;
+}

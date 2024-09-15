@@ -30,7 +30,7 @@ export class Hub {
     const configLoader = new ConfigLoader();
     this.options = config;
 
-    this._config = configLoader.loadConfig(configurationFile, new Logger('ConfigLoader', configLoader.defaults.log));
+    this._config = configLoader.loadConfig(configurationFile, new Logger('ConfigLoader', this, configLoader.defaults.log));
 
     this.logger = this.createLogger('Hub');
     this.state = new StateManager(this);
@@ -40,7 +40,7 @@ export class Hub {
   }
 
   createLogger = (name: string, config: LogConfig = this.config.log): ILogger => {
-    return new Logger(name, config);
+    return new Logger(name, this, config);
   };
 
   initialize = async (): Promise<boolean> => {
