@@ -126,6 +126,8 @@ export class ModuleLoader {
 
       process.status = ProcessStatus.INITIALIZED;
 
+      this.hub.server.sendProcessUpdate(process);
+
       return await this.startProcess(uuid);
     } catch (error) {
       this.logger.error('Error starting module:', definition.name, error);
@@ -145,6 +147,9 @@ export class ModuleLoader {
 
     process.status = ProcessStatus.RUNNING;
     process.startTime = new Date();
+
+    this.hub.server.sendProcessUpdate(process);
+
     return true;
   };
 
@@ -190,6 +195,8 @@ export class ModuleLoader {
       this.logger.error('Error stopping module:', process.provider.definition.name, error);
     }
     process.status = ProcessStatus.STOPPED;
+
+    this.hub.server.sendProcessUpdate(process);
   };
 
   data = () => {

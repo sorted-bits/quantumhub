@@ -15,7 +15,6 @@ async function stopProcess(pid) {
     method: 'POST',
   });
 
-  console.log(response);
   if (!response.ok) {
     throw new Error(`Response status: ${response.status}`);
   }
@@ -30,4 +29,12 @@ async function startProcess(pid) {
   if (!response.ok) {
     throw new Error(`Response status: ${response.status}`);
   }
+}
+
+function processStatusSubscription(callback) {
+  let ws = new WebSocket('/api/processes/status');
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    callback(data);
+  };
 }

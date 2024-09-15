@@ -1,9 +1,12 @@
+import { Logger } from 'quantumhub-sdk';
+
 import express from 'express';
 import expressWs from 'express-ws';
 import http from 'http';
-import { Logger } from 'quantumhub-sdk';
+import * as ws from 'ws';
 import { WebConfig } from '../config/interfaces/web-config';
 import { Hub } from '../hub';
+import { Process } from '../module-loader/interfaces/process';
 
 export class Webserver {
   private express: express.Express;
@@ -11,6 +14,8 @@ export class Webserver {
   private logger: Logger;
   private hub: Hub;
   private server?: http.Server;
+
+  private processStatusWebsocket?: ws.WebSocket;
 
   constructor(hub: Hub) {
     this.hub = hub;
@@ -22,12 +27,33 @@ export class Webserver {
     this.logger.info('Webserver initialized');
   }
 
+  sendProcessUpdate = (process: Process): void => {
+    if (!this.processStatusWebsocket) {
+      this.logger.warn('No websocket connected');
+      return;
+    }
+
+    const processData = {
+      uuid: process.uuid,
+      identifier: process.provider.config.identifier,
+      name: process.name,
+      status: process.status,
+      config: process.provider.config,
+      definition: process.provider.definition,
+      startTime: process.startTime,
+    };
+
+    this.processStatusWebsocket.send(JSON.stringify(processData));
+  };
+
   start = async (): Promise<boolean> => {
     const ws = expressWs(this.express);
 
     this.express.use('/', express.static(this.hub.options.publicPath));
 
-    ws.app.ws('/api/ws', (ws, req) => {
+    ws.app.ws('/api/processes/status', (ws, req) => {
+      this.processStatusWebsocket = ws;
+
       ws.on('message', (msg) => {
         this.logger.info('Received message:', msg);
         ws.send('Hello from server');
@@ -97,17 +123,5 @@ export class Webserver {
     }
 
     this.logger.trace('Stopping webserver');
-
-    return new Promise((resolve, reject) => {
-      this.server!.close((err) => {
-        if (err) {
-          this.logger.error('Error stopping webserver:', err);
-          reject(err);
-        } else {
-          this.logger.info('Webserver stopped');
-          resolve();
-        }
-      });
-    });
   };
 }

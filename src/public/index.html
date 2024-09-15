@@ -23,18 +23,39 @@
   </body>
 
   <script>
+    processStatusSubscription((process) => {
+      updateProcessStatus(process);
+    });
+
     const onStartProcessClicked = (id) => {
       startProcess(id).then((response) => {
         console.log(response);
-        window.location.reload();
       });
     };
 
     const onStopProcessClicked = (id) => {
       stopProcess(id).then((response) => {
         console.log(response);
-        window.location.reload();
       });
+    };
+
+    const updateProcessStatus = (process) => {
+      console.log(process);
+
+      document.getElementById(`status_${process.identifier}`).innerText = process.status;
+      const chip = document.getElementById(`status_${process.identifier}_chip`);
+      chip.classList.remove('p-chip--positive');
+      chip.classList.remove('p-chip--negative');
+
+      if  (process.status.toLowerCase() === 'running') {
+        chip.classList.add('p-chip--positive');
+      } else {
+        chip.classList.add('p-chip--negative');
+      }
+
+      document.getElementById(`status_${process.identifier}_start`).disabled = (process.status.toLowerCase() === 'running');
+      document.getElementById(`status_${process.identifier}_stop`).disabled = !(process.status.toLowerCase() === 'running');
+
     };
 
     // Get the processes from the API
@@ -52,6 +73,7 @@
             </tr>
             </thead>
           `;
+
       processes.data.forEach((process) => {
         const row = document.createElement('tr');
 
@@ -68,21 +90,21 @@
         row.innerHTML = `
               <td><a href="/api/processes/${process.identifier}/states">${process.name}</a></td>
               <td>
-                <button class="p-chip--${statusColor} is-dense is-small">
-                  <span class="p-chip__value">${process.status}</span>
+                <button class="p-chip--${statusColor} is-dense is-small" id="status_${process.identifier}_chip">
+                  <span class="p-chip__value" id="status_${process.identifier}">${process.status}</span>
                 </button>
               </td>
               <td>${date} ${time}</td>
               <td>
-                <button ${startEnabled} class="p-button--positive is-dense is-small" onclick="onStartProcessClicked('${process.identifier}')">Start</button>
-                <button ${stopEnabled} class="p-button--negative is-dense is-small" type="" class="bg-sky-500" onclick="onStopProcessClicked('${process.identifier}')">Stop</button>
+                <button id="status_${process.identifier}_start" ${startEnabled} class="p-button--positive is-dense is-small" onclick="onStartProcessClicked('${process.identifier}')">Start</button>
+                <button id="status_${process.identifier}_stop" ${stopEnabled} class="p-button--negative is-dense is-small" type="" class="bg-sky-500" onclick="onStopProcessClicked('${process.identifier}')">Stop</button>
               </td>
             `;
         table.appendChild(row);
       });
 
     const contentNode = document.getElementById('content');
-console.log(table);
+    console.log(table);
     console.log(contentNode);
     contentNode.appendChild(table);
     });
