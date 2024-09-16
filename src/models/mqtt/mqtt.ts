@@ -3,7 +3,7 @@ import { Logger as ILogger } from 'quantumhub-sdk';
 import { MqttConfig } from '../config/interfaces/mqtt-config';
 import { Hub } from '../hub';
 import { Attribute } from '../package-loader/interfaces/attribute';
-import { PackageProvider } from '../package-loader/models/package-provider';
+import { PackageProvider } from '../provider/package-provider';
 import { ProviderAttribute } from './interfaces/provider-attribute';
 
 export class MQTT {
@@ -59,7 +59,7 @@ export class MQTT {
       });
 
       this.client.on('error', (error) => {
-        this.logger.error('Error:', error);
+        this.logger.error('Error from MQTT broker: ', JSON.stringify(error));
         reject(error);
       });
 
@@ -133,7 +133,7 @@ export class MQTT {
           this.logger.info('Reconnected to broker');
         })
         .catch((error) => {
-          this.logger.error('Failed to reconnect to broker:', error);
+          this.logger.error('Failed to reconnect to broker:', JSON.stringify(error));
         });
     }
   };

@@ -11,8 +11,8 @@ import { Definition } from './interfaces/definition';
 import { Process, processToDto } from './interfaces/process';
 
 import { Device } from 'quantumhub-sdk';
+import { PackageProvider } from '../provider/package-provider';
 import { ProcessStatus } from './enums/status';
-import { PackageProvider } from './models/package-provider';
 
 export class PackageLoader {
   private _definitions: Definition[] = [];

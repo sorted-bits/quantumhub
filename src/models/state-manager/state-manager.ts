@@ -3,7 +3,7 @@ import { Hub } from '../hub';
 import { DeviceClass } from '../package-loader/enums/device-class';
 import { DeviceType } from '../package-loader/enums/device-type';
 import { Attribute, DeviceAutomationAttribute, NumberAttribute, SwitchAttribute } from '../package-loader/interfaces/attribute';
-import { PackageProvider } from '../package-loader/models/package-provider';
+import { PackageProvider } from '../provider/package-provider';
 
 export class StateManager {
   private logger: ILogger;

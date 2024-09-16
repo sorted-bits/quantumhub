@@ -1,5 +1,5 @@
+import { PackageProvider } from '../../provider/package-provider';
 import { ProcessStatus } from '../enums/status';
-import { PackageProvider } from '../models/package-provider';
 
 export interface Process {
   uuid: string;

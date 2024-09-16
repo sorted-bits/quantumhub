@@ -1,7 +1,7 @@
 import { Device, Logger as ILogger, PackageConfig, Provider } from 'quantumhub-sdk';
-import { Hub } from '../../hub';
-import { DeviceType } from '../enums/device-type';
-import { Definition } from '../interfaces/definition';
+import { Hub } from '../hub';
+import { DeviceType } from '../package-loader/enums/device-type';
+import { Definition } from '../package-loader/interfaces/definition';
 
 export class PackageProvider implements Provider {
   config: PackageConfig;
@@ -33,6 +33,7 @@ export class PackageProvider implements Provider {
    * @memberof PackageProvider
    */
   setAttributeValue = (attribute: string, value: any): Promise<void> => {
+    this.deviceLogger.trace('Setting attribute value', attribute, value);
     return this.hub.state.setAttributeValue(this, attribute, value);
   };
 
@@ -43,6 +44,7 @@ export class PackageProvider implements Provider {
    * @memberof PackageProvider
    */
   setAvailability = async (availability: boolean): Promise<void> => {
+    this.deviceLogger.trace('Setting availability to', availability);
     return this.hub.state.setAvailability(this, availability);
   };
 
@@ -64,6 +66,7 @@ export class PackageProvider implements Provider {
    * @memberof PackageProvider
    */
   subscribeToTopic = (topic: string): Promise<void> => {
+    this.deviceLogger.trace('Subscribing to topic', topic);
     return this.hub.mqtt.subscribeToTopic(topic, this);
   };
 
@@ -77,6 +80,7 @@ export class PackageProvider implements Provider {
    * @memberof PackageProvider
    */
   publishToTopic = (topic: string, message: string, retain: boolean): Promise<void> => {
+    this.deviceLogger.trace('Publishing to topic', topic, message);
     return this.hub.mqtt.publish(topic, message, retain);
   };
 
