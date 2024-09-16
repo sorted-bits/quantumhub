@@ -143,6 +143,13 @@ export class PackageLoader {
       return false;
     }
 
+    if (process.status === ProcessStatus.STARTING || process.status === ProcessStatus.RUNNING) {
+      return true;
+    }
+
+    process.status = ProcessStatus.STARTING;
+    this.hub.server.sendProcessUpdate(process);
+
     await process.provider.device.start();
 
     process.status = ProcessStatus.RUNNING;
@@ -188,14 +195,21 @@ export class PackageLoader {
       return;
     }
 
+    if (process.status === ProcessStatus.STOPPING || process.status === ProcessStatus.STOPPED) {
+      return;
+    }
+
+    process.status = ProcessStatus.STOPPING;
+    this.hub.server.sendProcessUpdate(process);
+
     this.logger.trace('Stopping:', process.provider.config.identifier);
     try {
       await process.provider.device.stop();
     } catch (error) {
       this.logger.error('Error stopping package:', process.provider.definition.name, error);
     }
-    process.status = ProcessStatus.STOPPED;
 
+    process.status = ProcessStatus.STOPPED;
     this.hub.server.sendProcessUpdate(process);
   };
 
