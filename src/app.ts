@@ -9,7 +9,7 @@ if (!configFile) {
 }
 
 const hub = new Hub(configFile, {
-  publicPath: path.join(__dirname, 'public'),
+  uiPath: path.join(__dirname, 'ui'),
 });
 
 hub.logger.info('Starting QuantumHub');

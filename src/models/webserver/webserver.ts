@@ -1,8 +1,8 @@
-import { Logger } from 'quantumhub-sdk';
-
 import express from 'express';
+import { engine } from 'express-handlebars';
 import expressWs from 'express-ws';
 import http from 'http';
+import { Logger } from 'quantumhub-sdk';
 import * as ws from 'ws';
 import { WebConfig } from '../config/interfaces/web-config';
 import { Hub } from '../hub';
@@ -29,6 +29,10 @@ export class Webserver {
     this.hub = hub;
 
     this.express = express();
+    this.express.engine('handlebars', engine());
+    this.express.set('view engine', 'handlebars');
+    this.express.set('views', this.hub.options.uiPath + '/views');
+
     this.express.on('error', (err) => {
       this.logger.error('Webserver error:', err);
     });
@@ -73,9 +77,10 @@ export class Webserver {
   };
 
   start = async (): Promise<boolean> => {
+    console.log('Starting webserver', this.express);
     const ws = expressWs(this.express);
 
-    this.express.use('/', express.static(this.hub.options.publicPath));
+    this.express.use('/scripts', express.static(this.hub.options.uiPath + '/scripts'));
 
     ws.app.ws('/api/processes/status', (ws, req) => {
       this.processStatusWebsockets.push(ws);
@@ -155,6 +160,10 @@ export class Webserver {
       }
 
       res.send('OK');
+    });
+
+    this.express.get('/', (req, res) => {
+      res.render('home', { test: 'Hello World' });
     });
 
     const server = this.express.listen(this.config.port, () => {

@@ -9,7 +9,7 @@ import { StateManager } from './state-manager/state-manager';
 import { Webserver } from './webserver/webserver';
 
 interface ConfigOptions {
-  publicPath: string;
+  uiPath: string;
 }
 
 export class Hub {
