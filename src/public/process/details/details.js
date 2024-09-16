@@ -48,8 +48,11 @@ const subscribeToLogs = (level) => {
   tableBody.innerHTML = '';
 
   loggingWs = processLogsSubscription(identifier, level, (data) => {
+    const log = [data.message, ...data.messages];
+    console.log(log);
+    const messages = log.join(', ');
     const row = document.createElement('tr');
-    row.innerHTML = `<td>${data.time}</td><td>${data.level}</td><td>${data.message}</td>`;
+    row.innerHTML = `<td>${data.time}</td><td>${data.level}</td><td>${messages}</td>`;
     tableBody.prepend(row);
 
     if (tableBody.childElementCount > 20) {
@@ -66,6 +69,8 @@ getProcess().then((process) => {
   });
 
   setButtonState(logLevel);
+  subscribeToLogs(logLevel);
+  /*
   loggingWs = processLogsSubscription(identifier, logLevel, (data) => {
     const tableBody = document.getElementById('logs');
     console.log(data);
@@ -77,6 +82,7 @@ getProcess().then((process) => {
       tableBody.removeChild(tableBody.lastChild);
     }
   });
+  */
 
   document.getElementById('title').innerText = process.name;
 });
