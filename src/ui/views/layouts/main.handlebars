@@ -4,33 +4,38 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <title>QuantumHub</title>
 
-    <link rel='preconnect' href='https://fonts.googleapis.com' />
-    <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin />
-    <link href='https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap' rel='stylesheet' />
-
     <link rel='stylesheet' href='/css/style.css' />
     <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/css/fontawesome.min.css' integrity='sha384-NvKbDTEnL+A8F/AA5Tc5kmMLSJHUO868P+lDtTpJIeQdGYaUIuLr4lVGOEA1OcMy' crossorigin='anonymous' />
   </head>
   <body>
-    <div class='container-fluid'>
-      <nav class='navbar navbar-expand-lg bg-body-tertiary'>
-        <div class='container-fluid'>
-          <a class='navbar-brand' href='/'>QuantumHub</a>
-          <button class='navbar-toggler' type='button' data-bs-toggle='collapse' data-bs-target='#navbarText' aria-controls='navbarText' aria-expanded='false' aria-label='Toggle navigation'>
-            <span class='navbar-toggler-icon'></span>
-          </button>
-          <div class='collapse navbar-collapse' id='navbarText'>
-            <ul class='navbar-nav me-auto mb-2 mb-lg-0'>
-              <li class='nav-item'>
-                <a class='nav-link active' aria-current='page' href='#'>Processes</a>
-              </li>
-              <li class='nav-item'>
-                <a class='nav-link' href='#'>Config</a>
-              </li>
-            </ul>
+    <div class='container'>
+
+      <nav class='navbar' role='navigation' aria-label='main navigation'>
+        <div class='navbar-brand'>
+          <a class='navbar-item' href='/'>QuantumHub
+          </a>
+
+          <a role='button' class='navbar-burger' aria-label='menu' aria-expanded='false' data-target='navbarBasicExample'>
+            <span aria-hidden='true'></span>
+            <span aria-hidden='true'></span>
+            <span aria-hidden='true'></span>
+            <span aria-hidden='true'></span>
+          </a>
+        </div>
+
+        <div id='navbarBasicExample' class='navbar-menu'>
+          <div class='navbar-start'>
+            <a class='navbar-item'>
+              Home
+            </a>
+
+            <a class='navbar-item' href='/configuration'>
+              Configuration
+            </a>
           </div>
         </div>
       </nav>
+
       {{{body}}}
     </div>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/js/all.min.js'></script>

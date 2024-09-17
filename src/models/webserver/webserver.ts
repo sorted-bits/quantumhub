@@ -167,6 +167,17 @@ export class Webserver {
       res.render('home', { test: 'Hello World' });
     });
 
+    this.express.get('/process/:identifier', (req, res) => {
+      const identifier = req.params.identifier;
+      const process = this.hub.packages.getProcess(identifier);
+
+      if (!process) {
+        return res.status(404).send('Process not found');
+      }
+
+      res.render('details', { process: processToDto(process) });
+    });
+
     const server = this.express.listen(this.config.port, () => {
       this.logger.info('Webserver started on port:', this.config.port);
     });

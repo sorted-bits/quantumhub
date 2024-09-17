@@ -1,13 +1,7 @@
-$font-family-base: 'Nunito', sans-serif;
-$border-radius: 5px;
-
-$display-font-sizes: (
-  1: 5rem,
-  2: 4.5rem,
-  3: 4rem,
-  4: 3.5rem,
-  5: 3rem,
-  6: 1.5rem,
+@use '../../../node_modules/bulma/sass' with (
+  $family-primary: '"Nunito", sans-serif',
+  $success: #029e45,
+  $danger: #e63946
 );
 
-@import '../../../node_modules/bootstrap/scss/bootstrap';
+@import url('https://fonts.googleapis.com/css?family=Nunito:400,700');

@@ -8,7 +8,8 @@
     "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "css": "sass src/ui/sass/style.scss src/ui/css/style.css",
-    "watch-css": "sass --watch src/ui/sass/style.scss src/ui/css/style.css"
+    "watch-css": "sass --watch src/ui/sass/style.scss src/ui/css/style.css",
+    "publish-docker": "docker build -t sortedbit/quantumhub .. && docker image push sortedbit/quantumhub"
   },
   "keywords": [],
   "author": "",
@@ -24,11 +25,10 @@
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "globals": "^15.9.0",
     "sass": "1.78.0",
-    "typescript-eslint": "^8.4.0",
-    "bootstrap": "5.3.3",
-    "bootstrap-icons": "1.11.3"
+    "typescript-eslint": "^8.4.0"
   },
   "dependencies": {
+    "bulma": "^1.0.2",
     "express": "^4.17.1",
     "express-handlebars": "8.0.1",
     "express-ws": "5.0.2",
