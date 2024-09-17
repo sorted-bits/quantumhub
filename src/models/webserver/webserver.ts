@@ -81,6 +81,7 @@ export class Webserver {
     const ws = expressWs(this.express);
 
     this.express.use('/scripts', express.static(this.hub.options.uiPath + '/scripts'));
+    this.express.use('/css', express.static(this.hub.options.uiPath + '/css'));
 
     ws.app.ws('/api/processes/status', (ws, req) => {
       this.processStatusWebsockets.push(ws);

@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon src/app.ts --config=config.yaml",
-    "build-css": "sass -w --load-path=node_modules scss:src/public/css --style=compressed",
     "lint": "eslint .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "css": "sass src/ui/sass/style.scss src/ui/css/style.css",
+    "watch-css": "sass --watch src/ui/sass/style.scss src/ui/css/style.css"
   },
   "keywords": [],
   "author": "",
@@ -15,21 +16,22 @@
   "devDependencies": {
     "@eslint/js": "^9.10.0",
     "@types/express": "^4.17.1",
-    "@types/express-ws": "3.0.5",
     "@types/express-handlebars": "6.0.0",
+    "@types/express-ws": "3.0.5",
     "@types/luxon": "3.4.2",
     "@types/uuid": "10.0.0",
     "eslint": "^9.10.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "globals": "^15.9.0",
+    "sass": "1.78.0",
     "typescript-eslint": "^8.4.0",
-    "vanilla-framework": "4.16.0",
-    "sass": "1.78.0"
+    "bootstrap": "5.3.3",
+    "bootstrap-icons": "1.11.3"
   },
   "dependencies": {
     "express": "^4.17.1",
-    "express-ws": "5.0.2",
     "express-handlebars": "8.0.1",
+    "express-ws": "5.0.2",
     "luxon": "3.5.0",
     "mqtt": "5.10.1",
     "nodemon": "3.1.4",
