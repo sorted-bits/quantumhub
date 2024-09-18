@@ -1,8 +1,5 @@
-import { Logger as ILogger } from 'quantumhub-sdk';
+import { Attribute, ButtonAttribute, DeviceAutomationAttribute, DeviceClass, DeviceType, Logger as ILogger, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from 'quantumhub-sdk';
 import { Hub } from '../hub';
-import { DeviceClass } from '../package-loader/enums/device-class';
-import { DeviceType } from '../package-loader/enums/device-type';
-import { Attribute, ButtonAttribute, DeviceAutomationAttribute, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from '../package-loader/interfaces/attribute';
 import { PackageProvider } from '../provider/package-provider';
 
 export class StateManager {
@@ -100,17 +97,31 @@ export class StateManager {
   onMessage = async (provider: PackageProvider, attribute: Attribute, payload: string): Promise<void> => {
     switch (attribute.type) {
       case DeviceType.button: {
-        provider.device.valueChanged(attribute.key, payload);
+        if (provider.device.onButtonPressed) {
+          provider.device.onButtonPressed(attribute as ButtonAttribute);
+        } else {
+          this.logger.warn('No onButtonPressed handler found on device', provider.config.identifier);
+        }
         break;
       }
       case DeviceType.scene: {
-        provider.device.valueChanged(attribute.key, payload);
+        if (provider.device.onSceneTriggered) {
+          provider.device.onSceneTriggered(attribute as SceneAttribute);
+        } else {
+          this.logger.warn('No onSceneTriggered handler found on device', provider.config.identifier);
+        }
         break;
       }
       case DeviceType.switch: {
         const switchAttribute = attribute as SwitchAttribute;
         if (payload === switchAttribute.payload_on || payload === switchAttribute.payload_off) {
-          provider.device.valueChanged(attribute.key, payload);
+          const value = payload === switchAttribute.payload_on;
+
+          if (provider.device.onSwitchChanged) {
+            provider.device.onSwitchChanged(switchAttribute, value);
+          } else {
+            this.logger.warn('No onSwitchChanged handler found on device', provider.config.identifier);
+          }
 
           if (switchAttribute.optimistic) {
             this.setAttributeValue(provider, attribute.key, payload);
@@ -125,7 +136,11 @@ export class StateManager {
       case DeviceType.select: {
         const selectAttribute = attribute as SelectAttribute;
 
-        provider.device.valueChanged(attribute.key, payload);
+        if (provider.device.onSelectChanged) {
+          provider.device.onSelectChanged(selectAttribute, payload);
+        } else {
+          this.logger.warn('No onSelectChanged handler found on device', provider.config.identifier);
+        }
 
         if (selectAttribute.optimistic) {
           this.logger.info('Setting attribute value:', attribute.key, payload);
@@ -134,12 +149,15 @@ export class StateManager {
         break;
       }
       case DeviceType.number: {
-        provider.device.valueChanged(attribute.key, parseFloat(payload));
+        if (provider.device.onNumberChanged) {
+          provider.device.onNumberChanged(attribute as NumberAttribute, parseFloat(payload));
+        } else {
+          this.logger.warn('No onNumberChanged handler found on device', provider.config.identifier);
+        }
 
         break;
       }
       case DeviceType.device_automation: {
-        this.logger.info('Device automation not implemented', payload);
         break;
       }
     }

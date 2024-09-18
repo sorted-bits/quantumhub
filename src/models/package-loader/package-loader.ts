@@ -3,10 +3,9 @@ import path from 'path';
 import { v4 } from 'uuid';
 import YAML from 'yaml';
 
-import { Logger as ILogger } from 'quantumhub-sdk';
+import { Attribute, Logger as ILogger } from 'quantumhub-sdk';
 
 import { Hub } from '../hub';
-import { Attribute } from './interfaces/attribute';
 import { Definition } from './interfaces/definition';
 import { Process, processToDto } from './interfaces/process';
 

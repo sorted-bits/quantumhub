@@ -1,6 +1,6 @@
 import { Device, Logger as ILogger, PackageConfig, Provider } from 'quantumhub-sdk';
+import { DeviceType } from '../../../../quantumhub-sdk/src/enums/device-type';
 import { Hub } from '../hub';
-import { DeviceType } from '../package-loader/enums/device-type';
 import { Definition } from '../package-loader/interfaces/definition';
 
 export class PackageProvider implements Provider {
