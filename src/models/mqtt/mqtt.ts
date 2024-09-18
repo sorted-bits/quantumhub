@@ -13,12 +13,20 @@ export class MQTT {
   private client: MqttClient | undefined = undefined;
   private hub: Hub;
 
-  private attributeSubscriptions: { [topic: string]: ProviderAttribute[] } = {};
-  private topicSubscription: { [topic: string]: PackageProvider[] } = {};
+  private _attributeSubscriptions: { [topic: string]: ProviderAttribute[] } = {};
+  private _topicSubscriptions: { [topic: string]: PackageProvider[] } = {};
   private disconnecting: boolean = false;
 
   get isConnected(): boolean {
     return this.client ? this.client.connected : false;
+  }
+
+  get attributeSubscriptions(): string[] {
+    return Object.keys(this._attributeSubscriptions);
+  }
+
+  get topicSubscriptions(): string[] {
+    return Object.keys(this._topicSubscriptions);
   }
 
   constructor(hub: Hub) {
@@ -93,21 +101,21 @@ export class MQTT {
   };
 
   subscribeToTopic = async (topic: string, provider: PackageProvider): Promise<void> => {
-    if (!this.topicSubscription[topic]) {
-      this.topicSubscription[topic] = [];
+    if (!this._topicSubscriptions[topic]) {
+      this._topicSubscriptions[topic] = [];
       await this.subscribe(topic);
     }
 
-    this.topicSubscription[topic].push(provider);
+    this._topicSubscriptions[topic].push(provider);
   };
 
   subscribeToAttribute = async (provider: PackageProvider, attribute: Attribute, topic: string): Promise<void> => {
-    if (!this.attributeSubscriptions[topic]) {
-      this.attributeSubscriptions[topic] = [];
+    if (!this._attributeSubscriptions[topic]) {
+      this._attributeSubscriptions[topic] = [];
       await this.subscribe(topic);
     }
 
-    this.attributeSubscriptions[topic].push({ provider, attribute: attribute });
+    this._attributeSubscriptions[topic].push({ provider, attribute: attribute });
   };
 
   subscribe = async (topic: string): Promise<void> => {
@@ -117,8 +125,8 @@ export class MQTT {
         return;
       }
 
-      this.client.subscribe(topic, () => {
-        this.logger.trace('Subscribing to:', topic);
+      this.client.subscribe(topic, (err) => {
+        this.logger.trace('Subscribing to:', topic, err);
         resolve();
       });
     });
@@ -142,7 +150,7 @@ export class MQTT {
     this.logger.warn('Reconnecting to broker');
     await this.connect(this.config!);
 
-    for (const topic in this.attributeSubscriptions) {
+    for (const topic in this._attributeSubscriptions) {
       this.logger.trace('Resubscribing to:', topic);
       await this.subscribe(topic);
     }
@@ -162,12 +170,11 @@ export class MQTT {
   };
 
   private onMessageTopicSubscriptions = async (topic: string, message: Buffer): Promise<void> => {
-    if (!this.topicSubscription[topic]) {
-      this.logger.error('No subscriptions for topic:', topic);
+    if (!this._topicSubscriptions[topic]) {
       return;
     }
 
-    const providers = this.topicSubscription[topic];
+    const providers = this._topicSubscriptions[topic];
 
     for (const provider of providers) {
       provider.device.onMessage?.(topic, message);
@@ -176,12 +183,11 @@ export class MQTT {
 
   private onMessageAttributeSubscriptions = async (topic: string, message: Buffer): Promise<void> => {
     const payload = message.toString();
-    if (!this.attributeSubscriptions[topic]) {
-      this.logger.error('No subscriptions for topic:', topic);
+    if (!this._attributeSubscriptions[topic]) {
       return;
     }
 
-    const subscriptions = this.attributeSubscriptions[topic];
+    const subscriptions = this._attributeSubscriptions[topic];
 
     for (const subscription of subscriptions) {
       const { provider, attribute } = subscription;

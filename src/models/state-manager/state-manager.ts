@@ -2,7 +2,7 @@ import { Logger as ILogger } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { DeviceClass } from '../package-loader/enums/device-class';
 import { DeviceType } from '../package-loader/enums/device-type';
-import { Attribute, DeviceAutomationAttribute, NumberAttribute, SwitchAttribute } from '../package-loader/interfaces/attribute';
+import { Attribute, DeviceAutomationAttribute, NumberAttribute, SelectAttribute, SwitchAttribute } from '../package-loader/interfaces/attribute';
 import { PackageProvider } from '../provider/package-provider';
 
 export class StateManager {
@@ -41,7 +41,7 @@ export class StateManager {
       return;
     }
 
-    const key = provider.config.identifier; //device.config.identifier;
+    const key = provider.config.identifier;
 
     if (!this.states[key]) {
       this.logger.trace('Creating state for:', key);
@@ -114,6 +114,17 @@ export class StateManager {
 
         break;
       }
+      case DeviceType.select: {
+        const selectAttribute = attribute as SelectAttribute;
+
+        provider.device.valueChanged(attribute.key, payload);
+
+        if (selectAttribute.optimistic) {
+          this.logger.info('Setting attribute value:', attribute.key, payload);
+          this.setAttributeValue(provider, attribute.key, payload);
+        }
+        break;
+      }
       case DeviceType.number: {
         provider.device.valueChanged(attribute.key, parseFloat(payload));
 
@@ -160,6 +171,18 @@ export class StateManager {
     };
 
     switch (attribute.type) {
+      case DeviceType.select: {
+        const deviceAttribute = attribute as SelectAttribute;
+
+        const commandTopic = `${stateTopic}/${attribute.key}/set`;
+        config.command_topic = commandTopic;
+        config.options = deviceAttribute.options;
+
+        this.logger.info('Subscribing to attribute:', commandTopic);
+
+        this.hub.mqtt.subscribeToAttribute(provider, attribute, commandTopic);
+        break;
+      }
       case DeviceType.number: {
         const numberAttribute = attribute as NumberAttribute;
 

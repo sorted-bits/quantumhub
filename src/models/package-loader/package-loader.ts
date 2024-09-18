@@ -11,6 +11,7 @@ import { Definition } from './interfaces/definition';
 import { Process, processToDto } from './interfaces/process';
 
 import { Device } from 'quantumhub-sdk';
+import { PackageConfig } from '../config/interfaces/packages-config';
 import { PackageProvider } from '../provider/package-provider';
 import { ProcessStatus } from './enums/status';
 
@@ -55,8 +56,10 @@ export class PackageLoader {
 
       const definition = this.readPackageConfig(directoryName, `${directoryName}/config.yaml`);
 
-      this.logger.trace('Loaded package definition:', definition.name);
-      this._definitions.push(definition);
+      if (definition) {
+        this.logger.trace('Loaded package definition:', definition.name);
+        this.addPackageDefinition(definition);
+      }
     }
 
     return true;
@@ -69,7 +72,38 @@ export class PackageLoader {
     return output;
   };
 
-  readPackageConfig = (directoryName: string, filename: string): Definition => {
+  loadPackageFromConfig = async (config: PackageConfig): Promise<void> => {
+    if (!config.root) {
+      return;
+    }
+
+    const definition = this.readPackageConfig(config.root, `${config.root}/config.yaml`);
+    if (definition) {
+      this.logger.trace('Loaded package definition:', definition.name);
+      this.addPackageDefinition(definition);
+    }
+  };
+
+  private addPackageDefinition = (definition: Definition): void => {
+    if (this._definitions.find((elm) => elm.name === definition.name)) {
+      this.logger.error('Package definition already exists:', definition.name);
+      return;
+    }
+
+    this._definitions.push(definition);
+  };
+
+  private readPackageConfig = (directoryName: string, filename: string): Definition | undefined => {
+    if (!fs.existsSync(directoryName)) {
+      this.logger.error('Folder does not exist:', directoryName);
+      return undefined;
+    }
+
+    if (!fs.existsSync(filename)) {
+      this.logger.error('No config.yaml found in:', directoryName);
+      return undefined;
+    }
+
     const content = fs.readFileSync(filename, 'utf8');
     const output = YAML.parse(content, {});
 

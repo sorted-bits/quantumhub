@@ -88,7 +88,7 @@ export class PackageProvider implements Provider {
     const attributes = this.definition.attributes;
 
     for (const attribute of attributes) {
-      if (attribute.type === DeviceType.device_automation || attribute.type === DeviceType.number) {
+      if (attribute.type === DeviceType.device_automation || attribute.type === DeviceType.number || attribute.type === DeviceType.select) {
         await this.hub.state.publishDeviceDescription(this, attribute.key);
       }
     }

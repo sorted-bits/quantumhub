@@ -58,6 +58,10 @@ export class Hub {
       return false;
     }
 
+    this.config.packages.configuration.forEach((packageConfig) => {
+      this.packages.loadPackageFromConfig(packageConfig);
+    });
+
     await this.state.initialize();
 
     const mqttResult = await this.mqtt.connect(this.config.mqtt);

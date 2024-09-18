@@ -1,0 +1,28 @@
+<table class='table' style='width: 100%;'>
+    <thead>
+        <tr>
+            <th>Subscriptions for attributes</th>
+        </tr>
+    </thead>
+    <tbody>
+  {{#each attributes}}
+    <tr>
+      <td>{{this}}</td>
+    </tr>
+  {{/each}}
+</table>
+
+<table class='table' style='width: 100%;'>
+    <thead>
+        <tr>
+            <th>Subscriptions for topics</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each topics}}
+            <tr>
+                <td>{{this}}</td>
+            </tr>
+        {{/each}}
+    </tbody>
+</table>

@@ -77,7 +77,7 @@ export class Webserver {
   };
 
   start = async (): Promise<boolean> => {
-    console.log('Starting webserver', this.express);
+    console.log('Starting webserver');
     const ws = expressWs(this.express);
 
     this.express.use('/scripts', express.static(this.hub.options.uiPath + '/scripts'));
@@ -165,6 +165,10 @@ export class Webserver {
 
     this.express.get('/', (req, res) => {
       res.render('home', { test: 'Hello World' });
+    });
+
+    this.express.get('/mqtt', (req, res) => {
+      res.render('mqtt', { topics: this.hub.mqtt.topicSubscriptions, attributes: this.hub.mqtt.attributeSubscriptions });
     });
 
     this.express.get('/process/:identifier', (req, res) => {

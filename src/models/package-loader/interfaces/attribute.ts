@@ -26,4 +26,9 @@ export interface NumberAttribute extends BaseAttribute {
   step: number;
 }
 
-export type Attribute = BaseAttribute | SwitchAttribute | DeviceAutomationAttribute | NumberAttribute;
+export interface SelectAttribute extends BaseAttribute {
+  optimistic: boolean;
+  options: string[];
+}
+
+export type Attribute = BaseAttribute | SwitchAttribute | DeviceAutomationAttribute | NumberAttribute | SelectAttribute;
