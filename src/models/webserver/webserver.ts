@@ -4,6 +4,8 @@ import expressWs from 'express-ws';
 import http from 'http';
 import { Logger } from 'quantumhub-sdk';
 import * as ws from 'ws';
+import YAML from 'yaml';
+
 import { WebConfig } from '../config/interfaces/web-config';
 import { Hub } from '../hub';
 import { getLevelIndex, LogData } from '../logger/logger';
@@ -129,17 +131,6 @@ export class Webserver {
       res.send(processToDto(process));
     });
 
-    this.express.get('/api/process/:identifier/config', (req, res) => {
-      const identifier = req.params.identifier;
-      const process = this.hub.packages.getProcess(identifier);
-
-      if (!process) {
-        return res.status(404).send('Process not found');
-      }
-
-      res.send(process.provider.config);
-    });
-
     this.express.get('/api/definitions', (req, res) => {
       const data = this.hub.packages.definitions;
       res.send(data);
@@ -169,6 +160,10 @@ export class Webserver {
 
     this.express.get('/mqtt', (req, res) => {
       res.render('mqtt', { topics: this.hub.mqtt.topicSubscriptions, attributes: this.hub.mqtt.attributeSubscriptions });
+    });
+
+    this.express.get('/configuration', (req, res) => {
+      res.render('configuration', { config: YAML.stringify(this.hub.config) });
     });
 
     this.express.get('/process/:identifier', (req, res) => {

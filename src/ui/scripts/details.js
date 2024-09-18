@@ -1,16 +1,6 @@
 let loggingWs;
 let logLevel = localStorage.getItem(`${identifier}-logLevel`) || 'info';
 
-const getProcess = async () => {
-  const process = await fetch(`/api/process/${identifier}`);
-  return process.json();
-};
-
-const getConfig = async () => {
-  const config = await fetch(`/api/process/${identifier}/config`);
-  return config.json();
-};
-
 const filterLogs = (level) => {
   logLevel = level;
 

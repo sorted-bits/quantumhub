@@ -197,6 +197,15 @@ export class StateManager {
     };
 
     switch (attribute.type) {
+      case DeviceType.device_tracker: {
+        /* We don't need these for device_tracker */
+        delete config.state_topic;
+        delete config.value_template;
+
+        config.json_attributes_template = `{{ value_json.${attributeIdentifier} | tojson }}`;
+        config.json_attributes_topic = `${stateTopic}`;
+        break;
+      }
       case DeviceType.scene: {
         const sceneAttribute = attribute as SceneAttribute;
         config.command_topic = `${stateTopic}/${attribute.key}/set`;
