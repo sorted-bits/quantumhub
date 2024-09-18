@@ -3,6 +3,7 @@
 ## Purpose
 
 The purpose of `QuantumHub` is to be able to easily develop support for hardware using the Home Assistant MQTT integration. By using NodeJS and simple examples, I try to make developing for Home Assistant more accessible.
+
 This also makes sure that your code does not need to be merged into the Home Assistant repository, but can live in its own repository.
 
 ## Current limitations

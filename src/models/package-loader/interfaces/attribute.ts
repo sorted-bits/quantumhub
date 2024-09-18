@@ -10,6 +10,11 @@ export interface BaseAttribute {
   state_class?: string;
 }
 
+export interface ButtonAttribute extends BaseAttribute {
+  type: DeviceType.button;
+  payload_press: string;
+}
+
 export interface DeviceAutomationAttribute extends BaseAttribute {
   payload: string;
 }
@@ -31,4 +36,4 @@ export interface SelectAttribute extends BaseAttribute {
   options: string[];
 }
 
-export type Attribute = BaseAttribute | SwitchAttribute | DeviceAutomationAttribute | NumberAttribute | SelectAttribute;
+export type Attribute = BaseAttribute | SwitchAttribute | DeviceAutomationAttribute | NumberAttribute | SelectAttribute | ButtonAttribute;

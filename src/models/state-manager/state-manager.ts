@@ -2,7 +2,7 @@ import { Logger as ILogger } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { DeviceClass } from '../package-loader/enums/device-class';
 import { DeviceType } from '../package-loader/enums/device-type';
-import { Attribute, DeviceAutomationAttribute, NumberAttribute, SelectAttribute, SwitchAttribute } from '../package-loader/interfaces/attribute';
+import { Attribute, ButtonAttribute, DeviceAutomationAttribute, NumberAttribute, SelectAttribute, SwitchAttribute } from '../package-loader/interfaces/attribute';
 import { PackageProvider } from '../provider/package-provider';
 
 export class StateManager {
@@ -99,6 +99,10 @@ export class StateManager {
 
   onMessage = async (provider: PackageProvider, attribute: Attribute, payload: string): Promise<void> => {
     switch (attribute.type) {
+      case DeviceType.button: {
+        provider.device.valueChanged(attribute.key, payload);
+        break;
+      }
       case DeviceType.switch: {
         const switchAttribute = attribute as SwitchAttribute;
         if (payload === switchAttribute.on || payload === switchAttribute.off) {
@@ -171,14 +175,20 @@ export class StateManager {
     };
 
     switch (attribute.type) {
+      case DeviceType.button: {
+        const buttonAttribute = attribute as ButtonAttribute;
+        config.command_topic = `${stateTopic}/${attribute.key}/set`;
+        config.payload_press = buttonAttribute.payload_press;
+
+        this.hub.mqtt.subscribeToAttribute(provider, attribute, config.command_topic);
+        break;
+      }
       case DeviceType.select: {
         const deviceAttribute = attribute as SelectAttribute;
 
         const commandTopic = `${stateTopic}/${attribute.key}/set`;
         config.command_topic = commandTopic;
         config.options = deviceAttribute.options;
-
-        this.logger.info('Subscribing to attribute:', commandTopic);
 
         this.hub.mqtt.subscribeToAttribute(provider, attribute, commandTopic);
         break;

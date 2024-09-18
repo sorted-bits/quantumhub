@@ -1,7 +1,8 @@
 export enum DeviceType {
-  sensor = 'sensor',
-  switch = 'switch',
+  button = 'button',
+  device_automation = 'device_automation',
   number = 'number',
   select = 'select',
-  device_automation = 'device_automation',
+  sensor = 'sensor',
+  switch = 'switch',
 }

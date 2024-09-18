@@ -189,6 +189,8 @@ export class MQTT {
 
     const subscriptions = this._attributeSubscriptions[topic];
 
+    this.logger.trace('Received message on attribute subscription:', topic, payload, subscriptions);
+
     for (const subscription of subscriptions) {
       const { provider, attribute } = subscription;
       this.hub.state.onMessage(provider, attribute, payload);
