@@ -232,6 +232,8 @@ export class PackageLoader {
       return;
     }
 
+    process.provider.clearAllTimeouts();
+
     process.status = ProcessStatus.STOPPING;
     this.hub.server.sendProcessUpdate(process);
 

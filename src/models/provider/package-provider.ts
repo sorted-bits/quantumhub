@@ -10,6 +10,8 @@ export class PackageProvider implements Provider {
   device: Device;
   deviceLogger: ILogger;
 
+  private timeouts: NodeJS.Timeout[] = [];
+
   constructor(hub: Hub, config: PackageConfig, definition: Definition, device: Device) {
     this.config = config;
     this.hub = hub;
@@ -92,5 +94,28 @@ export class PackageProvider implements Provider {
         await this.hub.state.publishDeviceDescription(this, attribute.key);
       }
     }
+  };
+
+  setTimeout = (callback: () => void, timeout: number): NodeJS.Timeout => {
+    const id = setTimeout(() => {
+      callback();
+      this.timeouts = this.timeouts.filter((id) => id !== id);
+    }, timeout);
+
+    this.timeouts.push(id);
+    return id;
+  };
+
+  clearTimeout = (timeout: NodeJS.Timeout): void => {
+    clearTimeout(timeout);
+    this.timeouts = this.timeouts.filter((id) => id !== timeout);
+  };
+
+  clearAllTimeouts = (): void => {
+    for (const timeout of this.timeouts) {
+      clearTimeout(timeout);
+    }
+
+    this.timeouts = [];
   };
 }
