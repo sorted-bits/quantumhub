@@ -2,7 +2,7 @@ import { Logger as ILogger } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { DeviceClass } from '../package-loader/enums/device-class';
 import { DeviceType } from '../package-loader/enums/device-type';
-import { Attribute, ButtonAttribute, DeviceAutomationAttribute, NumberAttribute, SelectAttribute, SwitchAttribute } from '../package-loader/interfaces/attribute';
+import { Attribute, ButtonAttribute, DeviceAutomationAttribute, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from '../package-loader/interfaces/attribute';
 import { PackageProvider } from '../provider/package-provider';
 
 export class StateManager {
@@ -103,9 +103,13 @@ export class StateManager {
         provider.device.valueChanged(attribute.key, payload);
         break;
       }
+      case DeviceType.scene: {
+        provider.device.valueChanged(attribute.key, payload);
+        break;
+      }
       case DeviceType.switch: {
         const switchAttribute = attribute as SwitchAttribute;
-        if (payload === switchAttribute.on || payload === switchAttribute.off) {
+        if (payload === switchAttribute.payload_on || payload === switchAttribute.payload_off) {
           provider.device.valueChanged(attribute.key, payload);
 
           if (switchAttribute.optimistic) {
@@ -175,6 +179,14 @@ export class StateManager {
     };
 
     switch (attribute.type) {
+      case DeviceType.scene: {
+        const sceneAttribute = attribute as SceneAttribute;
+        config.command_topic = `${stateTopic}/${attribute.key}/set`;
+        config.payload_on = sceneAttribute.payload_on;
+
+        this.hub.mqtt.subscribeToAttribute(provider, attribute, config.command_topic);
+        break;
+      }
       case DeviceType.button: {
         const buttonAttribute = attribute as ButtonAttribute;
         config.command_topic = `${stateTopic}/${attribute.key}/set`;
@@ -221,11 +233,11 @@ export class StateManager {
         const commandTopic = `${stateTopic}/${attribute.key}/set`;
         config.command_topic = commandTopic;
 
-        config.payload_on = switchAttribute.on;
-        config.payload_off = switchAttribute.off;
+        config.payload_on = switchAttribute.payload_on;
+        config.payload_off = switchAttribute.payload_off;
 
-        config.state_on = switchAttribute.on;
-        config.state_off = switchAttribute.off;
+        config.state_on = switchAttribute.payload_on;
+        config.state_off = switchAttribute.payload_off;
 
         this.hub.mqtt.subscribeToAttribute(provider, attribute, commandTopic);
         break;

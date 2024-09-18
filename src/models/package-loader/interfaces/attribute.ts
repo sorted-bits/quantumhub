@@ -15,13 +15,18 @@ export interface ButtonAttribute extends BaseAttribute {
   payload_press: string;
 }
 
+export interface SceneAttribute extends BaseAttribute {
+  type: DeviceType.scene;
+  payload_on: string;
+}
+
 export interface DeviceAutomationAttribute extends BaseAttribute {
   payload: string;
 }
 
 export interface SwitchAttribute extends BaseAttribute {
-  on: string;
-  off: string;
+  payload_on: string;
+  payload_off: string;
   optimistic: boolean;
 }
 
