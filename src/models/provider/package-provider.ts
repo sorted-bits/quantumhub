@@ -90,7 +90,7 @@ export class PackageProvider implements Provider {
 
     for (const attribute of attributes) {
       if (attribute.type !== DeviceType.sensor) {
-        await this.hub.state.publishDeviceDescription(this, attribute.key);
+        await this.hub.state.publishDeviceDescription(this, attribute);
       }
     }
   };

@@ -23,15 +23,17 @@ mqtt:
 packages:
   root: ./packages
   configuration:
-    - package: test-device
+    - package: example-device
       identifier: quantumhub_new_york_clock
       name: New York Clock
       timezone: America/New_York
-    - package: test-device
+    - package: example-climate
       identifier: quantumhub_amsterdam_clock
       name: Amsterdam Clock
       timezone: Europe/Amsterdam
-
+    - package: example-climate
+      identifier: quantumhub_heater
+      name: Heater
 homeassistant:
 # availability: true # Whether to publish availability messages
 # base_topic: homeassistant # The base topic to use for Home Assistant discovery

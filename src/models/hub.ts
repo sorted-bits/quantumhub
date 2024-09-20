@@ -77,7 +77,7 @@ export class Hub {
 
   stop = async (): Promise<void> => {
     await this.packages.stopAll();
-    await this.state.publishBridgeStatus(false);
+    await this.state.publishBridgeAvailability(false);
     await this.server.stop();
   };
 }

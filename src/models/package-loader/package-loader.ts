@@ -37,27 +37,33 @@ export class PackageLoader {
       return false;
     }
 
-    const files = fs.readdirSync(folder); //.filter((elm) => elm.match(/package\.json$/gi));
+    const directories = fs.readdirSync(folder).filter((fileName) => {
+      const directoryName = `${folder}/${fileName}`;
+      if (fs.lstatSync(directoryName).isDirectory()) return true;
+    });
 
-    for (const file of files) {
-      const directoryName = `${folder}/${file}`;
+    for (const directory of directories) {
+      const fullDirectoryName = `${folder}/${directory}`;
+      this.logger.trace('Scanning directory:', fullDirectoryName);
 
-      if (!fs.lstatSync(directoryName).isDirectory()) {
+      const yamlFiles = fs.readdirSync(fullDirectoryName).filter((fileName) => {
+        return fileName.endsWith('.yaml');
+      });
+
+      if (yamlFiles.length === 0) {
+        this.logger.error('No attributes.yaml found in:', fullDirectoryName);
         continue;
       }
 
-      this.logger.trace('Scanning directory:', directoryName);
+      for (const yamlFile of yamlFiles) {
+        const path = `${fullDirectoryName}/${yamlFile}`;
 
-      if (!fs.existsSync(`${directoryName}/config.yaml`)) {
-        this.logger.error('No attributes.yaml found in:', directoryName);
-        continue;
-      }
+        const definition = this.readPackageConfig(fullDirectoryName, path);
 
-      const definition = this.readPackageConfig(directoryName, `${directoryName}/config.yaml`);
-
-      if (definition) {
-        this.logger.trace('Loaded package definition:', definition.name);
-        this.addPackageDefinition(definition);
+        if (definition) {
+          this.logger.trace('Loaded package definition:', definition.name);
+          this.addPackageDefinition(definition);
+        }
       }
     }
 
@@ -99,7 +105,7 @@ export class PackageLoader {
     }
 
     if (!fs.existsSync(filename)) {
-      this.logger.error('No config.yaml found in:', directoryName);
+      this.logger.error(`No ${filename} found in:`, directoryName);
       return undefined;
     }
 
@@ -108,6 +114,11 @@ export class PackageLoader {
 
     const { name, entry, version, description, author } = output.package;
     const path = `${directoryName}/${entry}`;
+
+    if (!fs.existsSync(path)) {
+      this.logger.error('Entry file not found:', path);
+      return undefined;
+    }
 
     const attributes: Attribute[] = [];
     for (const key in output.attributes) {

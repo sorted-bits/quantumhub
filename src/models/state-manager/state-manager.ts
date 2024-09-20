@@ -1,4 +1,4 @@
-import { Attribute, ButtonAttribute, DeviceAutomationAttribute, DeviceClass, DeviceType, Logger as ILogger, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from 'quantumhub-sdk';
+import { Attribute, ButtonAttribute, ClimateAttribute, DeviceAutomationAttribute, DeviceClass, DeviceType, Logger as ILogger, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { PackageProvider } from '../provider/package-provider';
 
@@ -27,17 +27,10 @@ export class StateManager {
 
     this.deviceAvailability[provider.config.identifier] = availability;
 
-    await this.publishDeviceStatus(provider, availability);
+    await this.publishDeviceAvailability(provider, availability);
   };
 
   setAttributeValue = async (provider: PackageProvider, attribute: string, value: any, force: boolean = false): Promise<void> => {
-    const attributeDefinition = provider.definition.attributes.find((a) => a.key === attribute);
-
-    if (!attributeDefinition) {
-      this.logger.error('Attribute not found:', attribute);
-      return;
-    }
-
     const key = provider.config.identifier;
 
     if (!this.states[key]) {
@@ -53,7 +46,11 @@ export class StateManager {
 
     this.states[key][attribute] = value;
 
-    this.publishDeviceDescription(provider, attribute);
+    const definition = provider.definition.attributes.find((a) => a.key === attribute);
+
+    if (definition) {
+      this.publishDeviceDescription(provider, definition);
+    }
     this.publishDeviceStates(provider);
   };
 
@@ -74,7 +71,7 @@ export class StateManager {
     }
   };
 
-  publishDeviceStatus = async (provider: PackageProvider, online: boolean): Promise<void> => {
+  publishDeviceAvailability = async (provider: PackageProvider, online: boolean): Promise<void> => {
     const topic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}/availability`;
     const payload = online ? 'online' : 'offline';
     const json = JSON.stringify({ state: payload });
@@ -84,7 +81,7 @@ export class StateManager {
     this.logger.trace('Device status published');
   };
 
-  publishBridgeStatus = async (online: boolean): Promise<void> => {
+  publishBridgeAvailability = async (online: boolean): Promise<void> => {
     const topic = `${this.hub.config.mqtt.base_topic}/bridge/state`;
     const payload = online ? 'online' : 'offline';
     const json = JSON.stringify({ state: payload });
@@ -163,14 +160,8 @@ export class StateManager {
     }
   };
 
-  publishDeviceDescription = async (provider: PackageProvider, attributeIdentifier: string): Promise<void> => {
-    const attribute = provider.definition.attributes.find((a) => a.key === attributeIdentifier);
-
-    if (!attribute) {
-      this.logger.error('Definition not found for:', attribute);
-      return;
-    }
-
+  publishDeviceDescription = async (provider: PackageProvider, attribute: Attribute): Promise<void> => {
+    const attributeIdentifier = attribute.key;
     const topic = `${this.hub.config.homeassistant.base_topic}/${attribute.type}/${provider.config.identifier}/${attributeIdentifier}/config`;
 
     if (this.deviceDescriptionsPublished.includes(topic)) {
@@ -197,6 +188,65 @@ export class StateManager {
     };
 
     switch (attribute.type) {
+      case DeviceType.climate: {
+        const climateAttribute = attribute as ClimateAttribute;
+
+        delete config.state_topic;
+        delete config.value_template;
+
+        config.current_temperature_topic = `${stateTopic}`;
+        config.current_temperature_template = `{{ value_json.current_temperature }}`;
+
+        config.temperature_command_topic = `${stateTopic}/temperature/set`;
+        config.temperature_state_topic = `${stateTopic}/temperature/set`;
+        config.temperature_state_template = `{{ value_json.target_temperature }}`;
+
+        if (climateAttribute.has_fanmode) {
+          config.fan_mode_command_topic = `${stateTopic}/fan_mode/set`;
+          config.fan_mode_state_topic = `${stateTopic}`;
+          config.fan_mode_state_template = `{{ value_json.fan_mode }}`;
+        }
+
+        if (climateAttribute.has_swingmode) {
+          config.swing_mode_command_topic = `${stateTopic}/swing_mode/set`;
+          config.swing_mode_state_topic = `${stateTopic}`;
+          config.swing_mode_state_template = `{{ value_json.swing_mode }}`;
+        }
+
+        if (climateAttribute.has_presetmode) {
+          config.preset_mode_command_topic = `${stateTopic}/preset_mode/set`;
+          config.preset_mode_state_topic = `${stateTopic}`;
+          config.preset_mode_value_template = `{{ value_json.preset_mode }}`;
+        }
+
+        if (climateAttribute.has_humidity_control) {
+          config.current_humidity_topic = `${stateTopic}`;
+          config.current_humidity_template = `{{ value_json.current_humidity }}`;
+          config.target_humidity_command_topic = `${stateTopic}/target_humidity/set`;
+        }
+        /*
+        config.mode_command_topic = `${stateTopic}/mode/set`;
+        config.power_command_topic = `${stateTopic}/power/set`;
+        config.preset_mode_command_topic = `${stateTopic}/preset_mode/set`;
+        config.target_humidity_command_topic = `${stateTopic}/target_humidity/set`;
+        config.temperature_high_command_topic = `${stateTopic}/temperature_high/set`;
+        config.temperature_low_command_topic = `${stateTopic}/temperature_low/set`;
+
+        config.current_humidity_topic = `${stateTopic}`;
+        config.current_humidity_template = `{{ value_json.humidity }}`;
+
+
+        config.mode_state_topic = `${stateTopic}`;
+        config.mode_state_template = `{{ value_json.mode }}`;
+*/
+
+        config.min_temp = 1;
+        config.max_temp = 32;
+        config.temp_step = 0.5;
+
+        this.logger.info('Current humidity template:', config.current_humidity_template);
+        break;
+      }
       case DeviceType.device_tracker: {
         /* We don't need these for device_tracker */
         delete config.state_topic;

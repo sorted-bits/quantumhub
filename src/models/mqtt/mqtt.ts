@@ -58,7 +58,7 @@ export class MQTT {
       this.client.on('connect', () => {
         this.logger.info('Connected to broker:', brokerUrl);
 
-        this.hub.state.publishBridgeStatus(true).then(() => {
+        this.hub.state.publishBridgeAvailability(true).then(() => {
           this.logger.trace('Bridge status published');
 
           resolve(true);
