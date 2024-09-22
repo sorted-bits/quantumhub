@@ -91,8 +91,21 @@ export class StateManager {
     this.logger.trace('Bridge status published');
   };
 
-  onMessage = async (provider: PackageProvider, attribute: Attribute, payload: string): Promise<void> => {
+  onMessage = async (provider: PackageProvider, attribute: Attribute, mqttData: { payload: string; topic: string }): Promise<void> => {
+    const { payload, topic } = mqttData;
     switch (attribute.type) {
+      case DeviceType.climate: {
+        const stateTopic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}`;
+        const actionPath = topic.replace(`${stateTopic}/`, '');
+
+        switch (actionPath) {
+          case 'temperature/set': {
+            const value = parseFloat(payload);
+            this.setAttributeValue(provider, attribute.key, value);
+            break;
+          }
+        }
+      }
       case DeviceType.button: {
         if (provider.device.onButtonPressed) {
           provider.device.onButtonPressed(attribute as ButtonAttribute);
@@ -198,7 +211,7 @@ export class StateManager {
         config.current_temperature_template = `{{ value_json.current_temperature }}`;
 
         config.temperature_command_topic = `${stateTopic}/temperature/set`;
-        config.temperature_state_topic = `${stateTopic}/temperature/set`;
+        config.temperature_state_topic = `${stateTopic}`;
         config.temperature_state_template = `{{ value_json.target_temperature }}`;
 
         if (climateAttribute.has_fanmode) {
@@ -227,14 +240,8 @@ export class StateManager {
         /*
         config.mode_command_topic = `${stateTopic}/mode/set`;
         config.power_command_topic = `${stateTopic}/power/set`;
-        config.preset_mode_command_topic = `${stateTopic}/preset_mode/set`;
-        config.target_humidity_command_topic = `${stateTopic}/target_humidity/set`;
         config.temperature_high_command_topic = `${stateTopic}/temperature_high/set`;
         config.temperature_low_command_topic = `${stateTopic}/temperature_low/set`;
-
-        config.current_humidity_topic = `${stateTopic}`;
-        config.current_humidity_template = `{{ value_json.humidity }}`;
-
 
         config.mode_state_topic = `${stateTopic}`;
         config.mode_state_template = `{{ value_json.mode }}`;

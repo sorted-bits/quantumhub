@@ -1,5 +1,5 @@
 import express from 'express';
-import { engine } from 'express-handlebars';
+import { create } from 'express-handlebars';
 import expressWs from 'express-ws';
 import http from 'http';
 import { Logger } from 'quantumhub-sdk';
@@ -10,6 +10,7 @@ import { WebConfig } from '../config/interfaces/web-config';
 import { Hub } from '../hub';
 import { getLevelIndex, LogData } from '../logger/logger';
 import { Process, processToDto } from '../package-loader/interfaces/process';
+import { debugEventsForDeviceType } from './debugging';
 
 interface LoggingWebsocket {
   websocket: ws.WebSocket;
@@ -30,10 +31,19 @@ export class Webserver {
   constructor(hub: Hub) {
     this.hub = hub;
 
+    const hbe = create({
+      helpers: {
+        json: (context: any) => JSON.parse(context),
+        eq: (a: any, b: any) => a === b,
+      },
+      partialsDir: this.hub.options.uiPath + '/views/partials',
+    });
+
     this.express = express();
-    this.express.engine('handlebars', engine());
+    this.express.engine('handlebars', hbe.engine);
     this.express.set('view engine', 'handlebars');
     this.express.set('views', this.hub.options.uiPath + '/views');
+    this.express.use(express.json());
 
     this.express.on('error', (err) => {
       this.logger.error('Webserver error:', err);
@@ -136,6 +146,68 @@ export class Webserver {
       res.send(data);
     });
 
+    this.express.post('/api/process/:identifier/debug', (req, res) => {
+      const identifier = req.params.identifier;
+      const process = this.hub.packages.getProcess(identifier);
+
+      if (!process) {
+        this.logger.error('Process not found', identifier);
+        return res.status(404).send('Process not found');
+      }
+
+      this.logger.info('Sending debug event', req.body);
+
+      if (!req.body.event) {
+        return res.status(400).send('Event not found');
+      }
+
+      const event = req.body.event;
+      if (typeof (process.provider.device as any)[event] !== 'function') {
+        this.logger.error('Event not found', event);
+        return res.status(400).send('Event not found');
+      }
+
+      const parameters = req.body;
+      delete parameters.event;
+
+      const allItems = debugEventsForDeviceType().flatMap((eventBlock) => eventBlock.items);
+      const item = allItems.find((item) => item.name === event);
+
+      if (!item) {
+        this.logger.error('Event not found', event);
+        return res.status(400).send('Event not found');
+      }
+
+      const methodParameters: any[] = [];
+      if (Object.keys(parameters).length > 0) {
+        Object.keys(parameters).forEach((key) => {
+          const value = parameters[key];
+          this.logger.info('Parameter', key, value);
+
+          if (value === undefined) {
+            this.logger.error('Parameter not found', key);
+            return res.status(400).send(`Parameter ${key} not found`);
+          }
+
+          if (key.toLocaleLowerCase() === 'attribute') {
+            const attribute = process.provider.getAttribute(value);
+            if (!attribute) {
+              this.logger.error('Attribute not found', value);
+              return res.status(400).send(`Attribute ${value} not found`);
+            }
+            methodParameters.push(attribute);
+          } else {
+            methodParameters.push(value);
+          }
+        });
+      }
+
+      this.logger.trace('Calling debug event', event, methodParameters);
+      (process.provider.device as any)[event](...methodParameters);
+
+      res.send('OK');
+    });
+
     this.express.post('/api/processes/:identifier/states/:state', (req, res) => {
       const identifier = req.params.identifier;
       const state = req.params.state;
@@ -168,13 +240,20 @@ export class Webserver {
 
     this.express.get('/process/:identifier', (req, res) => {
       const identifier = req.params.identifier;
+      this.logger.info('Getting process details', identifier);
+
       const process = this.hub.packages.getProcess(identifier);
 
       if (!process) {
         return res.status(404).send('Process not found');
       }
 
-      res.render('details', { process: processToDto(process) });
+      res.render('details', {
+        process: processToDto(process),
+        config: YAML.stringify(process.provider.config),
+        definition: process.provider.definition,
+        debugEvents: debugEventsForDeviceType(),
+      });
     });
 
     const server = this.express.listen(this.config.port, () => {

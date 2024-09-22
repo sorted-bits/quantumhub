@@ -50,7 +50,10 @@ export class Hub {
       return false;
     }
 
-    this.logger.info('Starting packages', this.config.packages.configuration);
+    this.logger.info(
+      'Starting packages',
+      this.config.packages.configuration.map((p) => p.name)
+    );
     const scanResult = await this.packages.scanFolder(this.config.packages.root);
     if (scanResult) {
       this.logger.trace('Scanned folder:', this.config.packages);

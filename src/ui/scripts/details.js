@@ -8,10 +8,9 @@ const filterLogs = (level) => {
     loggingWs.close();
   }
 
-  subscribeToLogs(level);
   setButtonState(level);
+  subscribeToLogs(level);
 
-  // Write log level to local storate
   localStorage.setItem(`${identifier}-logLevel`, level);
 };
 

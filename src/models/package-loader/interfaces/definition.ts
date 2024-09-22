@@ -1,4 +1,4 @@
-import { Attribute } from './attribute';
+import { Attribute } from 'quantumhub-sdk';
 
 export interface Definition {
   path: string;

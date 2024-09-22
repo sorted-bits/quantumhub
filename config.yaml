@@ -27,7 +27,7 @@ packages:
       identifier: quantumhub_new_york_clock
       name: New York Clock
       timezone: America/New_York
-    - package: example-climate
+    - package: example-device
       identifier: quantumhub_amsterdam_clock
       name: Amsterdam Clock
       timezone: Europe/Amsterdam

@@ -21548,4 +21548,8 @@ has-background-danger.is-hoverable:active {
   pointer-events: all !important;
 }
 
+textarea.configuration {
+  font-family: "Courier New", Courier, monospace;
+}
+
 /*# sourceMappingURL=style.css.map */

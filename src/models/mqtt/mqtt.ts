@@ -192,7 +192,7 @@ export class MQTT {
 
     for (const subscription of subscriptions) {
       const { provider, attribute } = subscription;
-      this.hub.state.onMessage(provider, attribute, payload);
+      this.hub.state.onMessage(provider, attribute, { payload, topic });
     }
   };
 }

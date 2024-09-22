@@ -1,4 +1,4 @@
-import { Device, DeviceType, Logger as ILogger, PackageConfig, Provider } from 'quantumhub-sdk';
+import { Attribute, Device, DeviceType, Logger as ILogger, PackageConfig, Provider } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { Definition } from '../package-loader/interfaces/definition';
 
@@ -25,6 +25,10 @@ export class PackageProvider implements Provider {
   get logger(): ILogger {
     return this.deviceLogger;
   }
+
+  getAttribute = (attribute: string): Attribute | undefined => {
+    return this.definition.attributes.find((attr) => attr.key === attribute);
+  };
 
   /**
    * Stores the value of the attribute in the state manager and publishes the changes to MQTT
