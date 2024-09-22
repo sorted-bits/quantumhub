@@ -2,71 +2,77 @@
   <div class='columns'>
     <div class='column is-two-thirds'>
       {{#each debugEvents}}
-        <div class="block">
-          <section class="hero is-small is-primary">
-            <div class="hero-body">
-              <p class="title">{{name}}</p>
+        <div class='block'>
+          <section class='hero is-small is-primary'>
+            <div class='hero-body'>
+              <p class='title'>{{name}}</p>
             </div>
           </section>
         </div>
+
         <div class="block">
           {{#each items}}
-            <div class='block' id='{{name}}'>
-              <div class='columns'>
-                <div class='column is-three-quarters'>
-                  <h4 class='title is-4' id='{{name}}'>{{name}} </h4>
-                  <h6 class='subtitle is-6'>
-                    {{description}}
-                  </h6>
-                </div>
-                <div class='column' style='text-align: right;'>
-                  <button class='button' onclick="sendDebugEvent('{{name}}')">
-                    Go
-                  </button>
-                </div>
-              </div>
-              {{#each parameters}}
-                <div class='field'>
-                  <label class='label'>{{name}}</label>
-                  <div class='control'>
-                    {{#if (eq name 'attribute')}}
-                      <div class='select' style='width: 100%;'>
-                        <select style='width: 100%;' data-name='{{name}}' data-type='{{type}}' class="debug-event-parameter">
-                          {{#each ../../../definition.attributes}}
-                            {{#if (eq ../type 'string')}}
-                              <option value='{{key}}'>{{name}} ({{type}})</option>
-                            {{else}}
-                              {{#if (eq type ../type)}}
-                                <option value='{{key}}'>{{name}} ({{type}})</option>
-                              {{/if}}
-                            {{/if}}
-                          {{/each}}
-                        </select>
-                      </div>
+
+          <article class="message" id="{{name}}">
+            <div class="message-header">
+              <p>{{name}}</p>
+              <button class='button is-small is-primary' onclick="sendDebugEvent('{{../../process.identifier}}', '{{name}}')">
+                  Go
+                </button>
+            </div>
+            <div class="message-body">
+              {{description}}
+
+              <div class="block">
+                {{#each parameters}}
+                  <div class='field'>
+                    <label class='label'>{{name}}</label>
+                    <div class='control'>
+                {{#if (eq name 'attribute')}}
+                <div class='select' style='width: 100%;'>
+                  <select style='width: 100%;' data-name='{{name}}' data-type='{{type}}' class="debug-event-parameter">
+                    {{#each ../../../definition.attributes}}
+                    {{#if (eq ../type 'string')}}
+                    <option value='{{key}}'>{{name}} ({{type}})</option>
                     {{else}}
-                      <input class='input debug-event-parameter' type='text' placeholder='{{description}}' data-name='{{name}}' data-type='{{type}}' />
+                    {{#if (eq type ../type)}}
+                    <option value='{{key}}'>{{name}} ({{type}})</option>
+                    {{/if}}
+                    {{/if}}
+                    {{/each}}
+                  </select>
+                </div>
+                {{else}}
+                <input class='input debug-event-parameter' type='text' placeholder='{{description}}' data-name='{{name}}'
+                  data-type='{{type}}' />
                     {{/if}}
                   </div>
                 </div>
-              {{/each}}
+                {{/each}}
+              </div>
+
+
+
             </div>
+          </article>
           {{/each}}
         </div>
       {{/each}}
     </div>
     <div class='column'>
-
       <aside class='menu'>
         {{#each debugEvents}}
           <p class='menu-label'>{{name}}</p>
           <ul class='menu-list'>
             {{#each items}}
-              <li><a href='#{{name}}'>{{name}}
+              <li>
+                <a href='#{{name}}'>
+                  {{name}}
                   {{#if optional}}
-                    <span class='tag'>Optional</span>
+                  <span class='tag'>Optional</span>
                   {{/if}}
                 </a>
-              </li>
+            </li>
             {{/each}}
           </ul>
         {{/each}}
@@ -74,49 +80,3 @@
     </div>
   </div>
 </div>
-
-<script>
-  const sendDebugEvent = async (event) => {
-    const eventBlock = document.getElementById(event);
-
-    var data = {};
-    data.event = event;
-
-    var hasError = false;
-
-    const parameters = eventBlock.querySelectorAll('.debug-event-parameter');
-    parameters.forEach((parameter) => {
-      parameter.classList.remove('is-danger');
-
-      if (!parameter.value) {
-        parameter.classList.add('is-danger');
-        if (!hasError) {
-        parameter.focus();
-        hasError = true;
-        }
-      } else {
-        parameter.classList.add('is-success');
-      }
-
-      data[parameter.dataset.name] = parameter.value;
-    });
-
-    if (hasError) {
-      return;
-    }
-
-    console.log('Sending debug event', event);
-    console.log(data);
-
-    const identifier = '{{process.identifier}}';
-
-    const response = await fetch(`/api/process/${identifier}/debug`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-
-  };
-</script>
