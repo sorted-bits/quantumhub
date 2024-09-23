@@ -1,4 +1,4 @@
-var states = [];
+var states = {};
 var selectedState = undefined;
 
 function processStateSubscription(identifier, callback) {
@@ -11,11 +11,70 @@ function processStateSubscription(identifier, callback) {
   };
 }
 
+function selectState(key) {
+  selectedState = key;
+
+  const stateDetails = document.getElementById('state-details');
+  stateDetails.style.display = 'block';
+
+  stateDetails.querySelectorAll('.attribute-details').forEach((detail) => {
+    detail.style.display = 'none';
+  });
+
+  const attributeDetails = document.getElementById(`attribute-${key}`);
+  if (attributeDetails) {
+    attributeDetails.style.display = 'block';
+  } else {
+    console.warn('No attribute details found for', key);
+  }
+
+  renderHistory();
+}
+
+function renderHistory() {
+  const historyTable = document.getElementById('state-history');
+
+  historyTable.innerHTML = '';
+
+  states[selectedState].forEach((data) => {
+    const historyRow = document.createElement('tr');
+
+    const timestampCell = document.createElement('td');
+    timestampCell.innerText = new Date(data.timestamp).toLocaleTimeString();
+    historyRow.appendChild(timestampCell);
+
+    const historyCell = document.createElement('td');
+    historyCell.innerText = JSON.stringify(data.value);
+    historyRow.appendChild(historyCell);
+
+    historyTable.prepend(historyRow);
+  });
+}
+
 processStateSubscription(identifier, (state) => {
   const table = document.getElementById('attribute-list');
   const keys = Object.keys(state);
 
   keys.forEach((key) => {
+    if (!states[key]) {
+      states[key] = [];
+    }
+
+    const history = states[key];
+
+    const data = {
+      value: state[key],
+      timestamp: Date.now(),
+    };
+
+    history.push(data);
+
+    states[key] = history.slice(-10);
+
+    if (key === selectedState) {
+      renderHistory();
+    }
+
     const value = state[key];
     const id = `attribute-${key}-row`;
 
@@ -27,7 +86,7 @@ processStateSubscription(identifier, (state) => {
       row.id = id;
 
       const link = document.createElement('a');
-      link.onclick = `selectState('${key}')`;
+      link.setAttribute('onclick', `selectState('${key}')`);
       link.href = '#';
       link.title = key;
 

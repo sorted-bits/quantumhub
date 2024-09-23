@@ -1,5 +1,5 @@
 <div class='columns'>
-  <div class='column is-three-quarters'>
+  <div class='column is-two-thirds'>
     <table style='width: 100%;' class='table'>
       <thead>
         <tr>
@@ -12,9 +12,41 @@
     </table>
   </div>
   <div class='column'>
+
     <div id='state-details' style='display: none;'>
-      <h5 class='title is-5'>History (last 10)</h5>
-      <h5 class='title is-5'>Attribute details</h5>
+      <div class='block'>
+        {{#each definition.attributes}}
+          <div id='attribute-{{key}}' class='attribute-details' style='display: none;'>
+            <h6 class='title is-5'>{{key}}</h6>
+            <table class='table' style='width: 100%;'>
+              <thead>
+                <tr>
+                  <th>Key</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each this}}
+                  <tr><td width='20%'>{{@key}}</td><td>{{this}}</td></tr>
+                {{/each}}
+              </tbody>
+            </table>
+          </div>
+        {{/each}}
+      </div>
+      <div class='block'>
+        <h5 class='title is-5'>History (last 10)</h5>
+        <table style='width: 100%;' class='table'>
+          <thead>
+            <tr>
+              <th width='20%'>Timestamp</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id='state-history'>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

@@ -2,8 +2,6 @@
   const identifier = '{{process.identifier}}';
 </script>
 
-
-
 <section class='section'>
   <h1 class='title'>{{process.name}}
     <span class='tag is-primary' id='status_{{process.identifier}}_chip'>{{process.status}}</span>
@@ -24,7 +22,7 @@
       </ul>
     </div>
 
-    <div id='details-tab' class='tab-content is-hidden'>
+    <div id='details-tab' class='tab-content '>
       {{> process-details}}
     </div>
 
@@ -32,7 +30,7 @@
       {{> debugging}}
     </div>
     
-    <div id='state-tab' class='tab-content'>
+    <div id='state-tab' class='tab-content is-hidden'>
       {{> process-states}}
     </div>
 
