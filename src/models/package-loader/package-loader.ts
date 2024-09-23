@@ -191,10 +191,25 @@ export class PackageLoader {
       return true;
     }
 
+    if (process.status === ProcessStatus.LOADED) {
+      process.provider.logger.error('Process not initialized:', uuid);
+      try {
+        await process.provider.device.init(process.provider);
+      } catch (error) {
+        process.provider.logger.error('Error initializing package:', process.provider.definition.name, error);
+        return false;
+      }
+    }
+
     process.status = ProcessStatus.STARTING;
     this.hub.server.sendProcessUpdate(process);
 
-    await process.provider.device.start();
+    try {
+      await process.provider.device.start();
+    } catch (error) {
+      process.provider.logger.error('Error starting package:', process.provider.definition.name, error);
+      return false;
+    }
 
     process.status = ProcessStatus.RUNNING;
     process.startTime = new Date();
@@ -219,7 +234,7 @@ export class PackageLoader {
         continue;
       }
 
-      await this.initializeProcess(definition, config);
+      this.initializeProcess(definition, config);
     }
   };
 

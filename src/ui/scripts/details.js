@@ -1,6 +1,18 @@
 let loggingWs;
 let logLevel = localStorage.getItem(`${identifier}-logLevel`) || 'info';
 
+const onStopProcessClicked = (id) => {
+  stopProcess(id).then((response) => {
+    console.log(response);
+  });
+};
+
+const onStartProcessClicked = (id) => {
+  startProcess(id).then((response) => {
+    console.log(response);
+  });
+};
+
 const filterLogs = (level) => {
   logLevel = level;
 
@@ -42,15 +54,25 @@ const subscribeToLogs = (level) => {
   });
 };
 
-getProcess().then((process) => {
+const updateProcessStatus = (process) => {
   console.log(process);
 
-  getConfig().then((config) => {
-    console.log(config);
-  });
+  var isRunning = process.status.toLowerCase() === 'running';
+  var badgeColor = isRunning ? 'success' : 'danger';
 
-  setButtonState(logLevel);
-  subscribeToLogs(logLevel);
+  document.getElementById(`status_${process.identifier}_chip`).innerText = process.status;
+  const chip = document.getElementById(`status_${process.identifier}_chip`);
+  chip.classList.remove('is-danger');
+  chip.classList.remove('is-success');
+  chip.classList.add(`is-${badgeColor}`);
 
-  document.getElementById('title').innerText = process.name;
+  document.getElementById(`status_${process.identifier}_start`).disabled = isRunning;
+  document.getElementById(`status_${process.identifier}_stop`).disabled = !isRunning;
+};
+
+setButtonState(logLevel);
+subscribeToLogs(logLevel);
+
+processStatusSubscription(identifier, (process) => {
+  updateProcessStatus(process);
 });

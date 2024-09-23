@@ -31,9 +31,20 @@ async function startProcess(pid) {
   }
 }
 
-function processStatusSubscription(callback) {
+function processesStatusSubscription(callback) {
   let ws = new WebSocket('/api/processes/status');
   ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    callback(data);
+  };
+}
+
+function processStatusSubscription(identifier, callback) {
+  console.log('Starting process status subscription', identifier);
+
+  let ws = new WebSocket(`/api/process/${identifier}/status`);
+  ws.onmessage = (event) => {
+    console.log('Process status message', event.data);
     const data = JSON.parse(event.data);
     callback(data);
   };

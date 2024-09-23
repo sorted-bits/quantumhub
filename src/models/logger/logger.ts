@@ -1,7 +1,15 @@
 import { DateTime } from 'luxon';
+import path from 'path';
 import { Logger as ILogger } from 'quantumhub-sdk';
 import { LogConfig } from '../config/interfaces/log-config';
 import { Hub } from '../hub';
+
+export interface CallInformation {
+  filepath: string;
+  line: string;
+  column: string;
+}
+
 export interface RGB {
   r: number;
   g: number;
@@ -15,6 +23,7 @@ export interface LogData {
   name: string;
   message: string;
   messages: any[];
+  callInformation: CallInformation | undefined;
 }
 
 export const getLevelIndex = (level: string): number => {
@@ -36,7 +45,7 @@ export class Logger implements ILogger {
     this.configLevel = getLevelIndex(this.config.level);
   }
 
-  private write = (color: RGB, level: string, message?: any, ...messages: any[]) => {
+  private write = (color: RGB, callInformation: CallInformation | undefined, level: string, message?: any, ...messages: any[]) => {
     const currentTime = DateTime.now().toFormat('HH:mm:ss.SSS');
 
     const logData: LogData = {
@@ -46,6 +55,7 @@ export class Logger implements ILogger {
       name: this.name,
       message: message,
       messages: messages,
+      callInformation: callInformation,
     };
 
     if (this.hub.server) {
@@ -66,33 +76,51 @@ export class Logger implements ILogger {
       shouldLog = false;
     }
 
+    const locationInformation = callInformation ? `[${path.basename(callInformation.filepath)}:${callInformation.line}] ` : '';
+
     if (shouldLog) {
       //      console.log(`\x1b[${color}m[${level}]\x1b[0m`, `[${this.name}]`, ...[message, ...messages]);
-      console.log(`${currentTime}: \u001b[38;2;${color.r};${color.g};${color.b}m[${level}]`, `[${this.name}]`, ...[message, ...messages], `\u001b[0m`);
+      console.log(`[${currentTime}] ${locationInformation}\u001b[38;2;${color.r};${color.g};${color.b}m[${level}]`, `[${this.name}]`, ...[message, ...messages], `\u001b[0m`);
     }
   };
 
   trace = (message?: any, ...messages: any[]): void => {
-    this.write({ r: 245, g: 245, b: 245 }, 'TRACE', message, ...messages);
+    this.write({ r: 245, g: 245, b: 245 }, this.getCallInformation(), 'TRACE', message, ...messages);
   };
 
   debug = (message?: any, ...messages: any[]): void => {
-    this.write({ r: 179, g: 179, b: 179 }, 'DEBUG', message, ...messages);
+    this.write({ r: 179, g: 179, b: 179 }, this.getCallInformation(), 'DEBUG', message, ...messages);
   };
 
   info = (message?: any, ...messages: any[]): void => {
-    this.write({ r: 0, g: 145, b: 39 }, 'INFO', message, ...messages);
+    this.write({ r: 0, g: 145, b: 39 }, this.getCallInformation(), 'INFO', message, ...messages);
   };
 
   warn = (message?: any, ...messages: any[]): void => {
-    this.write({ r: 235, g: 171, b: 12 }, 'WARN', message, ...messages);
+    this.write({ r: 235, g: 171, b: 12 }, this.getCallInformation(), 'WARN', message, ...messages);
   };
 
   error = (message?: any, ...messages: any[]): void => {
-    this.write({ r: 252, g: 80, b: 80 }, 'ERROR', message, messages);
+    this.write({ r: 252, g: 80, b: 80 }, this.getCallInformation(), 'ERROR', message, messages);
   };
 
   fatal = (message?: any, ...messages: any[]): void => {
-    this.write({ r: 230, g: 0, b: 0 }, 'FATAL', message, ...messages);
+    this.write({ r: 230, g: 0, b: 0 }, this.getCallInformation(), 'FATAL', message, ...messages);
+  };
+
+  private getCallInformation = (): CallInformation | undefined => {
+    const regex = /\((.*):(\d+):(\d+)\)$/;
+    const error = new Error();
+    const match = regex.exec(error.stack!.split('\n')[3]);
+
+    if (!match) {
+      return undefined;
+    }
+
+    return {
+      filepath: match[1],
+      line: match[2],
+      column: match[3],
+    };
   };
 }

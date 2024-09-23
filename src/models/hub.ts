@@ -73,7 +73,12 @@ export class Hub {
       return false;
     }
 
-    await this.packages.startAll();
+    try {
+      await this.packages.startAll();
+    } catch (error) {
+      this.logger.error('Error starting packages', error);
+      return false;
+    }
 
     return true;
   };

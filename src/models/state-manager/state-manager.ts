@@ -52,6 +52,8 @@ export class StateManager {
       this.publishDeviceDescription(provider, definition);
     }
     this.publishDeviceStates(provider);
+
+    this.hub.server.sendStateUpdate(provider.config.identifier, attribute);
   };
 
   publishDeviceStates = async (provider: PackageProvider): Promise<void> => {

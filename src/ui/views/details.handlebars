@@ -1,112 +1,48 @@
+<script>
+  const identifier = '{{process.identifier}}';
+</script>
+
+
+
 <section class='section'>
-  <h1 class='title'>{{process.name}}</h1>
+  <h1 class='title'>{{process.name}}
+    <span class='tag is-primary' id='status_{{process.identifier}}_chip'>{{process.status}}</span>
+  </h1>
+
+  <div class="block">
+    <button id="status_{{process.identifier}}_start" disabled="true" class="button is-success is-small" onclick="onStartProcessClicked('{{process.identifier}}')"><i class="fa-solid fa-play"></i></button>
+    <button id="status_{{process.identifier}}_stop" disabled="true" class="button is-danger is-small" onclick="onStopProcessClicked('{{process.identifier}}')"><i class="fa-solid fa-stop"></i></button>
+  </div>
 
   <div class='tabs-container'>
     <div class='tabs'>
       <ul>
         <li class='is-active'><a href='#details-tab'>Configuration</a></li>
         <li><a href='#logs-tab'>Logs</a></li>
+        <li><a href='#state-tab'>State</a></li>
         <li><a href='#debug-tab'>Debug</a></li>
       </ul>
+    </div>
+
+    <div id='details-tab' class='tab-content is-hidden'>
+      {{> process-details}}
     </div>
 
     <div id='debug-tab' class='tab-content is-hidden'>
       {{> debugging}}
     </div>
-
-    <div id='details-tab' class='tab-content'>
-      <div class='columns'>
-        <div class='column'>
-          <div class='field'>
-            <label class='label'>Path</label>
-            <div class='control'>
-              <input class='input' type='text' placeholder='Text input' value='{{definition.path}}' disabled />
-            </div>
-          </div>
-          <div class='field'>
-            <label class='label'>Name</label>
-            <div class='control'>
-              <input class='input' type='text' placeholder='Text input' value='{{definition.name}}' disabled />
-            </div>
-          </div>
-          <div class='field'>
-            <label class='label'>Author</label>
-            <div class='control'>
-              <input class='input' type='text' placeholder='Text input' value='{{definition.author}}' disabled />
-            </div>
-          </div>
-          <div class='field'>
-            <label class='label'>Description</label>
-            <div class='control'>
-              <textarea class='textarea is-link' placeholder='Link textarea' disabled>{{definition.description}}</textarea>
-            </div>
-          </div>
-        </div>
-        <div class='column'>
-          <div class='field'>
-            <label class='label'>Loaded Configuration</label>
-            <div class='control'>
-              <textarea class='textarea configuration' placeholder='Link textarea' disabled rows='15'>{{config}}</textarea>
-            </div>
-          </div>
-        </div>
-      </div>
+    
+    <div id='state-tab' class='tab-content'>
+      {{> process-states}}
     </div>
 
     <div id='logs-tab' class='tab-content is-hidden'>
-      <div class='field has-addons'>
-        <p class='control'>
-          <button class='button is-small' id='trace-filter' onclick="filterLogs('trace')">
-            <span>TRACE</span>
-          </button>
-        </p>
-        <p class='control'>
-          <button class='button is-small' id='debug-filter' onclick="filterLogs('debug')">
-            <span>DEBUG</span>
-          </button>
-        </p>
-        <p class='control'>
-          <button class='button is-small is-active' id='info-filter' onclick="filterLogs('info')">
-            <span>INFO</span>
-          </button>
-        </p>
-        <p class='control'>
-          <button class='button is-small' id='warn-filter' onclick="filterLogs('warn')">
-            <span>WARN</span>
-          </button>
-        </p>
-        <p class='control'>
-          <button class='button is-small' id='error-filter' onclick="filterLogs('error')">
-            <span>
-              ERROR
-            </span>
-          </button>
-        </p>
-        <p class='control'>
-          <button class='button is-small' id='fatal-filter' onclick="filterLogs('fatal')">
-            <span>FATAL</span>
-          </button>
-        </p>
-      </div>
-
-      <table class='table logs' style='width: 100%;'>
-        <thead>
-          <tr>
-            <th width='130'>Time</th>
-            <th width='100'>Level</th>
-            <th>Message</th>
-          </tr>
-        </thead>
-        <tbody id='logs'></tbody>
-      </table>
+      {{> process-logging}}
     </div>
   </div>
 </section>
 
-<script>
-  const identifier = '{{process.identifier}}';
-</script>
-
 <script src='/scripts/api.js'></script>
 <script src='/scripts/details.js'></script>
 <script src='/scripts/debugging.js'></script>
+

@@ -43,6 +43,7 @@ const exitRouter = (error: any, options: any) => {
 // Then handler exit code to do cleanup
 [`SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
   process.on(eventType, (error, source) => {
+    hub.logger.error('Error:', error, eventType);
     exitRouter(error, { exit: true, eventType: eventType });
   });
 });

@@ -25,8 +25,10 @@ export class Webserver {
   private hub: Hub;
   private server?: http.Server;
 
-  private processStatusWebsockets: ws.WebSocket[] = [];
+  private processesStatusWebsockets: ws.WebSocket[] = [];
   private logWebsockets: LoggingWebsocket[] = [];
+  private processStatusWebsocketsByIdentifier: { [identifier: string]: ws.WebSocket[] } = {};
+  private stateWebsocketsByIdentifier: { [identifier: string]: ws.WebSocket[] } = {};
 
   constructor(hub: Hub) {
     this.hub = hub;
@@ -56,7 +58,7 @@ export class Webserver {
   }
 
   sendProcessUpdate = (process: Process): void => {
-    if (this.processStatusWebsockets.length === 0) {
+    if (this.processesStatusWebsockets.length === 0 && this.processStatusWebsocketsByIdentifier[process.provider.config.identifier]?.length === 0) {
       return;
     }
 
@@ -70,7 +72,25 @@ export class Webserver {
       startTime: process.startTime,
     };
 
-    this.processStatusWebsockets.forEach((ws) => ws.send(JSON.stringify(processData)));
+    this.processesStatusWebsockets.forEach((ws) => ws.send(JSON.stringify(processData)));
+    this.processStatusWebsocketsByIdentifier[process.provider.config.identifier]?.forEach((ws) => ws.send(JSON.stringify(processData)));
+  };
+
+  sendStateUpdate = (processIdentifier: string, attribute: string | undefined): void => {
+    if (this.stateWebsocketsByIdentifier[processIdentifier]?.length === 0) {
+      return;
+    }
+
+    const process = this.hub.packages.getProcess(processIdentifier);
+    if (!process) {
+      return;
+    }
+
+    const stateData = this.hub.state.getAttributes(process.provider);
+
+    const filteredStateData = attribute ? { [attribute]: stateData[attribute] } : stateData;
+
+    this.stateWebsocketsByIdentifier[processIdentifier]?.forEach((ws) => ws.send(JSON.stringify(filteredStateData)));
   };
 
   sendLog = (logData: LogData): void => {
@@ -89,23 +109,48 @@ export class Webserver {
   };
 
   start = async (): Promise<boolean> => {
-    console.log('Starting webserver');
     const ws = expressWs(this.express);
 
     this.express.use('/scripts', express.static(this.hub.options.uiPath + '/scripts'));
     this.express.use('/css', express.static(this.hub.options.uiPath + '/css'));
 
     ws.app.ws('/api/processes/status', (ws, req) => {
-      this.processStatusWebsockets.push(ws);
+      this.processesStatusWebsockets.push(ws);
 
       ws.on('message', (msg) => {
-        this.logger.info('Received message:', msg);
-        ws.send('Hello from server');
+        ws.send('PONG');
       });
 
       ws.on('close', () => {
-        this.processStatusWebsockets = this.processStatusWebsockets.filter((socket) => socket !== ws);
+        this.processesStatusWebsockets = this.processesStatusWebsockets.filter((socket) => socket !== ws);
         this.logger.info('Websocket disconnected');
+      });
+    });
+
+    ws.app.ws('/api/process/:identifier/status', (ws, req) => {
+      const identifier = req.params.identifier;
+
+      const process = this.hub.packages.getProcess(identifier);
+      if (!process) {
+        this.logger.error('Process not found', identifier);
+        return;
+      }
+
+      if (!this.processStatusWebsocketsByIdentifier[identifier]) {
+        this.processStatusWebsocketsByIdentifier[identifier] = [];
+      }
+
+      this.processStatusWebsocketsByIdentifier[identifier].push(ws);
+
+      this.sendProcessUpdate(process);
+
+      ws.on('message', (msg) => {
+        ws.send('PONG');
+      });
+
+      ws.on('close', () => {
+        this.processesStatusWebsockets = this.processesStatusWebsockets.filter((socket) => socket !== ws);
+        this.logger.info('Process status websocket disconnected', identifier);
       });
     });
 
@@ -121,7 +166,33 @@ export class Webserver {
 
       ws.on('close', () => {
         this.logWebsockets = this.logWebsockets.filter((socket) => socket !== logWs);
-        this.logger.info('Logging socket disconnected');
+        this.logger.info('Logging socket disconnected', req.params.identifier);
+      });
+    });
+
+    ws.app.ws('/api/process/:identifier/state', (ws, req) => {
+      const identifier = req.params.identifier;
+      const process = this.hub.packages.getProcess(identifier);
+      if (!process) {
+        this.logger.error('Process not found', identifier);
+        return;
+      }
+
+      if (!this.stateWebsocketsByIdentifier[identifier]) {
+        this.stateWebsocketsByIdentifier[identifier] = [];
+      }
+
+      this.stateWebsocketsByIdentifier[identifier].push(ws);
+      this.logger.info('Process state websocket connected', identifier, this.stateWebsocketsByIdentifier[identifier].length);
+      this.sendStateUpdate(identifier, undefined);
+
+      ws.on('message', (msg) => {
+        ws.send('PONG');
+      });
+
+      ws.on('close', () => {
+        this.stateWebsocketsByIdentifier[identifier] = this.stateWebsocketsByIdentifier[identifier].filter((socket) => socket !== ws);
+        this.logger.info('Process state websocket disconnected', identifier);
       });
     });
 
@@ -170,42 +241,14 @@ export class Webserver {
       const parameters = req.body;
       delete parameters.event;
 
-      const allItems = debugEventsForDeviceType().flatMap((eventBlock) => eventBlock.items);
-      const item = allItems.find((item) => item.name === event);
-
-      if (!item) {
-        this.logger.error('Event not found', event);
-        return res.status(400).send('Event not found');
-      }
-
-      const methodParameters: any[] = [];
-      if (Object.keys(parameters).length > 0) {
-        Object.keys(parameters).forEach((key) => {
-          const value = parameters[key];
-          this.logger.info('Parameter', key, value);
-
-          if (value === undefined) {
-            this.logger.error('Parameter not found', key);
-            return res.status(400).send(`Parameter ${key} not found`);
-          }
-
-          if (key.toLocaleLowerCase() === 'attribute') {
-            const attribute = process.provider.getAttribute(value);
-            if (!attribute) {
-              this.logger.error('Attribute not found', value);
-              return res.status(400).send(`Attribute ${value} not found`);
-            }
-            methodParameters.push(attribute);
-          } else {
-            methodParameters.push(value);
-          }
+      this.callDeviceMethod(process, event, parameters)
+        .then((result) => {
+          res.status(result.code).send(result.message);
+        })
+        .catch((error) => {
+          this.logger.error('Error calling debug event', error);
+          res.status(500).send('Error calling debug event');
         });
-      }
-
-      this.logger.trace('Calling debug event', event, methodParameters);
-      (process.provider.device as any)[event](...methodParameters);
-
-      res.send('OK');
     });
 
     this.express.post('/api/processes/:identifier/states/:state', (req, res) => {
@@ -260,6 +303,7 @@ export class Webserver {
       this.logger.info('Webserver started on port:', this.config.port);
     });
 
+    /*
     this.express.get('/api/processes/:identifier/states', (req, res) => {
       const identifier = req.params.identifier;
       const process = this.hub.packages.getProcess(identifier);
@@ -271,6 +315,7 @@ export class Webserver {
       const states = this.hub.state.getAttributes(process.provider);
       res.send(states);
     });
+    */
 
     this.server = server;
     return true;
@@ -282,5 +327,53 @@ export class Webserver {
     }
 
     this.logger.trace('Stopping webserver');
+  };
+
+  private callDeviceMethod = async (process: Process, event: string, parameters: any): Promise<{ code: number; message: string }> => {
+    const allItems = debugEventsForDeviceType().flatMap((eventBlock) => eventBlock.items);
+    const item = allItems.find((item) => item.name === event);
+
+    if (!item) {
+      this.logger.error('Event not found', event);
+      return { code: 400, message: 'Event not found' };
+    }
+
+    const methodParameters: any[] = [];
+
+    if (Object.keys(parameters).length > 0) {
+      Object.keys(parameters).forEach((key) => {
+        const value = parameters[key];
+        this.logger.info('Parameter', key, value);
+
+        if (value === undefined) {
+          this.logger.error('Parameter not found', key);
+          return { code: 400, message: `Parameter '${key}' not found` };
+        }
+
+        if (key.toLocaleLowerCase() === 'attribute') {
+          const attribute = process.provider.getAttribute(value);
+          if (!attribute) {
+            this.logger.error('Attribute not found', value);
+            return { code: 400, message: `Attribute '${key}' not found` };
+          }
+          methodParameters.push(attribute);
+        } else {
+          methodParameters.push(value);
+        }
+      });
+    }
+
+    this.logger.trace('Calling debug event', event, methodParameters);
+    (process.provider.device as any)
+      [event](...methodParameters)
+      .then((result: any) => {
+        this.logger.info('Method result', result);
+      })
+      .catch((error: any) => {
+        this.logger.warn('Error calling method', error);
+        return { code: 500, message: `Error calling method: ${error}` };
+      });
+
+    return { code: 200, message: 'OK' };
   };
 }

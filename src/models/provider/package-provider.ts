@@ -99,10 +99,15 @@ export class PackageProvider implements Provider {
     }
   };
 
-  setTimeout = (callback: () => void, timeout: number): NodeJS.Timeout => {
+  setTimeout = (callback: () => Promise<void>, timeout: number): NodeJS.Timeout => {
     const id = setTimeout(() => {
-      callback();
-      this.timeouts = this.timeouts.filter((id) => id !== id);
+      callback()
+        .catch((error) => {
+          this.deviceLogger.warn('Device crashed during setTime', error);
+        })
+        .finally(() => {
+          this.timeouts = this.timeouts.filter((id) => id !== id);
+        });
     }, timeout);
 
     this.timeouts.push(id);
