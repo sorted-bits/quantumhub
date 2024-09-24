@@ -34,6 +34,7 @@ packages:
     - package: example-climate
       identifier: quantumhub_heater
       name: Heater
+
 homeassistant:
 # availability: true # Whether to publish availability messages
 # base_topic: homeassistant # The base topic to use for Home Assistant discovery

@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import { Hub } from '../../hub';
 import { PackageProvider } from '../../provider/package-provider';
 import { ProcessStatus } from '../enums/status';
@@ -8,13 +9,15 @@ export interface Process {
   identifier: string;
   provider: PackageProvider;
   status: ProcessStatus;
-  startTime?: Date;
-  stopTime?: Date;
+  startTime?: DateTime;
+  stopTime?: DateTime;
 }
 
 export const processToDto = (hub: Hub, process: Process): any => {
   return {
     ...process,
+    startTime: process.startTime?.toFormat('HH:mm:ss'),
+    stopTime: process.stopTime?.toFormat('HH:mm:ss'),
     availability: hub.state.getAvailability(process.provider),
     provider: undefined,
   };

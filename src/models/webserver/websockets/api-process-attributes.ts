@@ -8,6 +8,8 @@ import { Webserver } from '../webserver';
 interface ProcessAttributesData {
   identifier: string;
   attribute: string | undefined;
+  time: string;
+  value: any;
 }
 
 export class ApiProcessAttributesWebsocket implements ApiSocketConnection {
@@ -53,13 +55,6 @@ export class ApiProcessAttributesWebsocket implements ApiSocketConnection {
       return;
     }
 
-    const process = this.hub.packages.getProcess(data.identifier);
-    if (!process) {
-      return;
-    }
-
-    const stateData = this.hub.state.getAttributes(process.provider);
-    const filteredStateData = data.attribute ? { [data.attribute]: stateData[data.attribute] } : stateData;
-    this.stateWebsocketsByIdentifier[data.identifier]?.forEach((ws) => ws.send(JSON.stringify(filteredStateData)));
+    this.stateWebsocketsByIdentifier[data.identifier]?.forEach((ws) => ws.send(JSON.stringify(data)));
   };
 }

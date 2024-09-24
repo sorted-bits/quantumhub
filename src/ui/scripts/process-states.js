@@ -1,7 +1,7 @@
 var states = {};
 var selectedState = undefined;
 
-function processStateSubscription(identifier, callback) {
+function startAttributeSubscription(identifier, callback) {
   console.log('Starting state subscription', identifier);
 
   let ws = new WebSocket(`/api/process/${identifier}/attributes`);
@@ -37,74 +37,68 @@ function renderHistory() {
   historyTable.innerHTML = '';
 
   states[selectedState].forEach((data) => {
+    const { value, time } = data;
+
     const historyRow = document.createElement('tr');
 
     const timestampCell = document.createElement('td');
-    timestampCell.innerText = new Date(data.timestamp).toLocaleTimeString();
+    timestampCell.innerText = time;
     historyRow.appendChild(timestampCell);
 
     const historyCell = document.createElement('td');
-    historyCell.innerText = JSON.stringify(data.value);
+    historyCell.innerText = JSON.stringify(value);
     historyRow.appendChild(historyCell);
 
     historyTable.prepend(historyRow);
   });
 }
 
-processStateSubscription(identifier, (state) => {
+startAttributeSubscription(identifier, (state) => {
   const table = document.getElementById('attribute-list');
-  const keys = Object.keys(state);
 
-  keys.forEach((key) => {
-    if (!states[key]) {
-      states[key] = [];
-    }
+  const { attribute, value } = state;
 
-    const history = states[key];
+  if (!states[attribute]) {
+    states[attribute] = [];
+  }
 
-    const data = {
-      value: state[key],
-      timestamp: Date.now(),
-    };
+  const history = states[attribute];
+  history.push(state);
 
-    history.push(data);
+  states[attribute] = history.slice(-10);
 
-    states[key] = history.slice(-10);
+  if (attribute === selectedState) {
+    renderHistory();
+  }
 
-    if (key === selectedState) {
-      renderHistory();
-    }
+  const id = `attribute-${attribute}-row`;
 
-    const value = state[key];
-    const id = `attribute-${key}-row`;
+  const existingRow = document.getElementById(id);
+  if (existingRow) {
+    existingRow.querySelector('.value').innerText = JSON.stringify(value);
+  } else {
+    const row = document.createElement('tr');
+    row.id = id;
 
-    const existingRow = document.getElementById(id);
-    if (existingRow) {
-      existingRow.querySelector('.value').innerText = JSON.stringify(value);
-    } else {
-      const row = document.createElement('tr');
-      row.id = id;
+    const link = document.createElement('a');
+    link.setAttribute('onclick', `selectState('${attribute}')`);
+    link.href = '#';
+    link.title = attribute;
 
-      const link = document.createElement('a');
-      link.setAttribute('onclick', `selectState('${key}')`);
-      link.href = '#';
-      link.title = key;
+    link.appendChild(document.createTextNode(attribute));
 
-      link.appendChild(document.createTextNode(key));
+    const nameCell = document.createElement('td');
+    nameCell.classList.add('attribute');
+    //      nameCell.innerText = key;
+    nameCell.appendChild(link);
 
-      const nameCell = document.createElement('td');
-      nameCell.classList.add('key');
-      //      nameCell.innerText = key;
-      nameCell.appendChild(link);
+    const valueCell = document.createElement('td');
+    valueCell.classList.add('value');
+    valueCell.innerText = JSON.stringify(value);
 
-      const valueCell = document.createElement('td');
-      valueCell.classList.add('value');
-      valueCell.innerText = JSON.stringify(value);
+    row.appendChild(nameCell);
+    row.appendChild(valueCell);
 
-      row.appendChild(nameCell);
-      row.appendChild(valueCell);
-
-      table.appendChild(row);
-    }
-  });
+    table.appendChild(row);
+  }
 });

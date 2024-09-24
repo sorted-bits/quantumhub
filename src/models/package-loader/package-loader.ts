@@ -9,6 +9,7 @@ import { Hub } from '../hub';
 import { Definition } from './interfaces/definition';
 import { Process, processToDto } from './interfaces/process';
 
+import { DateTime } from 'luxon';
 import { Device } from 'quantumhub-sdk';
 import { PackageConfig } from '../config/interfaces/packages-config';
 import { PackageProvider } from '../provider/package-provider';
@@ -58,7 +59,7 @@ export class PackageLoader {
       for (const yamlFile of yamlFiles) {
         const path = `${fullDirectoryName}/${yamlFile}`;
 
-        const definition = this.readPackageConfig(fullDirectoryName, path);
+        const definition = this.readPackageConfig(path);
 
         if (definition) {
           this.logger.trace('Loaded package definition:', definition.name);
@@ -78,11 +79,11 @@ export class PackageLoader {
   };
 
   loadPackageFromConfig = async (config: PackageConfig): Promise<void> => {
-    if (!config.root) {
+    if (!config.config_file) {
       return;
     }
 
-    const definition = this.readPackageConfig(config.root, `${config.root}/config.yaml`);
+    const definition = this.readPackageConfig(config.config_file);
     if (definition) {
       this.logger.trace('Loaded package definition:', definition.name);
       this.addPackageDefinition(definition);
@@ -98,24 +99,22 @@ export class PackageLoader {
     this._definitions.push(definition);
   };
 
-  private readPackageConfig = (directoryName: string, filename: string): Definition | undefined => {
-    if (!fs.existsSync(directoryName)) {
-      this.logger.error('Folder does not exist:', directoryName);
+  private readPackageConfig = (configFile: string): Definition | undefined => {
+    if (!fs.existsSync(configFile)) {
+      this.logger.error('File does not exist:', configFile);
       return undefined;
     }
 
-    if (!fs.existsSync(filename)) {
-      this.logger.error(`No ${filename} found in:`, directoryName);
-      return undefined;
-    }
-
-    const content = fs.readFileSync(filename, 'utf8');
+    const content = fs.readFileSync(configFile, 'utf8');
     const output = YAML.parse(content, {});
 
     const { name, entry, version, description, author } = output.package;
-    const path = `${directoryName}/${entry}`;
 
-    if (!fs.existsSync(path)) {
+    const directoryName = path.dirname(configFile);
+
+    const entryFile = `${directoryName}/${entry}`;
+
+    if (!fs.existsSync(entryFile)) {
       this.logger.error('Entry file not found:', path);
       return undefined;
     }
@@ -131,7 +130,7 @@ export class PackageLoader {
     }
 
     const definition: Definition = {
-      path,
+      path: entryFile,
       name,
       entry,
       description,
@@ -212,7 +211,7 @@ export class PackageLoader {
     }
 
     process.status = ProcessStatus.RUNNING;
-    process.startTime = new Date();
+    process.startTime = DateTime.now();
 
     this.hub.state.setAvailability(process.provider, true);
     this.hub.server.sendProcessUpdate(process);
@@ -259,6 +258,8 @@ export class PackageLoader {
       return;
     }
 
+    process.stopTime = DateTime.now();
+
     process.provider.clearAllTimeouts();
 
     process.status = ProcessStatus.STOPPING;
@@ -277,18 +278,7 @@ export class PackageLoader {
   };
 
   data = () => {
-    const result: any = {};
-    result.data = [];
-
-    for (const uuid in this.processes) {
-      const process = this.processes[uuid];
-
-      const data = processToDto(this.hub, process);
-
-      result.data.push(data);
-    }
-
-    return result;
+    return Object.values(this.processes).map((process) => processToDto(this.hub, process));
   };
 
   getProcess = (identifier: string): Process | undefined => {

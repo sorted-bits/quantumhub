@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import { Attribute, ButtonAttribute, ClimateAttribute, DeviceAutomationAttribute, DeviceClass, DeviceType, Logger as ILogger, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { PackageProvider } from '../provider/package-provider';
@@ -61,7 +62,14 @@ export class StateManager {
     }
     this.publishDeviceStates(provider);
 
-    this.hub.server.sendStateUpdate(provider.config.identifier, attribute);
+    const data = {
+      time: DateTime.now().toFormat('HH:mm:ss.SSS'),
+      identifier: provider.config.identifier,
+      attribute: attribute,
+      value: value,
+    };
+
+    this.hub.server.sendStateUpdate(data);
   };
 
   publishDeviceStates = async (provider: PackageProvider): Promise<void> => {

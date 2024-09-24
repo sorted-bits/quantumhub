@@ -3,7 +3,6 @@
   <h2 class='subtitle'>
     Currently the following processes are running:
   </h2>
-
   <table class='table' style='width: 100%;'>
     <thead>
       <tr>
@@ -14,7 +13,23 @@
       </tr>
     </thead>
     <tbody id='processes-table-body'>
-
+      {{#each processes}}
+        <tr>
+          <td><a href='/process/{{identifier}}'>{{name}}</a></td>
+          <td>
+            {{#if (eq status 'RUNNING')}}
+              <span class='tag is-success' id='status_{{identifier}}_chip'>{{status}}</span>
+            {{else}}
+              <span class='tag is-danger' id='status_{{identifier}}_chip'>{{status}}</span>
+            {{/if}}
+          </td>
+          <td class='start-time'>{{startTime}}</td>
+          <td>
+            <button id='status_{{identifier}}_start' {{#if (eq status 'RUNNING')}}disabled{{/if}} class='button is-success is-small' onclick='onStartProcessClicked("{{identifier}}")'><i class='fa-solid fa-play'></i></button>
+            <button id='status_{{identifier}}_stop' {{#if (eq status 'STOPPED')}}disabled{{/if}} class='button is-danger is-small' onclick='onStopProcessClicked("{{identifier}}")'><i class='fa-solid fa-stop'></i></button>
+          </td>
+        </tr>
+      {{/each}}
     </tbody>
   </table>
 

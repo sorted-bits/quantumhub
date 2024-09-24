@@ -66,12 +66,7 @@ export class Webserver {
     this.apiProcessesStatusWebsocket.send(data);
   };
 
-  sendStateUpdate = (processIdentifier: string, attribute: string | undefined): void => {
-    const data = {
-      identifier: processIdentifier,
-      attribute: attribute,
-    };
-
+  sendStateUpdate = (data: any): void => {
     this.apiProcessAttributesWebsocket.send(data);
   };
 
@@ -89,11 +84,6 @@ export class Webserver {
     this.apiProcessStatusWebsocket.initialize(ws);
     this.apiProcessLogWebsocket.initialize(ws);
     this.apiProcessAttributesWebsocket.initialize(ws);
-
-    this.express.get('/api/processes', (req, res) => {
-      const data = this.hub.packages.data();
-      res.send(data);
-    });
 
     this.express.post('/api/process/:identifier/debug', (req, res) => apiProcessDebugRequest(this.hub, req, res));
 
@@ -116,7 +106,7 @@ export class Webserver {
     });
 
     this.express.get('/', (req, res) => {
-      res.render('home');
+      res.render('home', { processes: this.hub.packages.data() });
     });
 
     this.express.get('/mqtt', (req, res) => {

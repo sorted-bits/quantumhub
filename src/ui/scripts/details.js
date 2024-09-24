@@ -42,7 +42,6 @@ const subscribeToLogs = (level) => {
 
   loggingWs = processLogsSubscription(identifier, level, (data) => {
     const log = [data.message, ...data.messages];
-    console.log(log);
     const messages = log.join(', ');
     const row = document.createElement('tr');
     row.innerHTML = `<td>${data.time}</td><td>${data.level}</td><td>${messages}</td>`;

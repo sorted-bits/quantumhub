@@ -26,7 +26,6 @@ const switchTab = (event) => {
   const contentContainerId = currentHref.replace('#', '');
 
   const tabsContainer = list.parentElement.parentElement;
-  console.log(tabsContainer);
 
   const tabContents = tabsContainer.querySelectorAll('.tab-content');
   tabContents.forEach((item) => {

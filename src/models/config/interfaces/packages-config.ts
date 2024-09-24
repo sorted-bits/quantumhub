@@ -7,5 +7,5 @@ export interface PackageConfig {
   package: string;
   name: string;
   identifier: string;
-  root?: string;
+  config_file?: string;
 }
