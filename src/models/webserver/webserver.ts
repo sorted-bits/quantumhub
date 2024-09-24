@@ -3,22 +3,18 @@ import { create } from 'express-handlebars';
 import expressWs from 'express-ws';
 import http from 'http';
 import { Logger } from 'quantumhub-sdk';
-import * as ws from 'ws';
 import YAML from 'yaml';
 
 import { WebConfig } from '../config/interfaces/web-config';
 import { Hub } from '../hub';
-import { getLevelIndex, LogData } from '../logger/logger';
+import { LogData } from '../logger/logger';
 import { Process, processToDto } from '../package-loader/interfaces/process';
 import { debugEventsForDeviceType } from './debugging';
+import { apiProcessDebugRequest } from './requests/api-process-debug';
+import { ApiProcessAttributesWebsocket } from './websockets/api-process-attributes';
+import { ApiProcessLogWebsocket } from './websockets/api-process-log';
 import { ApiProcessStatusWebsocket } from './websockets/api-process-status';
 import { ApiProcessesStatusWebsocket } from './websockets/api-processes-status';
-
-interface LoggingWebsocket {
-  websocket: ws.WebSocket;
-  identifier: string;
-  level: string;
-}
 
 export class Webserver {
   private express: express.Express;
@@ -29,11 +25,8 @@ export class Webserver {
 
   private apiProcessesStatusWebsocket: ApiProcessesStatusWebsocket;
   private apiProcessStatusWebsocket: ApiProcessStatusWebsocket;
-
-  private processesStatusWebsockets: ws.WebSocket[] = [];
-  private logWebsockets: LoggingWebsocket[] = [];
-  private processStatusWebsocketsByIdentifier: { [identifier: string]: ws.WebSocket[] } = {};
-  private stateWebsocketsByIdentifier: { [identifier: string]: ws.WebSocket[] } = {};
+  private apiProcessLogWebsocket: ApiProcessLogWebsocket;
+  private apiProcessAttributesWebsocket: ApiProcessAttributesWebsocket;
 
   constructor(hub: Hub) {
     this.hub = hub;
@@ -61,6 +54,8 @@ export class Webserver {
 
     this.apiProcessesStatusWebsocket = new ApiProcessesStatusWebsocket(this.hub, this);
     this.apiProcessStatusWebsocket = new ApiProcessStatusWebsocket(this.hub, this);
+    this.apiProcessLogWebsocket = new ApiProcessLogWebsocket(this.hub, this);
+    this.apiProcessAttributesWebsocket = new ApiProcessAttributesWebsocket(this.hub, this);
     this.logger.info('Webserver initialized');
   }
 
@@ -72,35 +67,16 @@ export class Webserver {
   };
 
   sendStateUpdate = (processIdentifier: string, attribute: string | undefined): void => {
-    if (this.stateWebsocketsByIdentifier[processIdentifier]?.length === 0) {
-      return;
-    }
+    const data = {
+      identifier: processIdentifier,
+      attribute: attribute,
+    };
 
-    const process = this.hub.packages.getProcess(processIdentifier);
-    if (!process) {
-      return;
-    }
-
-    const stateData = this.hub.state.getAttributes(process.provider);
-
-    const filteredStateData = attribute ? { [attribute]: stateData[attribute] } : stateData;
-
-    this.stateWebsocketsByIdentifier[processIdentifier]?.forEach((ws) => ws.send(JSON.stringify(filteredStateData)));
+    this.apiProcessAttributesWebsocket.send(data);
   };
 
   sendLog = (logData: LogData): void => {
-    if (this.logWebsockets.length === 0) {
-      return;
-    }
-
-    const sockets = this.logWebsockets.filter((logWebsocket) => logWebsocket.identifier === logData.identifier);
-    sockets.forEach((logWebsocket) => {
-      const logLevelIndex = getLevelIndex(logData.level);
-      const logWebsocketLevelIndex = getLevelIndex(logWebsocket.level);
-      if (logLevelIndex >= logWebsocketLevelIndex) {
-        logWebsocket.websocket.send(JSON.stringify(logData));
-      }
-    });
+    this.apiProcessLogWebsocket.send(logData);
   };
 
   start = async (): Promise<boolean> => {
@@ -111,99 +87,15 @@ export class Webserver {
 
     this.apiProcessesStatusWebsocket.initialize(ws);
     this.apiProcessStatusWebsocket.initialize(ws);
-
-    ws.app.ws('/api/process/:identifier/log/:level', (ws, req) => {
-      const logWs = {
-        websocket: ws,
-        identifier: req.params.identifier,
-        level: req.params.level,
-      };
-
-      this.logger.info('Logging socket connected', req.params.identifier, req.params.level);
-      this.logWebsockets.push(logWs);
-
-      ws.on('close', () => {
-        this.logWebsockets = this.logWebsockets.filter((socket) => socket !== logWs);
-        this.logger.info('Logging socket disconnected', req.params.identifier);
-      });
-    });
-
-    ws.app.ws('/api/process/:identifier/state', (ws, req) => {
-      const identifier = req.params.identifier;
-      const process = this.hub.packages.getProcess(identifier);
-      if (!process) {
-        this.logger.error('Process not found', identifier);
-        return;
-      }
-
-      if (!this.stateWebsocketsByIdentifier[identifier]) {
-        this.stateWebsocketsByIdentifier[identifier] = [];
-      }
-
-      this.stateWebsocketsByIdentifier[identifier].push(ws);
-      this.logger.info('Process state websocket connected', identifier, this.stateWebsocketsByIdentifier[identifier].length);
-      this.sendStateUpdate(identifier, undefined);
-
-      ws.on('close', () => {
-        this.stateWebsocketsByIdentifier[identifier] = this.stateWebsocketsByIdentifier[identifier].filter((socket) => socket !== ws);
-        this.logger.info('Process state websocket disconnected', identifier);
-      });
-    });
+    this.apiProcessLogWebsocket.initialize(ws);
+    this.apiProcessAttributesWebsocket.initialize(ws);
 
     this.express.get('/api/processes', (req, res) => {
       const data = this.hub.packages.data();
       res.send(data);
     });
 
-    this.express.get('/api/process/:identifier', (req, res) => {
-      const identifier = req.params.identifier;
-      const process = this.hub.packages.getProcess(identifier);
-
-      if (!process) {
-        return res.status(404).send('Process not found');
-      }
-
-      res.send(processToDto(this.hub, process));
-    });
-
-    this.express.get('/api/definitions', (req, res) => {
-      const data = this.hub.packages.definitions;
-      res.send(data);
-    });
-
-    this.express.post('/api/process/:identifier/debug', (req, res) => {
-      const identifier = req.params.identifier;
-      const process = this.hub.packages.getProcess(identifier);
-
-      if (!process) {
-        this.logger.error('Process not found', identifier);
-        return res.status(404).send('Process not found');
-      }
-
-      this.logger.info('Sending debug event', req.body);
-
-      if (!req.body.event) {
-        return res.status(400).send('Event not found');
-      }
-
-      const event = req.body.event;
-      if (typeof (process.provider.device as any)[event] !== 'function') {
-        this.logger.error('Event not found', event);
-        return res.status(400).send('Event not found');
-      }
-
-      const parameters = req.body;
-      delete parameters.event;
-
-      this.callDeviceMethod(process, event, parameters)
-        .then((result) => {
-          res.status(result.code).send(result.message);
-        })
-        .catch((error) => {
-          this.logger.error('Error calling debug event', error);
-          res.status(500).send('Error calling debug event');
-        });
-    });
+    this.express.post('/api/process/:identifier/debug', (req, res) => apiProcessDebugRequest(this.hub, req, res));
 
     this.express.post('/api/processes/:identifier/states/:state', (req, res) => {
       const identifier = req.params.identifier;
@@ -224,7 +116,7 @@ export class Webserver {
     });
 
     this.express.get('/', (req, res) => {
-      res.render('home', { test: 'Hello World' });
+      res.render('home');
     });
 
     this.express.get('/mqtt', (req, res) => {
@@ -267,63 +159,5 @@ export class Webserver {
     }
 
     this.logger.trace('Stopping webserver');
-  };
-
-  private callDeviceMethod = async (process: Process, event: string, parameters: any): Promise<{ code: number; message: string }> => {
-    const allItems = debugEventsForDeviceType().flatMap((eventBlock) => eventBlock.items);
-    const item = allItems.find((item) => item.name === event);
-
-    if (!item) {
-      this.logger.error('Event not found', event);
-      return { code: 400, message: 'Event not found' };
-    }
-
-    if (event === 'stop') {
-      this.hub.packages.stopProcess(process.uuid);
-      return { code: 200, message: 'OK' };
-    }
-
-    if (event === 'start') {
-      this.hub.packages.startProcess(process.uuid);
-      return { code: 200, message: 'OK' };
-    }
-
-    const methodParameters: any[] = [];
-
-    if (Object.keys(parameters).length > 0) {
-      Object.keys(parameters).forEach((key) => {
-        const value = parameters[key];
-        this.logger.info('Parameter', key, value);
-
-        if (value === undefined) {
-          this.logger.error('Parameter not found', key);
-          return { code: 400, message: `Parameter '${key}' not found` };
-        }
-
-        if (key.toLocaleLowerCase() === 'attribute') {
-          const attribute = process.provider.getAttribute(value);
-          if (!attribute) {
-            this.logger.error('Attribute not found', value);
-            return { code: 400, message: `Attribute '${key}' not found` };
-          }
-          methodParameters.push(attribute);
-        } else {
-          methodParameters.push(value);
-        }
-      });
-    }
-
-    this.logger.trace('Calling debug event', event, methodParameters);
-    (process.provider.device as any)
-      [event](...methodParameters)
-      .then((result: any) => {
-        this.logger.info('Method result', result);
-      })
-      .catch((error: any) => {
-        this.logger.warn('Error calling method', error);
-        return { code: 500, message: `Error calling method: ${error}` };
-      });
-
-    return { code: 200, message: 'OK' };
   };
 }

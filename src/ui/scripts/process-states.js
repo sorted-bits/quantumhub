@@ -4,7 +4,7 @@ var selectedState = undefined;
 function processStateSubscription(identifier, callback) {
   console.log('Starting state subscription', identifier);
 
-  let ws = new WebSocket(`/api/process/${identifier}/state`);
+  let ws = new WebSocket(`/api/process/${identifier}/attributes`);
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
     callback(data);
