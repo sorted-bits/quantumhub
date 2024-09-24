@@ -8,6 +8,16 @@
         </tr>
       </thead>
       <tbody id='attribute-list'>
+        {{#each states}}
+          <tr id='attribute-{{key}}-row'>
+            <td width='20%'>
+              <a onclick='selectState("{{key}}")'>{{key}}</a>
+            </td>
+            <td class='value'>
+              {{value}}
+            </td>
+          </tr>
+        {{/each}}
       </tbody>
     </table>
   </div>

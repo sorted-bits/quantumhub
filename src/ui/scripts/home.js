@@ -14,15 +14,12 @@ const updateProcessStatus = (process) => {
   console.log(process);
 
   var isRunning = process.status.toLowerCase() === 'running';
+  var isAvailable = process.availability === true;
 
-  console.log(process.name, isRunning);
-  var badgeColor = isRunning ? 'success' : 'danger';
+  const availabilityText = isAvailable ? 'AVAILABLE' : 'UNAVAILABLE';
 
-  document.getElementById(`status_${process.identifier}_chip`).innerText = process.status;
-  const chip = document.getElementById(`status_${process.identifier}_chip`);
-  chip.classList.remove('is-danger');
-  chip.classList.remove('is-success');
-  chip.classList.add(`is-${badgeColor}`);
+  setChip(`status_${process.identifier}_chip`, isRunning, process.status);
+  setChip(`availability_${process.identifier}_chip`, isAvailable, availabilityText);
 
   document.getElementById(`status_${process.identifier}_start`).disabled = isRunning;
   document.getElementById(`status_${process.identifier}_stop`).disabled = !isRunning;

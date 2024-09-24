@@ -3,28 +3,36 @@
   <h2 class='subtitle'>
     Currently the following processes are running:
   </h2>
-  <table class='table' style='width: 100%;'>
+  <table class='table is-fullwidth is-striped'>
     <thead>
       <tr>
+        <th>Status</th>
         <th>Name</th>
-        <th width='120px'>Status</th>
-        <th width='180px'>Start time</th>
-        <th width='100px'></th>
+        <th>Start time</th>
+        <th></th>
       </tr>
     </thead>
     <tbody id='processes-table-body'>
       {{#each processes}}
         <tr>
-          <td><a href='/process/{{identifier}}'>{{name}}</a></td>
           <td>
+            <a href='/process/{{identifier}}'>{{name}}</a>
+          </td>
+          <td width='220px'>
+            {{#if (eq availability true)}}
+              <span class='tag is-success' id='availability_{{identifier}}_chip'>AVAILABLE</span>
+            {{else}}
+              <span class='tag is-danger' id='availability_{{identifier}}_chip'>UNAVAILABLE</span>
+            {{/if}}
+
             {{#if (eq status 'RUNNING')}}
               <span class='tag is-success' id='status_{{identifier}}_chip'>{{status}}</span>
             {{else}}
               <span class='tag is-danger' id='status_{{identifier}}_chip'>{{status}}</span>
             {{/if}}
           </td>
-          <td class='start-time'>{{startTime}}</td>
-          <td>
+          <td class='start-time' width='140px'>{{startTime}}</td>
+          <td width='100px'>
             <button id='status_{{identifier}}_start' {{#if (eq status 'RUNNING')}}disabled{{/if}} class='button is-success is-small' onclick='onStartProcessClicked("{{identifier}}")'><i class='fa-solid fa-play'></i></button>
             <button id='status_{{identifier}}_stop' {{#if (eq status 'STOPPED')}}disabled{{/if}} class='button is-danger is-small' onclick='onStopProcessClicked("{{identifier}}")'><i class='fa-solid fa-stop'></i></button>
           </td>
@@ -35,5 +43,6 @@
 
 </section>
 
+<script src='/scripts/modules/chip.js'></script>
 <script src='/scripts/api.js'></script>
 <script src='/scripts/home.js'></script>

@@ -53,18 +53,17 @@ const subscribeToLogs = (level) => {
   });
 };
 
-const updateProcessStatus = (identifier, status) => {
+const updateProcessStatus = (identifier, status, availability) => {
   console.log('updateProcessStatus', identifier);
   console.log('updateProcessStatus', status);
 
   var isRunning = status.toLowerCase() === 'running';
-  var badgeColor = isRunning ? 'success' : 'danger';
+  var isAvailable = availability === true;
 
-  document.getElementById(`status_${identifier}_chip`).innerText = status;
-  const chip = document.getElementById(`status_${identifier}_chip`);
-  chip.classList.remove('is-danger');
-  chip.classList.remove('is-success');
-  chip.classList.add(`is-${badgeColor}`);
+  const availabilityText = isAvailable ? 'AVAILABLE' : 'UNAVAILABLE';
+
+  setChip(`status_${identifier}_chip`, isRunning, status);
+  setChip(`availability_${identifier}_chip`, isAvailable, availabilityText);
 
   document.getElementById(`status_${identifier}_start`).disabled = isRunning;
   document.getElementById(`status_${identifier}_stop`).disabled = !isRunning;
@@ -73,9 +72,9 @@ const updateProcessStatus = (identifier, status) => {
 setButtonState(logLevel);
 subscribeToLogs(logLevel);
 
-updateProcessStatus(identifier, status);
+updateProcessStatus(identifier, status, availability);
 
 processStatusSubscription(identifier, (process) => {
   console.log('processStatusSubscription', process);
-  updateProcessStatus(identifier, process.status);
+  updateProcessStatus(identifier, process.status, process.availability);
 });

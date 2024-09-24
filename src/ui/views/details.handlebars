@@ -1,11 +1,22 @@
 <script>
   const identifier = '{{process.identifier}}';
   const status = '{{process.status}}';
+  const availability = {{process.availability}};
 </script>
 
 <section class='section'>
   <h1 class='title'>{{process.name}}
-    <span class='tag is-primary' id='status_{{process.identifier}}_chip'>{{process.status}}</span>
+    {{#if (eq process.status 'RUNNING')}}
+      <span class='tag is-success' id='status_{{process.identifier}}_chip'>{{process.status}}</span>
+    {{else}}
+      <span class='tag is-danger' id='status_{{process.identifier}}_chip'>{{process.status}}</span>
+    {{/if}}
+
+    {{#if (eq process.availability true)}}
+      <span class='tag is-success' id='availability_{{process.identifier}}_chip'>AVAILABLE</span>
+    {{else}}
+      <span class='tag is-danger' id='availability_{{process.identifier}}_chip'>UNAVAILABLE</span>
+    {{/if}}
   </h1>
 
   <div class="block">
@@ -41,6 +52,7 @@
   </div>
 </section>
 
+<script src='/scripts/modules/chip.js'></script>
 <script src='/scripts/api.js'></script>
 <script src='/scripts/details.js'></script>
 <script src='/scripts/debugging.js'></script>

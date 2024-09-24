@@ -127,11 +127,19 @@ export class Webserver {
         return res.status(404).send('Process not found');
       }
 
+      const states = this.hub.state.getAttributes(process.provider);
+
       res.render('details', {
         process: processToDto(this.hub, process),
         config: YAML.stringify(process.provider.config),
         definition: process.provider.definition,
         debugEvents: debugEventsForDeviceType(),
+        states: Object.keys(states).map((key) => {
+          return {
+            key,
+            value: typeof states[key] === 'object' ? JSON.stringify(states[key]) : states[key],
+          };
+        }),
       });
     });
 
