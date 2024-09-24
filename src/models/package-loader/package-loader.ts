@@ -214,6 +214,7 @@ export class PackageLoader {
     process.status = ProcessStatus.RUNNING;
     process.startTime = new Date();
 
+    this.hub.state.setAvailability(process.provider, true);
     this.hub.server.sendProcessUpdate(process);
 
     return true;
@@ -261,6 +262,7 @@ export class PackageLoader {
     process.provider.clearAllTimeouts();
 
     process.status = ProcessStatus.STOPPING;
+    this.hub.state.setAvailability(process.provider, false);
     this.hub.server.sendProcessUpdate(process);
 
     this.logger.trace('Stopping:', process.provider.config.identifier);
@@ -280,7 +282,10 @@ export class PackageLoader {
 
     for (const uuid in this.processes) {
       const process = this.processes[uuid];
-      result.data.push(processToDto(process));
+
+      const data = processToDto(this.hub, process);
+
+      result.data.push(data);
     }
 
     return result;

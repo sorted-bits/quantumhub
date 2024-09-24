@@ -37,17 +37,33 @@ function processesStatusSubscription(callback) {
     const data = JSON.parse(event.data);
     callback(data);
   };
+  ws.onclose = () => {
+    setTimeout(() => {
+      processesStatusSubscription(callback);
+    }, 500);
+  };
+  return ws;
 }
 
 function processStatusSubscription(identifier, callback) {
   console.log('Starting process status subscription', identifier);
 
   let ws = new WebSocket(`/api/process/${identifier}/status`);
+
   ws.onmessage = (event) => {
     console.log('Process status message', event.data);
     const data = JSON.parse(event.data);
     callback(data);
   };
+
+  ws.onclose = () => {
+    console.log('Process status subscription closed', identifier);
+    setTimeout(() => {
+      processStatusSubscription(identifier, callback);
+    }, 500);
+  };
+
+  return ws;
 }
 
 function processLogsSubscription(identifier, level, callback) {

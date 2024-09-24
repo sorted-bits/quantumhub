@@ -1,3 +1,4 @@
+import { Hub } from '../../hub';
 import { PackageProvider } from '../../provider/package-provider';
 import { ProcessStatus } from '../enums/status';
 
@@ -11,9 +12,10 @@ export interface Process {
   stopTime?: Date;
 }
 
-export const processToDto = (process: Process): any => {
+export const processToDto = (hub: Hub, process: Process): any => {
   return {
     ...process,
+    availability: hub.state.getAvailability(process.provider),
     provider: undefined,
   };
 };

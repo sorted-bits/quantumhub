@@ -2,12 +2,13 @@ import fs from 'fs';
 import { Logger as ILogger } from 'quantumhub-sdk';
 import YAML from 'yaml';
 
+import { defaultValues } from './defaults';
 import { BaseConfig } from './interfaces/base-config';
 
 export class ConfigLoader {
   loadConfig = (file: string, logger: ILogger): BaseConfig => {
     try {
-      const defaults = this.defaults;
+      const defaults = defaultValues;
 
       if (!fs.existsSync(file)) {
         logger.error('Config file does not exist, loading defaults:', file);
@@ -48,37 +49,4 @@ export class ConfigLoader {
       throw new Error('Error reading config file');
     }
   };
-
-  get defaults(): BaseConfig {
-    const defaultValues: BaseConfig = {
-      mqtt: {
-        host: 'localhost',
-        port: 1883,
-        base_topic: 'quantumhub',
-        username: undefined,
-        password: undefined,
-        protocol: 'mqtt',
-        validate_certificate: true,
-      },
-      homeassistant: {
-        availability: true,
-        base_topic: 'homeassistant',
-      },
-      packages: {
-        root: 'packages',
-        configuration: [],
-      },
-      instance_name: 'quantumhub',
-      web: {
-        port: 3000,
-      },
-      log: {
-        level: 'INFO',
-        excluded_packages: [],
-        included_packages: [],
-      },
-    };
-
-    return defaultValues;
-  }
 }

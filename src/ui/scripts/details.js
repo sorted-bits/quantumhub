@@ -54,25 +54,29 @@ const subscribeToLogs = (level) => {
   });
 };
 
-const updateProcessStatus = (process) => {
-  console.log(process);
+const updateProcessStatus = (identifier, status) => {
+  console.log('updateProcessStatus', identifier);
+  console.log('updateProcessStatus', status);
 
-  var isRunning = process.status.toLowerCase() === 'running';
+  var isRunning = status.toLowerCase() === 'running';
   var badgeColor = isRunning ? 'success' : 'danger';
 
-  document.getElementById(`status_${process.identifier}_chip`).innerText = process.status;
-  const chip = document.getElementById(`status_${process.identifier}_chip`);
+  document.getElementById(`status_${identifier}_chip`).innerText = status;
+  const chip = document.getElementById(`status_${identifier}_chip`);
   chip.classList.remove('is-danger');
   chip.classList.remove('is-success');
   chip.classList.add(`is-${badgeColor}`);
 
-  document.getElementById(`status_${process.identifier}_start`).disabled = isRunning;
-  document.getElementById(`status_${process.identifier}_stop`).disabled = !isRunning;
+  document.getElementById(`status_${identifier}_start`).disabled = isRunning;
+  document.getElementById(`status_${identifier}_stop`).disabled = !isRunning;
 };
 
 setButtonState(logLevel);
 subscribeToLogs(logLevel);
 
+updateProcessStatus(identifier, status);
+
 processStatusSubscription(identifier, (process) => {
-  updateProcessStatus(process);
+  console.log('processStatusSubscription', process);
+  updateProcessStatus(identifier, process.status);
 });

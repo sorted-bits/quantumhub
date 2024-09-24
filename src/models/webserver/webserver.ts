@@ -11,6 +11,8 @@ import { Hub } from '../hub';
 import { getLevelIndex, LogData } from '../logger/logger';
 import { Process, processToDto } from '../package-loader/interfaces/process';
 import { debugEventsForDeviceType } from './debugging';
+import { ApiProcessStatusWebsocket } from './websockets/api-process-status';
+import { ApiProcessesStatusWebsocket } from './websockets/api-processes-status';
 
 interface LoggingWebsocket {
   websocket: ws.WebSocket;
@@ -24,6 +26,9 @@ export class Webserver {
   private logger: Logger;
   private hub: Hub;
   private server?: http.Server;
+
+  private apiProcessesStatusWebsocket: ApiProcessesStatusWebsocket;
+  private apiProcessStatusWebsocket: ApiProcessStatusWebsocket;
 
   private processesStatusWebsockets: ws.WebSocket[] = [];
   private logWebsockets: LoggingWebsocket[] = [];
@@ -54,26 +59,16 @@ export class Webserver {
     this.config = hub.config.web;
     this.logger = hub.createLogger('Webserver');
 
+    this.apiProcessesStatusWebsocket = new ApiProcessesStatusWebsocket(this.hub, this);
+    this.apiProcessStatusWebsocket = new ApiProcessStatusWebsocket(this.hub, this);
     this.logger.info('Webserver initialized');
   }
 
   sendProcessUpdate = (process: Process): void => {
-    if (this.processesStatusWebsockets.length === 0 && this.processStatusWebsocketsByIdentifier[process.provider.config.identifier]?.length === 0) {
-      return;
-    }
+    const data = processToDto(this.hub, process);
 
-    const processData = {
-      uuid: process.uuid,
-      identifier: process.provider.config.identifier,
-      name: process.name,
-      status: process.status,
-      config: process.provider.config,
-      definition: process.provider.definition,
-      startTime: process.startTime,
-    };
-
-    this.processesStatusWebsockets.forEach((ws) => ws.send(JSON.stringify(processData)));
-    this.processStatusWebsocketsByIdentifier[process.provider.config.identifier]?.forEach((ws) => ws.send(JSON.stringify(processData)));
+    this.apiProcessStatusWebsocket.send(data);
+    this.apiProcessesStatusWebsocket.send(data);
   };
 
   sendStateUpdate = (processIdentifier: string, attribute: string | undefined): void => {
@@ -114,45 +109,8 @@ export class Webserver {
     this.express.use('/scripts', express.static(this.hub.options.uiPath + '/scripts'));
     this.express.use('/css', express.static(this.hub.options.uiPath + '/css'));
 
-    ws.app.ws('/api/processes/status', (ws, req) => {
-      this.processesStatusWebsockets.push(ws);
-
-      ws.on('message', (msg) => {
-        ws.send('PONG');
-      });
-
-      ws.on('close', () => {
-        this.processesStatusWebsockets = this.processesStatusWebsockets.filter((socket) => socket !== ws);
-        this.logger.info('Websocket disconnected');
-      });
-    });
-
-    ws.app.ws('/api/process/:identifier/status', (ws, req) => {
-      const identifier = req.params.identifier;
-
-      const process = this.hub.packages.getProcess(identifier);
-      if (!process) {
-        this.logger.error('Process not found', identifier);
-        return;
-      }
-
-      if (!this.processStatusWebsocketsByIdentifier[identifier]) {
-        this.processStatusWebsocketsByIdentifier[identifier] = [];
-      }
-
-      this.processStatusWebsocketsByIdentifier[identifier].push(ws);
-
-      this.sendProcessUpdate(process);
-
-      ws.on('message', (msg) => {
-        ws.send('PONG');
-      });
-
-      ws.on('close', () => {
-        this.processesStatusWebsockets = this.processesStatusWebsockets.filter((socket) => socket !== ws);
-        this.logger.info('Process status websocket disconnected', identifier);
-      });
-    });
+    this.apiProcessesStatusWebsocket.initialize(ws);
+    this.apiProcessStatusWebsocket.initialize(ws);
 
     ws.app.ws('/api/process/:identifier/log/:level', (ws, req) => {
       const logWs = {
@@ -186,10 +144,6 @@ export class Webserver {
       this.logger.info('Process state websocket connected', identifier, this.stateWebsocketsByIdentifier[identifier].length);
       this.sendStateUpdate(identifier, undefined);
 
-      ws.on('message', (msg) => {
-        ws.send('PONG');
-      });
-
       ws.on('close', () => {
         this.stateWebsocketsByIdentifier[identifier] = this.stateWebsocketsByIdentifier[identifier].filter((socket) => socket !== ws);
         this.logger.info('Process state websocket disconnected', identifier);
@@ -209,7 +163,7 @@ export class Webserver {
         return res.status(404).send('Process not found');
       }
 
-      res.send(processToDto(process));
+      res.send(processToDto(this.hub, process));
     });
 
     this.express.get('/api/definitions', (req, res) => {
@@ -292,7 +246,7 @@ export class Webserver {
       }
 
       res.render('details', {
-        process: processToDto(process),
+        process: processToDto(this.hub, process),
         config: YAML.stringify(process.provider.config),
         definition: process.provider.definition,
         debugEvents: debugEventsForDeviceType(),
@@ -302,20 +256,6 @@ export class Webserver {
     const server = this.express.listen(this.config.port, () => {
       this.logger.info('Webserver started on port:', this.config.port);
     });
-
-    /*
-    this.express.get('/api/processes/:identifier/states', (req, res) => {
-      const identifier = req.params.identifier;
-      const process = this.hub.packages.getProcess(identifier);
-
-      if (!process) {
-        return res.status(404).send('Process not found');
-      }
-
-      const states = this.hub.state.getAttributes(process.provider);
-      res.send(states);
-    });
-    */
 
     this.server = server;
     return true;
@@ -336,6 +276,16 @@ export class Webserver {
     if (!item) {
       this.logger.error('Event not found', event);
       return { code: 400, message: 'Event not found' };
+    }
+
+    if (event === 'stop') {
+      this.hub.packages.stopProcess(process.uuid);
+      return { code: 200, message: 'OK' };
+    }
+
+    if (event === 'start') {
+      this.hub.packages.startProcess(process.uuid);
+      return { code: 200, message: 'OK' };
     }
 
     const methodParameters: any[] = [];

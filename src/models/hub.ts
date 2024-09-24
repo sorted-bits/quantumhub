@@ -1,5 +1,6 @@
 import { Logger as ILogger } from 'quantumhub-sdk';
 import { ConfigLoader } from './config/config-loader';
+import { defaultValues } from './config/defaults';
 import { BaseConfig } from './config/interfaces/base-config';
 import { LogConfig } from './config/interfaces/log-config';
 import { Logger } from './logger/logger';
@@ -30,7 +31,7 @@ export class Hub {
     const configLoader = new ConfigLoader();
     this.options = config;
 
-    this._config = configLoader.loadConfig(configurationFile, new Logger('ConfigLoader', this, configLoader.defaults.log));
+    this._config = configLoader.loadConfig(configurationFile, new Logger('ConfigLoader', this, defaultValues.log));
 
     this.logger = this.createLogger('Hub');
     this.state = new StateManager(this);

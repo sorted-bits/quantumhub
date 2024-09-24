@@ -22,12 +22,20 @@ export class StateManager {
     return this.states[provider.config.identifier];
   };
 
+  getAvailability = (provider: PackageProvider): boolean => {
+    return this.deviceAvailability[provider.config.identifier];
+  };
+
   setAvailability = async (provider: PackageProvider, availability: boolean): Promise<void> => {
     this.logger.trace('Setting availability:', provider.config.identifier, availability);
 
     this.deviceAvailability[provider.config.identifier] = availability;
 
     await this.publishDeviceAvailability(provider, availability);
+    const process = this.hub.packages.getProcess(provider.config.identifier);
+    if (process) {
+      this.hub.server.sendProcessUpdate(process);
+    }
   };
 
   setAttributeValue = async (provider: PackageProvider, attribute: string, value: any, force: boolean = false): Promise<void> => {
