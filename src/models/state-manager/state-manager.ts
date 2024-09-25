@@ -49,10 +49,6 @@ export class StateManager {
 
     const previousValue = this.states[key][attribute];
 
-    if (previousValue === value && !force) {
-      return;
-    }
-
     this.states[key][attribute] = value;
 
     const definition = provider.definition.attributes.find((a) => a.key === attribute);

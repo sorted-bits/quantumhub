@@ -127,7 +127,7 @@ export class Webserver {
         return res.status(404).send('Process not found');
       }
 
-      const states = this.hub.state.getAttributes(process.provider);
+      const states = this.hub.state.getAttributes(process.provider) ?? {};
 
       res.render('details', {
         process: processToDto(this.hub, process),
