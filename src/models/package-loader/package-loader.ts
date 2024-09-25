@@ -253,14 +253,13 @@ export class PackageLoader {
       this.logger.error('Process not found:', uuid);
       return;
     }
+    process.provider.clearAllTimeouts();
 
     if (process.status === ProcessStatus.STOPPING || process.status === ProcessStatus.STOPPED) {
       return;
     }
 
     process.stopTime = DateTime.now();
-
-    process.provider.clearAllTimeouts();
 
     process.status = ProcessStatus.STOPPING;
     this.hub.state.setAvailability(process.provider, false);
