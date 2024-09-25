@@ -32,6 +32,14 @@ export class StateManager {
 
     this.deviceAvailability[provider.config.identifier] = availability;
 
+    if (!availability) {
+      for (const attribute of provider.definition.attributes) {
+        if (attribute.unavailability_value !== undefined) {
+          this.setAttributeValue(provider, attribute.key, attribute.unavailability_value);
+        }
+      }
+    }
+
     await this.publishDeviceAvailability(provider, availability);
     const process = this.hub.packages.getProcess(provider.config.identifier);
     if (process) {
@@ -189,7 +197,7 @@ export class StateManager {
 
   publishDeviceDescription = async (provider: PackageProvider, attribute: Attribute): Promise<void> => {
     const attributeIdentifier = attribute.key;
-    const topic = `${this.hub.config.homeassistant.base_topic}/${attribute.type}/${provider.config.identifier}/${attributeIdentifier}/config`;
+    const topic = `${this.hub.config.homeassistant.base_topic}/${attribute.type}/${provider.mqttTopic}/${attributeIdentifier}/config`;
 
     if (this.deviceDescriptionsPublished.includes(topic)) {
       return;
@@ -200,7 +208,6 @@ export class StateManager {
     const stateTopic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}`;
 
     const config = {
-      ...this.availabilityAttributes(provider),
       ...this.deviceDetailsAttribute(provider),
 
       enabled_by_default: true,
@@ -213,6 +220,11 @@ export class StateManager {
       unique_id: `${provider.config.identifier}_${attributeIdentifier}`,
       value_template: `{{ value_json.${attributeIdentifier} }}`,
     };
+
+    if (!attribute.unavailability_value) {
+      const availability = this.availabilityAttributes(provider);
+      config.availability = availability.availability;
+    }
 
     switch (attribute.type) {
       case DeviceType.climate: {

@@ -23,7 +23,7 @@ export const debugEventsForDeviceType = () => {
           deviceType: 'General',
           optional: false,
           parameters: [],
-        },
+        },        
         {
           name: 'onMessage',
           description: 'This will call the onMessage function of the device, this method is optional and is triggered when the device manually subscribes to a MQTT topic.',
@@ -61,6 +61,25 @@ export const debugEventsForDeviceType = () => {
           ],
         },
       ],
+    },
+    {
+      name: 'availability',
+      items: [
+        {
+          name: 'setAvailable',
+          description: 'This sets the availability of the device to true',
+          deviceType: 'Availability',
+          optional: true,
+          parameters: []
+        },
+        {
+          name: 'setUnavailable',
+          description: 'Set the availability of the device to false',
+          deviceType: 'Availability',
+          optional: true,
+          parameters: []
+        },
+      ]      
     },
     {
       name: 'button',

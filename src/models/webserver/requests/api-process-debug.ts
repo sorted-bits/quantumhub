@@ -20,9 +20,11 @@ export const apiProcessDebugRequest = (hub: Hub, request: any, response: any) =>
   }
 
   const event = request.body.event;
+  if (event !== 'setAvailable' && event !== 'setUnavailable') {
   if (typeof (process.provider.device as any)[event] !== 'function') {
     logger.error('Event not found', event);
     return response.status(400).send('Event not found');
+    }
   }
 
   const parameters = request.body;
@@ -45,6 +47,16 @@ const callDeviceMethod = async (logger: ILogger, hub: Hub, process: Process, eve
   if (!item) {
     logger.error('Event not found', event);
     return { code: 400, message: 'Event not found' };
+  }
+
+  if (event === 'setAvailable') {
+    process.provider.setAvailability(true);
+    return { code: 200, message: 'OK' };
+  }
+
+  if (event === 'setUnavailable') {
+    process.provider.setAvailability(false);
+    return { code: 200, message: 'OK' };
   }
 
   if (event === 'stop') {

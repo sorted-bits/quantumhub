@@ -26,6 +26,10 @@ export class PackageProvider implements Provider {
     return this.deviceLogger;
   }
 
+  get mqttTopic(): string {
+    return `${this.hub.config.instance_name}_${this.config.identifier}`;
+  }
+
   getAttribute = (attribute: string): Attribute | undefined => {
     return this.definition.attributes.find((attr) => attr.key === attribute);
   };
