@@ -28,14 +28,19 @@
     <div class='tabs'>
       <ul>
         <li class='is-active'><a href='#details-tab'>Configuration</a></li>
-        <li><a href='#logs-tab'>Logs</a></li>
+        <li><a href='#attributes-tab'>Attributes</a></li>
         <li><a href='#state-tab'>State</a></li>
+        <li><a href='#logs-tab'>Logs</a></li>
         <li><a href='#debug-tab'>Debug</a></li>
       </ul>
     </div>
 
     <div id='details-tab' class='tab-content '>
       {{> process-details}}
+    </div>
+
+    <div id='attributes-tab' class='tab-content is-hidden'>
+      {{> process-attributes}}
     </div>
 
     <div id='debug-tab' class='tab-content is-hidden'>

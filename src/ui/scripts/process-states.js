@@ -17,11 +17,11 @@ function selectState(key) {
   const stateDetails = document.getElementById('state-details');
   stateDetails.style.display = 'block';
 
-  stateDetails.querySelectorAll('.attribute-details').forEach((detail) => {
+  stateDetails.querySelectorAll('.state-attribute-details').forEach((detail) => {
     detail.style.display = 'none';
   });
 
-  const attributeDetails = document.getElementById(`attribute-${key}`);
+  const attributeDetails = document.getElementById(`state-attribute-${key}`);
   if (attributeDetails) {
     attributeDetails.style.display = 'block';
   } else {

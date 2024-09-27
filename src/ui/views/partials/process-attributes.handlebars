@@ -1,0 +1,53 @@
+<div class='columns'>
+  <div class='column is-one-quarter'>
+      <aside class='menu'>
+        <p class='menu-label'>{{definition.name}}</p>
+        <ul class='menu-list'>
+        {{#each attributes}}
+            <li>
+            <a onclick='selectAttribute("{{key}}")' class="menu-link" id="menu-link-{{key}}">
+                {{key}}
+            </a>
+        </li>
+        {{/each}}
+        </ul>
+      </aside>
+
+  </div>
+  <div class='column'>
+    {{#each definition.attributes}}
+        <div class='block attribute-details' id='attribute-{{key}}' style='display: none;' > 
+            <h6 class='title is-5'>{{key}}</h6>
+            <table class='table' style='width: 100%;'>
+                <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Value</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{#each this}}
+                    <tr><td width='20%'>{{@key}}</td><td>{{this}}</td></tr>
+                {{/each}}
+                </tbody>
+            </table>
+        </div>
+    {{/each}}
+  </div>
+</div>
+
+<script>
+    function selectAttribute(attribute) {
+        document.querySelectorAll('.attribute-details').forEach((detail) => {
+            detail.style = 'display: none;';
+        });
+
+        document.getElementById(`attribute-${attribute}`).style.display = 'block';
+
+        document.querySelectorAll('.menu-link').forEach((link) => {
+            link.classList.remove('is-active');
+        });
+
+        document.getElementById(`menu-link-${attribute}`).classList.add('is-active');
+    }
+</script>

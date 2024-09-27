@@ -133,8 +133,9 @@ export class Webserver {
         process: processToDto(this.hub, process),
         config: YAML.stringify(process.provider.config),
         definition: process.provider.definition,
+        attributes: process.provider.getAttributes(),
         debugEvents: debugEventsForDeviceType(),
-        states: Object.keys(states).map((key) => {
+        states: Object.keys(states).sort().map((key) => {
           return {
             key,
             value: typeof states[key] === 'object' ? JSON.stringify(states[key]) : states[key],

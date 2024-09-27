@@ -34,6 +34,12 @@ export class PackageProvider implements Provider {
     return this.definition.attributes.find((attr) => attr.key === attribute);
   };
 
+  getAttributes = (): Attribute[] => {
+    const result = this.definition.attributes.sort((a, b) => a.key.localeCompare(b.key));
+
+    return result;
+  };
+
   /**
    * Stores the value of the attribute in the state manager and publishes the changes to MQTT
    *
