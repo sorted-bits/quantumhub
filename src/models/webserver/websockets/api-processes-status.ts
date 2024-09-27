@@ -29,7 +29,7 @@ export class ApiProcessesStatusWebsocket implements ApiSocketConnection {
 
       ws.on('close', () => {
         this.sockets = this.sockets.filter((socket) => socket !== ws);
-        this.logger.info('Websocket disconnected');
+        this.logger.trace('Websocket disconnected');
       });
     });
   };
