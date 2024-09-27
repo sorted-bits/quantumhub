@@ -20,14 +20,14 @@ export class ApiProcessStatusWebsocket implements ApiSocketConnection {
   }
 
   initialize = async (ws: expressWs.Instance): Promise<void> => {
-    this.logger.info('Initializing');
+    this.logger.trace('Initializing');
 
     ws.app.ws('/api/process/:identifier/status', (ws, req) => {
       const identifier = req.params.identifier;
 
       const process = this.hub.packages.getProcess(identifier);
 
-      this.logger.info('Websocket connected', identifier);
+      this.logger.trace('Websocket connected', identifier);
 
       if (!process) {
         this.logger.error('Process not found', identifier);
@@ -42,7 +42,7 @@ export class ApiProcessStatusWebsocket implements ApiSocketConnection {
 
       ws.on('close', () => {
         this.sockets[identifier] = this.sockets[identifier].filter((socket) => socket !== ws);
-        this.logger.info('Websocket disconnected', identifier);
+        this.logger.trace('Websocket disconnected', identifier);
       });
     });
   };

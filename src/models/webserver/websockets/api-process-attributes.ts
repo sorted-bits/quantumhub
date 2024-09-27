@@ -26,7 +26,7 @@ export class ApiProcessAttributesWebsocket implements ApiSocketConnection {
   }
 
   initialize = async (ws: expressWs.Instance): Promise<void> => {
-    this.logger.info('Initializing');
+    this.logger.trace('Initializing');
 
     ws.app.ws('/api/process/:identifier/attributes', (ws, req) => {
       const identifier = req.params.identifier;
@@ -41,11 +41,11 @@ export class ApiProcessAttributesWebsocket implements ApiSocketConnection {
       }
 
       this.stateWebsocketsByIdentifier[identifier].push(ws);
-      this.logger.info('Process state websocket connected', identifier, this.stateWebsocketsByIdentifier[identifier].length);
+      this.logger.trace('Process state websocket connected', identifier, this.stateWebsocketsByIdentifier[identifier].length);
 
       ws.on('close', () => {
         this.stateWebsocketsByIdentifier[identifier] = this.stateWebsocketsByIdentifier[identifier].filter((socket) => socket !== ws);
-        this.logger.info('Process state websocket disconnected', identifier);
+        this.logger.trace('Process state websocket disconnected', identifier);
       });
     });
   };

@@ -26,7 +26,7 @@ export class ApiProcessLogWebsocket implements ApiSocketConnection {
   }
 
   initialize = async (ws: expressWs.Instance): Promise<void> => {
-    this.logger.info('Initializing');
+    this.logger.trace('Initializing');
 
     ws.app.ws('/api/process/:identifier/log/:level', (ws, req) => {
       const logWs = {
@@ -35,12 +35,12 @@ export class ApiProcessLogWebsocket implements ApiSocketConnection {
         level: req.params.level,
       };
 
-      this.logger.info('Logging socket connected', req.params.identifier, req.params.level);
+      this.logger.trace('Logging socket connected', req.params.identifier, req.params.level);
       this.logWebsockets.push(logWs);
 
       ws.on('close', () => {
         this.logWebsockets = this.logWebsockets.filter((socket) => socket !== logWs);
-        this.logger.info('Logging socket disconnected', req.params.identifier);
+        this.logger.trace('Logging socket disconnected', req.params.identifier);
       });
     });
   };
