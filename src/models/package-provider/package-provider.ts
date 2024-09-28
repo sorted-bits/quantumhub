@@ -1,6 +1,9 @@
 import { Attribute, Device, DeviceType, Logger as ILogger, PackageConfig, Provider } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { Definition } from '../package-loader/interfaces/definition';
+import { ProviderMQTT} from './provider-mqtt';
+import { ProviderTimeout } from './provider-timeout';
+import { ProviderCache } from './provider-cache';
 
 export class PackageProvider implements Provider {
   config: PackageConfig;
@@ -9,8 +12,10 @@ export class PackageProvider implements Provider {
   device: Device;
   deviceLogger: ILogger;
 
-  private timeouts: NodeJS.Timeout[] = [];
-
+  providerMqtt: ProviderMQTT;
+  providerTimeout: ProviderTimeout;
+  providerCache: ProviderCache;
+  
   constructor(hub: Hub, config: PackageConfig, definition: Definition, device: Device) {
     this.config = config;
     this.hub = hub;
@@ -19,7 +24,27 @@ export class PackageProvider implements Provider {
 
     this.deviceLogger = this.hub.createLogger(this.config.identifier);
 
+    this.providerMqtt = new ProviderMQTT(this, this.hub);
+    this.providerTimeout = new ProviderTimeout(this);
+    this.providerCache = new ProviderCache(this.hub, this);
+
     this.registerAttributes();
+
+    this.providerCache.all().then((result) => {
+      this.deviceLogger.info('Cache during init:', result);
+    });
+  }
+
+  get cache(): ProviderCache {
+    return this.providerCache;
+  }
+
+  get timeout(): ProviderTimeout {
+    return this.providerTimeout;
+  }
+
+  get mqtt(): ProviderMQTT {
+    return this.providerMqtt;
   }
 
   get logger(): ILogger {
@@ -73,32 +98,6 @@ export class PackageProvider implements Provider {
     return this.config as any;
   };
 
-  /**
-   * Subscribes directly to a MQTT topic
-   *
-   * @param {string} topic The topic to subscribe to
-   * @returns {Promise<void>}
-   * @memberof PackageProvider
-   */
-  subscribeToTopic = (topic: string): Promise<void> => {
-    this.deviceLogger.trace('Subscribing to topic', topic);
-    return this.hub.mqtt.subscribeToTopic(topic, this);
-  };
-
-  /**
-   * Publishes a message to a MQTT topic
-   *
-   * @param {string} topic The topic to publish to
-   * @param {string} message The message to publish
-   * @param {boolean} retain Whether the message should be retained
-   * @returns {Promise<void>}
-   * @memberof PackageProvider
-   */
-  publishToTopic = (topic: string, message: string, retain: boolean): Promise<void> => {
-    this.deviceLogger.trace('Publishing to topic', topic, message);
-    return this.hub.mqtt.publish(topic, message, retain);
-  };
-
   private registerAttributes = async (): Promise<void> => {
     const attributes = this.definition.attributes;
 
@@ -107,33 +106,5 @@ export class PackageProvider implements Provider {
         await this.hub.state.publishDeviceDescription(this, attribute);
       }
     }
-  };
-
-  setTimeout = (callback: () => Promise<void>, timeout: number): NodeJS.Timeout => {
-    const id = setTimeout(() => {
-      callback()
-        .catch((error) => {
-          this.deviceLogger.warn('Device crashed during setTime', error);
-        })
-        .finally(() => {
-          this.timeouts = this.timeouts.filter((id) => id !== id);
-        });
-    }, timeout);
-
-    this.timeouts.push(id);
-    return id;
-  };
-
-  clearTimeout = (timeout: NodeJS.Timeout): void => {
-    clearTimeout(timeout);
-    this.timeouts = this.timeouts.filter((id) => id !== timeout);
-  };
-
-  clearAllTimeouts = (): void => {
-    for (const timeout of this.timeouts) {
-      clearTimeout(timeout);
-    }
-
-    this.timeouts = [];
   };
 }

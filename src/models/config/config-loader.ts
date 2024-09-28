@@ -19,6 +19,10 @@ export class ConfigLoader {
       const output = YAML.parse(content, {});
 
       const result: BaseConfig = {
+        storage: {
+          ...defaults.storage,
+          ...output.storage,
+        },
         mqtt: {
           ...defaults.mqtt,
           ...output.mqtt,

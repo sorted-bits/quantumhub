@@ -12,7 +12,7 @@ import { Process, processToDto } from './interfaces/process';
 import { DateTime } from 'luxon';
 import { Device } from 'quantumhub-sdk';
 import { PackageConfig } from '../config/interfaces/packages-config';
-import { PackageProvider } from '../provider/package-provider';
+import { PackageProvider } from '../package-provider/package-provider';
 import { ProcessStatus } from './enums/status';
 
 export class PackageLoader {
@@ -228,6 +228,11 @@ export class PackageLoader {
     const configurations = this.hub.config.packages.configuration;
 
     for (const config of configurations) {
+      if (config.disabled) {
+        this.logger.trace('Package disabled:', config.name);
+        continue;
+      }
+
       const definition = this._definitions.find((elm) => elm.name === config.package);
       if (!definition) {
         this.logger.error('Package not found:', config.package);
@@ -253,7 +258,7 @@ export class PackageLoader {
       this.logger.error('Process not found:', uuid);
       return;
     }
-    process.provider.clearAllTimeouts();
+    process.provider.timeout.clearAll();
 
     if (process.status === ProcessStatus.STOPPING || process.status === ProcessStatus.STOPPED) {
       return;

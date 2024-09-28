@@ -15,6 +15,7 @@ import { ApiProcessAttributesWebsocket } from './websockets/api-process-attribut
 import { ApiProcessLogWebsocket } from './websockets/api-process-log';
 import { ApiProcessStatusWebsocket } from './websockets/api-process-status';
 import { ApiProcessesStatusWebsocket } from './websockets/api-processes-status';
+import { ApiProcessCacheWebsocket } from './websockets/api-process-cache';
 
 export class Webserver {
   private express: express.Express;
@@ -27,6 +28,7 @@ export class Webserver {
   private apiProcessStatusWebsocket: ApiProcessStatusWebsocket;
   private apiProcessLogWebsocket: ApiProcessLogWebsocket;
   private apiProcessAttributesWebsocket: ApiProcessAttributesWebsocket;
+  private apiProcessCacheWebsocket: ApiProcessCacheWebsocket;
 
   constructor(hub: Hub) {
     this.hub = hub;
@@ -56,6 +58,7 @@ export class Webserver {
     this.apiProcessStatusWebsocket = new ApiProcessStatusWebsocket(this.hub, this);
     this.apiProcessLogWebsocket = new ApiProcessLogWebsocket(this.hub, this);
     this.apiProcessAttributesWebsocket = new ApiProcessAttributesWebsocket(this.hub, this);
+    this.apiProcessCacheWebsocket = new ApiProcessCacheWebsocket(this.hub, this);
     this.logger.info('Webserver initialized');
   }
 
@@ -84,7 +87,7 @@ export class Webserver {
     this.apiProcessStatusWebsocket.initialize(ws);
     this.apiProcessLogWebsocket.initialize(ws);
     this.apiProcessAttributesWebsocket.initialize(ws);
-
+    this.apiProcessCacheWebsocket.initialize(ws);
     this.express.post('/api/process/:identifier/debug', (req, res) => apiProcessDebugRequest(this.hub, req, res));
 
     this.express.post('/api/processes/:identifier/states/:state', (req, res) => {
@@ -117,7 +120,7 @@ export class Webserver {
       res.render('configuration', { config: YAML.stringify(this.hub.config) });
     });
 
-    this.express.get('/process/:identifier', (req, res) => {
+    this.express.get('/process/:identifier', async (req, res) => {
       const identifier = req.params.identifier;
       this.logger.info('Getting process details', identifier);
 
@@ -128,6 +131,7 @@ export class Webserver {
       }
 
       const states = this.hub.state.getAttributes(process.provider) ?? {};
+      const cache = await this.hub.cache.all(process.provider);
 
       res.render('details', {
         process: processToDto(this.hub, process),
@@ -135,6 +139,12 @@ export class Webserver {
         definition: process.provider.definition,
         attributes: process.provider.getAttributes(),
         debugEvents: debugEventsForDeviceType(),
+        cache: Object.keys(cache).sort().map((key) => {
+          return {
+            key,
+            value: cache[key],
+          };
+        }),
         states: Object.keys(states).sort().map((key) => {
           return {
             key,

@@ -8,6 +8,7 @@ import { MQTT } from './mqtt/mqtt';
 import { PackageLoader } from './package-loader/package-loader';
 import { StateManager } from './state-manager/state-manager';
 import { Webserver } from './webserver/webserver';
+import { QuantumCache } from './database/cache';
 
 interface ConfigOptions {
   uiPath: string;
@@ -19,7 +20,7 @@ export class Hub {
   packages: PackageLoader;
   logger: ILogger;
   server: Webserver;
-
+  cache: QuantumCache;
   options: ConfigOptions;
   private _config: BaseConfig;
 
@@ -38,6 +39,8 @@ export class Hub {
     this.mqtt = new MQTT(this);
     this.packages = new PackageLoader(this);
     this.server = new Webserver(this);
+
+    this.cache = new QuantumCache(this, this._config.storage);
   }
 
   createLogger = (name: string, config: LogConfig = this.config.log): ILogger => {
@@ -45,6 +48,8 @@ export class Hub {
   };
 
   initialize = async (): Promise<boolean> => {
+    await this.cache.initialize();
+    
     const result = await this.server.start();
     if (!result) {
       this.logger.error('Failed to start webserver');

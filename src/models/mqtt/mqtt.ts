@@ -2,7 +2,7 @@ import { connect, MqttClient } from 'mqtt';
 import { Attribute, Logger as ILogger } from 'quantumhub-sdk';
 import { MqttConfig } from '../config/interfaces/mqtt-config';
 import { Hub } from '../hub';
-import { PackageProvider } from '../provider/package-provider';
+import { PackageProvider } from '../package-provider/package-provider';
 import { ProviderAttribute } from './interfaces/provider-attribute';
 
 export class MQTT {

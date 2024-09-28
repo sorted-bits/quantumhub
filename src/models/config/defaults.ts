@@ -1,6 +1,9 @@
 import { BaseConfig } from './interfaces/base-config';
 
 export const defaultValues: BaseConfig = {
+  storage: {
+    file: 'storage.sqlite',
+  },
   mqtt: {
     host: 'localhost',
     port: 1883,

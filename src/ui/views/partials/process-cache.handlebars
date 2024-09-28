@@ -1,0 +1,67 @@
+<div class='columns'>
+    <div class='column is-two-thirds'>
+        <table style='width: 100%;' class='table'>
+            <thead>
+                <tr>
+                    <th style='width: 35%;'>cache</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody id='attribute-list'>
+                {{#each cache}}
+                <tr id='attribute-{{key}}-row'>
+                    <td width='20%'>
+                        <a onclick='selectState("{{key}}")'>{{key}}</a>
+                    </td>
+                    <td class='value'>
+                        {{value}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    <div class='column'>
+
+        <div id='state-details' style='display: none;'>
+            <div class='block'>
+                {{#each definition.attributes}}
+                <div id='state-attribute-{{key}}' class='state-attribute-details' style='display: none;'>
+                    <h6 class='title is-5'>{{key}}</h6>
+                    <table class='table' style='width: 100%;'>
+                        <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each this}}
+                            <tr>
+                                <td width='20%'>{{@key}}</td>
+                                <td>{{this}}</td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+                {{/each}}
+            </div>
+            <div class='block'>
+                <h5 class='title is-5'>History (last 10)</h5>
+                <table style='width: 100%;' class='table'>
+                    <thead>
+                        <tr>
+                            <th width='20%'>Timestamp</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id='state-history'>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src='/scripts/process-states.js'></script>

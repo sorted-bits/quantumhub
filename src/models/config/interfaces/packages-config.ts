@@ -8,4 +8,5 @@ export interface PackageConfig {
   name: string;
   identifier: string;
   config_file?: string;
+  disabled?: boolean;
 }

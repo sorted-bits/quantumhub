@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { Hub } from '../../hub';
-import { PackageProvider } from '../../provider/package-provider';
+import { PackageProvider } from '../../package-provider/package-provider';
 import { ProcessStatus } from '../enums/status';
 
 export interface Process {

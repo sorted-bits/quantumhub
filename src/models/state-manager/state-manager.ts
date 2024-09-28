@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
 import { Attribute, ButtonAttribute, ClimateAttribute, DeviceAutomationAttribute, DeviceClass, DeviceType, Logger as ILogger, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from 'quantumhub-sdk';
 import { Hub } from '../hub';
-import { PackageProvider } from '../provider/package-provider';
+import { PackageProvider } from '../package-provider/package-provider';
 
 export class StateManager {
   private logger: ILogger;
