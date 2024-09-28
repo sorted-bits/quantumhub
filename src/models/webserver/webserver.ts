@@ -34,6 +34,7 @@ export class Webserver {
     this.hub = hub;
 
     const hbe = create({
+
       helpers: {
         json: (context: any) => JSON.parse(context),
         eq: (a: any, b: any) => a === b,
@@ -41,7 +42,9 @@ export class Webserver {
       partialsDir: this.hub.options.uiPath + '/views/partials',
     });
 
+
     this.express = express();
+    this.express.disable('view cache');
     this.express.engine('handlebars', hbe.engine);
     this.express.set('view engine', 'handlebars');
     this.express.set('views', this.hub.options.uiPath + '/views');

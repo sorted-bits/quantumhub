@@ -1,8 +1,5 @@
 <section class='section'>
   <h1 class='title'>Running processes</h1>
-  <h2 class='subtitle'>
-    Currently the following processes are running:
-  </h2>
   <table class='table is-fullwidth is-striped'>
     <thead>
       <tr>
@@ -16,7 +13,7 @@
       {{#each processes}}
         <tr>
           <td>
-            <a href='/process/{{identifier}}'>{{name}}</a>
+            <a href='/process/{{identifier}}' class="has-text-primary">{{name}}</a>
           </td>
           <td width='220px'>
             {{#if (eq availability true)}}
