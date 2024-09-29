@@ -9,7 +9,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "css": "sass src/ui/sass/style.scss src/ui/css/style.css",
     "watch-css": "sass --watch src/ui/sass/style.scss src/ui/css/style.css",
-    "publish-docker": "docker build -t sortedbit/quantumhub . && docker image push sortedbit/quantumhub"
+    "publish-docker": "docker build -t sortedbit/quantumhub . && docker image push sortedbit/quantumhub",
+    "docker-publish": "docker build -t sortedbit/quantumhub . && docker image push sortedbit/quantumhub"
   },
   "keywords": [],
   "author": "",
@@ -36,7 +37,7 @@
     "luxon": "3.5.0",
     "mqtt": "5.10.1",
     "nodemon": "3.1.4",
-    "quantumhub-sdk": "1.4.9",
+    "quantumhub-sdk": "1.4.10",
     "sqlite3": "5.1.7",
     "ts-node": "^10.9.2",
     "typescript": "5.6.2",

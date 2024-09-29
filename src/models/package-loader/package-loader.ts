@@ -124,6 +124,8 @@ export class PackageLoader {
       const data = output.attributes[key];
       data.key = key;
 
+      data.availability = data.availability ?? (data.unavailability_value === undefined);
+
       this.logger.trace('Loaded attribute:', JSON.stringify(data));
 
       attributes.push(data);

@@ -34,7 +34,7 @@ export class StateManager {
 
     if (!availability) {
       for (const attribute of provider.definition.attributes) {
-        if (attribute.unavailability_value !== undefined) {
+        if (attribute.unavailability_value !== undefined && !attribute.availability) {
           this.setAttributeValue(provider, attribute.key, attribute.unavailability_value);
         }
       }
@@ -221,7 +221,7 @@ export class StateManager {
       value_template: `{{ value_json.${attributeIdentifier} }}`,
     };
 
-    if (attribute.unavailability_value === undefined) {
+    if (attribute.availability) {
       const availability = this.availabilityAttributes(provider);
       config.availability = availability.availability;
     }
