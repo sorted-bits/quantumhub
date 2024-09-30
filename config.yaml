@@ -19,6 +19,9 @@ mqtt:
 # validate_certificate: true # Whether to validate the certificate of the MQTT broker
   base_topic: qt # The base topic to use for MQTT
 
+storage:
+  file: 'storage.sqlite'
+
 packages:
   root: ./packages
   configuration:
@@ -33,6 +36,19 @@ packages:
     - package: example-climate
       identifier: heater
       name: Heater
+    - package: growatt
+      identifier: quantumhub_growatt_3ph_mod_tl3_x
+      name: Growatt 3PH MOD TL3-X series
+      device: growatt-tl3
+      host: 10.210.5.12
+      port: 502
+      unitId: 1
+      updateInterval: 1
+      solarman: false
+      config_file: /Volumes/Projects/quantumhub/modules/modbus-solarman/growatt.yaml
+      disabled: false
+      unavailable_timeout: 180 # When no successful read is done, the device is marked as unavailable after this timeout (Seconds)
+      # serial: 123456789 # This is needed when you are connecting through solarman      
 
 homeassistant:
 # availability: true # Whether to publish availability messages

@@ -148,8 +148,8 @@ export class StateManager {
       }
       case DeviceType.switch: {
         const switchAttribute = attribute as SwitchAttribute;
-        if (payload === switchAttribute.payload_on || payload === switchAttribute.payload_off) {
-          const value = payload === switchAttribute.payload_on;
+        if (payload === 'ON' || payload === 'OFF') {
+          const value = payload === 'ON';
 
           if (provider.device.onSwitchChanged) {
             provider.device.onSwitchChanged(switchAttribute, value);
@@ -294,7 +294,6 @@ export class StateManager {
       case DeviceType.scene: {
         const sceneAttribute = attribute as SceneAttribute;
         config.command_topic = `${stateTopic}/${attribute.key}/set`;
-        config.payload_on = sceneAttribute.payload_on;
 
         this.hub.mqtt.subscribeToAttribute(provider, attribute, config.command_topic);
         break;
@@ -302,7 +301,6 @@ export class StateManager {
       case DeviceType.button: {
         const buttonAttribute = attribute as ButtonAttribute;
         config.command_topic = `${stateTopic}/${attribute.key}/set`;
-        config.payload_press = buttonAttribute.payload_press;
 
         this.hub.mqtt.subscribeToAttribute(provider, attribute, config.command_topic);
         break;
@@ -344,12 +342,6 @@ export class StateManager {
         const switchAttribute = attribute as SwitchAttribute;
         const commandTopic = `${stateTopic}/${attribute.key}/set`;
         config.command_topic = commandTopic;
-
-        config.payload_on = switchAttribute.payload_on;
-        config.payload_off = switchAttribute.payload_off;
-
-        config.state_on = switchAttribute.payload_on;
-        config.state_off = switchAttribute.payload_off;
 
         this.hub.mqtt.subscribeToAttribute(provider, attribute, commandTopic);
         break;
