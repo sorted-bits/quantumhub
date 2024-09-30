@@ -33,7 +33,7 @@ export class StateManager {
     this.deviceAvailability[provider.config.identifier] = availability;
 
     if (!availability) {
-      for (const attribute of provider.definition.attributes) {
+      for (const attribute of provider.packageDefinition.attributes) {
         if (attribute.unavailability_value !== undefined && !attribute.availability) {
           this.setAttributeValue(provider, attribute.key, attribute.unavailability_value);
         }
@@ -59,9 +59,7 @@ export class StateManager {
 
     this.states[key][attribute] = value;
 
-    this.hub.data.state.set(provider, attribute, value);
-
-    const definition = provider.definition.attributes.find((a) => a.key === attribute);
+    const definition = provider.packageDefinition.attributes.find((a) => a.key === attribute);
 
     if (definition) {
       this.publishDeviceDescription(provider, definition);
@@ -117,18 +115,68 @@ export class StateManager {
 
   onMessage = async (provider: PackageProvider, attribute: Attribute, mqttData: { payload: string; topic: string }): Promise<void> => {
     const { payload, topic } = mqttData;
+
+    this.logger.info('Received message:', topic, payload);
+
     switch (attribute.type) {
       case DeviceType.climate: {
+        this.logger.info('Received climate action:', topic);
+        const climateAttribute = attribute as ClimateAttribute;
         const stateTopic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}`;
         const actionPath = topic.replace(`${stateTopic}/`, '');
+
+        this.logger.info('Received action:', actionPath);
 
         switch (actionPath) {
           case 'temperature/set': {
             const value = parseFloat(payload);
-            this.setAttributeValue(provider, attribute.key, value);
+
+            if (provider.device.onTargetTemperatureChanged) {
+              provider.device.onTargetTemperatureChanged(climateAttribute, value);
+            } else {
+              provider.logger.warn('No onTargetTemperatureChanged handler found on device', provider.config.identifier);
+            }
+
+            break;
+          }
+          case 'fan_mode/set': {
+            const value = payload;
+            if (provider.device.onClimateFanModeChanged) {
+              provider.device.onClimateFanModeChanged(climateAttribute, value);
+            } else {
+              provider.logger.warn('No onClimateFanModeChanged handler found on device', provider.config.identifier);
+            }
+            break;
+          }
+          case 'swing_mode/set': {
+            const value = payload;
+            if (provider.device.onClimateSwingModeChanged) {
+              provider.device.onClimateSwingModeChanged(climateAttribute, value);
+            } else {
+              provider.logger.warn('No onClimateSwingModeChanged handler found on device', provider.config.identifier);
+            }
+            break;
+          }
+          case 'target_humidity/set': {
+            const value = parseInt(payload);
+            provider.logger.warn('No onTargetHumidityChanged handler found on device', provider.config.identifier);
+            break;
+          }
+          case 'preset_mode/set': {
+            const value = payload;
+            if (provider.device.onClimatePresetModeChanged) {
+              provider.device.onClimatePresetModeChanged(climateAttribute, value);
+            } else {
+              provider.logger.warn('No onClimatePresetModeChanged handler found on device', provider.config.identifier);
+            }
+            break;
+          }
+          default: {
+            this.logger.warn('Unknown climate action:', actionPath);
             break;
           }
         }
+        break;
       }
       case DeviceType.button: {
         if (provider.device.onButtonPressed) {
@@ -235,6 +283,10 @@ export class StateManager {
         delete config.state_topic;
         delete config.value_template;
 
+        config.action_topic = `${stateTopic}/action/set`;
+        config.action_template = `{{ value_json.action }}`;
+        this.hub.mqtt.subscribeToAttribute(provider, attribute, config.action_topic);
+
         config.current_temperature_topic = `${stateTopic}`;
         config.current_temperature_template = `{{ value_json.current_temperature }}`;
 
@@ -242,44 +294,43 @@ export class StateManager {
         config.temperature_state_topic = `${stateTopic}`;
         config.temperature_state_template = `{{ value_json.target_temperature }}`;
 
+        this.hub.mqtt.subscribeToAttribute(provider, attribute, config.temperature_command_topic);
+
         if (climateAttribute.has_fanmode) {
           config.fan_mode_command_topic = `${stateTopic}/fan_mode/set`;
           config.fan_mode_state_topic = `${stateTopic}`;
           config.fan_mode_state_template = `{{ value_json.fan_mode }}`;
+
+          this.hub.mqtt.subscribeToAttribute(provider, attribute, config.fan_mode_command_topic);
         }
 
         if (climateAttribute.has_swingmode) {
           config.swing_mode_command_topic = `${stateTopic}/swing_mode/set`;
           config.swing_mode_state_topic = `${stateTopic}`;
           config.swing_mode_state_template = `{{ value_json.swing_mode }}`;
+
+          this.hub.mqtt.subscribeToAttribute(provider, attribute, config.swing_mode_command_topic);
         }
 
         if (climateAttribute.has_presetmode) {
           config.preset_mode_command_topic = `${stateTopic}/preset_mode/set`;
           config.preset_mode_state_topic = `${stateTopic}`;
           config.preset_mode_value_template = `{{ value_json.preset_mode }}`;
+
+          this.hub.mqtt.subscribeToAttribute(provider, attribute, config.preset_mode_command_topic);
         }
+
+        config.current_humidity_topic = `${stateTopic}`;
+        config.current_humidity_template = `{{ value_json.current_humidity }}`;
 
         if (climateAttribute.has_humidity_control) {
-          config.current_humidity_topic = `${stateTopic}`;
-          config.current_humidity_template = `{{ value_json.current_humidity }}`;
           config.target_humidity_command_topic = `${stateTopic}/target_humidity/set`;
+          config.target_humidity_state_topic = `${stateTopic}`;
+          config.target_humidity_state_template = `{{ value_json.target_humidity }}`;
+
+          this.hub.mqtt.subscribeToAttribute(provider, attribute, config.target_humidity_command_topic);
         }
-        /*
-        config.mode_command_topic = `${stateTopic}/mode/set`;
-        config.power_command_topic = `${stateTopic}/power/set`;
-        config.temperature_high_command_topic = `${stateTopic}/temperature_high/set`;
-        config.temperature_low_command_topic = `${stateTopic}/temperature_low/set`;
 
-        config.mode_state_topic = `${stateTopic}`;
-        config.mode_state_template = `{{ value_json.mode }}`;
-*/
-
-        config.min_temp = 1;
-        config.max_temp = 32;
-        config.temp_step = 0.5;
-
-        this.logger.info('Current humidity template:', config.current_humidity_template);
         break;
       }
       case DeviceType.device_tracker: {
@@ -371,7 +422,7 @@ export class StateManager {
     return {
       device: {
         identifiers: [provider.config.identifier],
-        manufacturer: provider.definition.author ?? 'QuantumHub',
+        manufacturer: provider.packageDefinition.author ?? 'QuantumHub',
         name: provider.config.name,
       },
     };

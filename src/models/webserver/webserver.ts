@@ -139,7 +139,7 @@ export class Webserver {
       res.render('details', {
         process: processToDto(this.hub, process),
         config: YAML.stringify(process.provider.config),
-        definition: process.provider.definition,
+        definition: process.provider.packageDefinition,
         attributes: process.provider.getAttributes(),
         debugEvents: debugEventsForDeviceType(),
         cache: Object.keys(cache).sort().map((key) => {

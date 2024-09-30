@@ -3,10 +3,9 @@ import path from 'path';
 import { v4 } from 'uuid';
 import YAML from 'yaml';
 
-import { Attribute, Logger } from 'quantumhub-sdk';
+import { Attribute, Logger, Definition } from 'quantumhub-sdk';
 
 import { Hub } from '../hub';
-import { Definition } from './interfaces/definition';
 import { Process, processToDto } from './interfaces/process';
 
 import { DateTime } from 'luxon';
@@ -197,7 +196,7 @@ export class PackageLoader {
       try {
         await process.provider.device.init(process.provider);
       } catch (error) {
-        process.provider.logger.error('Error initializing package:', process.provider.definition.name, error);
+        process.provider.logger.error('Error initializing package:', process.provider.packageDefinition.name, error);
         return false;
       }
     }
@@ -208,7 +207,7 @@ export class PackageLoader {
     try {
       await process.provider.device.start();
     } catch (error) {
-      process.provider.logger.error('Error starting package:', process.provider.definition.name, error);
+      process.provider.logger.error('Error starting package:', process.provider.packageDefinition.name, error);
       return false;
     }
 
@@ -276,7 +275,7 @@ export class PackageLoader {
     try {
       await process.provider.device.stop();
     } catch (error) {
-      this.logger.error('Error stopping package:', process.provider.definition.name, error);
+      this.logger.error('Error stopping package:', process.provider.packageDefinition.name, error);
     }
 
     process.status = ProcessStatus.STOPPED;
