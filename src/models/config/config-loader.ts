@@ -1,12 +1,12 @@
 import fs from 'fs';
-import { Logger as ILogger } from 'quantumhub-sdk';
+import { Logger } from 'quantumhub-sdk';
 import YAML from 'yaml';
 
 import { defaultValues } from './defaults';
 import { BaseConfig } from './interfaces/base-config';
 
 export class ConfigLoader {
-  loadConfig = (file: string, logger: ILogger): BaseConfig => {
+  loadConfig = (file: string, logger: Logger): BaseConfig => {
     try {
       const defaults = defaultValues;
 

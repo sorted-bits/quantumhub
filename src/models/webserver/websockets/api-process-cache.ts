@@ -1,5 +1,5 @@
 import expressWs from 'express-ws';
-import { Logger as ILogger } from 'quantumhub-sdk';
+import { Logger } from 'quantumhub-sdk';
 import { WebSocket } from 'ws';
 import { Hub } from '../../hub';
 import { ApiSocketConnection } from '../api-socket-connection';
@@ -13,7 +13,7 @@ interface ProcessAttributesData {
 }
 
 export class ApiProcessCacheWebsocket implements ApiSocketConnection {
-  private logger: ILogger;
+  private logger: Logger;
   private stateWebsocketsByIdentifier: { [identifier: string]: WebSocket[] } = {};
 
   server: Webserver;

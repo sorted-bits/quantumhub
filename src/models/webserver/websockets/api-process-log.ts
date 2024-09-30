@@ -1,5 +1,5 @@
 import expressWs from 'express-ws';
-import { Logger as ILogger } from 'quantumhub-sdk';
+import { Logger } from 'quantumhub-sdk';
 import { WebSocket } from 'ws';
 import { Hub } from '../../hub';
 import { getLevelIndex, LogData } from '../../logger/logger';
@@ -13,7 +13,7 @@ interface LoggingWebsocket {
 }
 
 export class ApiProcessLogWebsocket implements ApiSocketConnection {
-  private logger: ILogger;
+  private logger: Logger;
   private logWebsockets: LoggingWebsocket[] = [];
 
   server: Webserver;

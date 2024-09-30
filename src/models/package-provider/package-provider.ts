@@ -1,7 +1,7 @@
-import { Attribute, Device, DeviceType, Logger as ILogger, PackageConfig, Provider } from 'quantumhub-sdk';
+import { Attribute, Device, DeviceType, Logger, PackageConfig, Provider } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { Definition } from '../package-loader/interfaces/definition';
-import { ProviderMQTT} from './provider-mqtt';
+import { ProviderMQTT } from './provider-mqtt';
 import { ProviderTimeout } from './provider-timeout';
 import { ProviderCache } from './provider-cache';
 
@@ -10,12 +10,12 @@ export class PackageProvider implements Provider {
   hub: Hub;
   definition: Definition;
   device: Device;
-  deviceLogger: ILogger;
+  deviceLogger: Logger;
 
   providerMqtt: ProviderMQTT;
   providerTimeout: ProviderTimeout;
   providerCache: ProviderCache;
-  
+
   constructor(hub: Hub, config: PackageConfig, definition: Definition, device: Device) {
     this.config = config;
     this.hub = hub;
@@ -47,7 +47,7 @@ export class PackageProvider implements Provider {
     return this.providerMqtt;
   }
 
-  get logger(): ILogger {
+  get logger(): Logger {
     return this.deviceLogger;
   }
 

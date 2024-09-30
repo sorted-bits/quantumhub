@@ -1,5 +1,5 @@
 import { connect, MqttClient } from 'mqtt';
-import { Attribute, Logger as ILogger } from 'quantumhub-sdk';
+import { Attribute, Logger } from 'quantumhub-sdk';
 import { MqttConfig } from '../config/interfaces/mqtt-config';
 import { Hub } from '../hub';
 import { PackageProvider } from '../package-provider/package-provider';
@@ -8,7 +8,7 @@ import { ProviderAttribute } from './interfaces/provider-attribute';
 export class MQTT {
   private config?: MqttConfig;
 
-  private logger: ILogger;
+  private logger: Logger;
   private client: MqttClient | undefined = undefined;
   private hub: Hub;
 

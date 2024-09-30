@@ -1,4 +1,4 @@
-import { Logger as ILogger } from 'quantumhub-sdk';
+import { Logger } from 'quantumhub-sdk';
 import { Hub } from '../../hub';
 import { Process } from '../../package-loader/interfaces/process';
 import { debugEventsForDeviceType } from '../debugging';
@@ -21,9 +21,9 @@ export const apiProcessDebugRequest = (hub: Hub, request: any, response: any) =>
 
   const event = request.body.event;
   if (event !== 'setAvailable' && event !== 'setUnavailable') {
-  if (typeof (process.provider.device as any)[event] !== 'function') {
-    logger.error('Event not found', event);
-    return response.status(400).send('Event not found');
+    if (typeof (process.provider.device as any)[event] !== 'function') {
+      logger.error('Event not found', event);
+      return response.status(400).send('Event not found');
     }
   }
 
@@ -40,7 +40,7 @@ export const apiProcessDebugRequest = (hub: Hub, request: any, response: any) =>
     });
 };
 
-const callDeviceMethod = async (logger: ILogger, hub: Hub, process: Process, event: string, parameters: any): Promise<{ code: number; message: string }> => {
+const callDeviceMethod = async (logger: Logger, hub: Hub, process: Process, event: string, parameters: any): Promise<{ code: number; message: string }> => {
   const allItems = debugEventsForDeviceType().flatMap((eventBlock) => eventBlock.items);
   const item = allItems.find((item) => item.name === event);
 
@@ -96,7 +96,7 @@ const callDeviceMethod = async (logger: ILogger, hub: Hub, process: Process, eve
 
   logger.trace('Calling debug event', event, methodParameters);
   (process.provider.device as any)
-    [event](...methodParameters)
+  [event](...methodParameters)
     .then((result: any) => {
       logger.info('Method result', result);
     })

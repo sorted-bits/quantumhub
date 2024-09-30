@@ -1,10 +1,10 @@
 import { DateTime } from 'luxon';
-import { Attribute, ButtonAttribute, ClimateAttribute, DeviceAutomationAttribute, DeviceClass, DeviceType, Logger as ILogger, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from 'quantumhub-sdk';
+import { Attribute, ButtonAttribute, ClimateAttribute, DeviceAutomationAttribute, DeviceClass, DeviceType, Logger, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { PackageProvider } from '../package-provider/package-provider';
 
 export class StateManager {
-  private logger: ILogger;
+  private logger: Logger;
   private states: { [id: string]: { [attribute: string]: any } } = {};
   private deviceAvailability: { [id: string]: boolean } = {};
   private deviceDescriptionsPublished: string[] = [];
@@ -58,6 +58,8 @@ export class StateManager {
     const previousValue = this.states[key][attribute];
 
     this.states[key][attribute] = value;
+
+    this.hub.data.state.set(provider, attribute, value);
 
     const definition = provider.definition.attributes.find((a) => a.key === attribute);
 

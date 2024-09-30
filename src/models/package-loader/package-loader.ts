@@ -3,7 +3,7 @@ import path from 'path';
 import { v4 } from 'uuid';
 import YAML from 'yaml';
 
-import { Attribute, Logger as ILogger } from 'quantumhub-sdk';
+import { Attribute, Logger } from 'quantumhub-sdk';
 
 import { Hub } from '../hub';
 import { Definition } from './interfaces/definition';
@@ -17,7 +17,7 @@ import { ProcessStatus } from './enums/status';
 
 export class PackageLoader {
   private _definitions: Definition[] = [];
-  private logger: ILogger;
+  private logger: Logger;
   private processes: { [id: string]: Process } = {};
   private hub: Hub;
 

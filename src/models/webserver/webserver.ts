@@ -134,7 +134,7 @@ export class Webserver {
       }
 
       const states = this.hub.state.getAttributes(process.provider) ?? {};
-      const cache = await this.hub.cache.all(process.provider);
+      const cache = await this.hub.data.cache.all(process.provider);
 
       res.render('details', {
         process: processToDto(this.hub, process),
