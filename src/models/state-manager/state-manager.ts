@@ -159,7 +159,11 @@ export class StateManager {
           }
           case 'target_humidity/set': {
             const value = parseInt(payload);
-            provider.logger.warn('No onTargetHumidityChanged handler found on device', provider.config.identifier);
+            if (provider.device.onTargetHumidityChanged) {
+              provider.device.onTargetHumidityChanged(climateAttribute, value);
+            } else {
+              provider.logger.warn('No onTargetHumidityChanged handler found on device', provider.config.identifier);
+            }
             break;
           }
           case 'preset_mode/set': {
@@ -296,6 +300,21 @@ export class StateManager {
 
         this.hub.mqtt.subscribeToAttribute(provider, attribute, config.temperature_command_topic);
 
+        if (climateAttribute.has_mode_control) {
+          config.mode_command_topic = `${stateTopic}/mode/set`;
+          config.mode_state_topic = `${stateTopic}`;
+          config.mode_state_template = `{{ value_json.mode }}`;
+
+          this.hub.mqtt.subscribeToAttribute(provider, attribute, config.mode_command_topic);
+        }
+
+        if (climateAttribute.has_power_control) {
+          config.power_command_topic = `${stateTopic}/power/set`;
+          config.power_command_template = `{{ value_json.power }}`;
+
+          this.hub.mqtt.subscribeToAttribute(provider, attribute, config.power_command_topic);
+        }
+
         if (climateAttribute.has_fanmode) {
           config.fan_mode_command_topic = `${stateTopic}/fan_mode/set`;
           config.fan_mode_state_topic = `${stateTopic}`;
@@ -390,7 +409,6 @@ export class StateManager {
         break;
       }
       case DeviceType.switch: {
-        const switchAttribute = attribute as SwitchAttribute;
         const commandTopic = `${stateTopic}/${attribute.key}/set`;
         config.command_topic = commandTopic;
 
