@@ -1,11 +1,12 @@
 {
   "name": "quantumhub",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha.1",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "nodemon src/app.ts --config=config.yaml",
     "lint": "eslint .",
+    "update-version": "versi",
     "test": "echo \"Error: no test specified\" && exit 1",
     "css": "sass src/ui/sass/style.scss src/ui/css/style.css",
     "watch-css": "sass --watch src/ui/sass/style.scss src/ui/css/style.css",
@@ -26,7 +27,8 @@
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "globals": "^15.9.0",
     "sass": "1.78.0",
-    "typescript-eslint": "^8.4.0"
+    "typescript-eslint": "^8.4.0",
+    "versi": "^0.7.4"
   },
   "dependencies": {
     "bulma": "^1.0.2",
