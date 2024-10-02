@@ -9,8 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "css": "sass src/ui/sass/style.scss src/ui/css/style.css",
     "watch-css": "sass --watch src/ui/sass/style.scss src/ui/css/style.css",
-    "publish-docker": "docker build -t sortedbit/quantumhub . && docker image push sortedbit/quantumhub",
-    "docker-publish": "docker build -t sortedbit/quantumhub . && docker image push sortedbit/quantumhub"
+    "publish-docker": "docker build -t sortedbit/quantumhub . && docker image push sortedbit/quantumhub"
   },
   "keywords": [],
   "author": "",
