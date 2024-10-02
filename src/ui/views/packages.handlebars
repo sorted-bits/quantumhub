@@ -7,6 +7,7 @@
                 <th>Version</th>
                 <th>Author</th>
                 <th>Description</th>
+                <th>Processes</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -17,9 +18,11 @@
                 <td>{{version}}</td>
                 <td>{{author}}</td>
                 <td>{{description}}</td>
+                <td>{{processes}}</td>
                 <td>
-                    <button class='button is-small is-success' onclick='onReloadPackageClicked("{{name}}")'><i
-                            class='fa-solid fa-rotate'></i>&nbsp;Reload</button>
+                    <button class='button is-small is-success' onclick='onReloadPackageClicked("{{name}}")'>
+                        <i class='fa-solid fa-rotate'></i>
+                    </button>
                 </td>
             </tr>
             {{/each}}

@@ -6,7 +6,7 @@ import YAML from 'yaml';
 import { Attribute, Logger, Definition } from 'quantumhub-sdk';
 
 import { Hub } from '../hub';
-import { Process, processToDto } from './interfaces/process';
+import { Process, ProcessDto, processToDto } from './interfaces/process';
 
 import { DateTime } from 'luxon';
 import { Device } from 'quantumhub-sdk';
@@ -337,7 +337,7 @@ export class PackageLoader {
     process.provider.device.destroy();
   };
 
-  data = () => {
+  data = (): ProcessDto[] => {
     return Object.values(this.processes).map((process) => processToDto(this.hub, process));
   };
 

@@ -48,8 +48,8 @@ export class ApiProcessStatusWebsocket implements ApiSocketConnection {
   };
 
   sendCurrentState = async (ws: WebSocket, process: Process): Promise<void> => {
-    const data = processToDto(this.hub, process);
-    ws.send(processToDto(this.hub, process));
+    const data = processToDto(this.hub, process) as any;
+    ws.send(data);
   };
 
   send = async (data: any): Promise<void> => {

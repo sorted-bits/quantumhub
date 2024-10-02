@@ -116,7 +116,13 @@ export class Webserver {
     });
 
     this.express.get('/packages', (req, res) => {
-      res.render('packages', { packages: this.hub.packages.definitions });
+      const definitions: any[] = this.hub.packages.definitions;
+
+      for (const definition of definitions) {
+        const processesPerDefinition = this.hub.packages.data().filter((process) => process.packageName === definition.name).length
+        definition['processes'] = processesPerDefinition;
+      }
+      res.render('packages', { packages: definitions });
     });
 
     this.express.get('/mqtt', (req, res) => {

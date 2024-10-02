@@ -13,14 +13,28 @@ export interface Process {
   stopTime?: DateTime;
 }
 
-export const processToDto = (hub: Hub, process: Process): any => {
+export interface ProcessDto {
+  uuid: string;
+  name: string;
+  identifier: string;
+  status: ProcessStatus;
+  startTime?: string;
+  stopTime?: string;
+  availability: boolean;
+  version?: string;
+  packageName: string;
+}
+
+export const processToDto = (hub: Hub, process: Process): ProcessDto => {
   return {
-    ...process,
+    uuid: process.uuid,
+    name: process.name,
+    identifier: process.identifier,
+    status: process.status,
     startTime: process.startTime?.toFormat('HH:mm:ss'),
     stopTime: process.stopTime?.toFormat('HH:mm:ss'),
     availability: hub.state.getAvailability(process.provider),
     version: process.provider.definition.version,
     packageName: process.provider.definition.name,
-    provider: undefined,
   };
 };
