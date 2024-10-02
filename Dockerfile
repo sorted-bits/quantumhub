@@ -3,8 +3,8 @@ LABEL maintainer="wim@sortedbits.com"
 
 EXPOSE 3000
 
-WORKDIR /home/node/packages/example-device
-COPY ./packages/example-device .
+WORKDIR /home/node/packages/example-package
+COPY ./packages/example-package .
 RUN npm install
 
 WORKDIR /home/node/app
