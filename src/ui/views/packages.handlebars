@@ -1,0 +1,36 @@
+<section class='section'>
+    <h1 class='title'>Loaded packages</h1>
+    <table class='table is-fullwidth is-striped'>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Version</th>
+                <th>Author</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each packages}}
+            <tr>
+                <td>{{name}}</td>
+                <td>{{version}}</td>
+                <td>{{author}}</td>
+                <td>{{description}}</td>
+                <td>
+                    <button class='button is-small is-success' onclick='onReloadPackageClicked("{{name}}")'><i
+                            class='fa-solid fa-rotate'></i>&nbsp;Reload</button>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+</section>
+<script>
+    function onReloadPackageClicked(identifier) {
+        console.log('Reload package:', identifier);
+        fetch(`/package/${identifier}/reload`, { method: 'POST' }).then(() => {
+            location.reload();
+        });
+    }
+</script>

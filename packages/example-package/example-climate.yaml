@@ -1,7 +1,7 @@
 package:
   name: example-climate
   version: 1.0.0
-  description: QuantumHub module for testing the integration
+  description: Example climate device, for demonstration purposes
   author: Wim Haanstra
   entry: example-climate/example-climate.ts
 

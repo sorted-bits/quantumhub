@@ -115,12 +115,22 @@ export class Webserver {
       res.render('home', { processes: this.hub.packages.data() });
     });
 
+    this.express.get('/packages', (req, res) => {
+      res.render('packages', { packages: this.hub.packages.definitions });
+    });
+
     this.express.get('/mqtt', (req, res) => {
       res.render('mqtt', { topics: this.hub.mqtt.topicSubscriptions, attributes: this.hub.mqtt.attributeSubscriptions });
     });
 
     this.express.get('/configuration', (req, res) => {
       res.render('configuration', { config: YAML.stringify(this.hub.config) });
+    });
+
+    this.express.post('/package/:identifier/reload', (req, res) => {
+      const identifier = req.params.identifier;
+      this.hub.packages.reloadPackage(identifier);
+      res.send('OK');
     });
 
     this.express.get('/process/:identifier', async (req, res) => {

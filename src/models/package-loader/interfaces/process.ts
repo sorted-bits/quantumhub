@@ -19,6 +19,8 @@ export const processToDto = (hub: Hub, process: Process): any => {
     startTime: process.startTime?.toFormat('HH:mm:ss'),
     stopTime: process.stopTime?.toFormat('HH:mm:ss'),
     availability: hub.state.getAvailability(process.provider),
+    version: process.provider.definition.version,
+    packageName: process.provider.definition.name,
     provider: undefined,
   };
 };

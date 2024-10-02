@@ -1,7 +1,7 @@
 package:
   name: example-device
-  version: 1.0.0
-  description: QuantumHub module for testing the integration
+  version: 1.0.1
+  description: Example device, for demonstration purposes
   author: Wim Haanstra
   entry: example-device/example-device.ts
 

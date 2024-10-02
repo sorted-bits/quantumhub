@@ -56,6 +56,12 @@ export class Hub {
       return false;
     }
 
+    const mqttResult = await this.mqtt.connect(this.config.mqtt);
+
+    if (!mqttResult) {
+      return false;
+    }
+
     this.logger.info(
       'Starting packages',
       this.config.packages.configuration.map((p) => p.name)
@@ -72,12 +78,6 @@ export class Hub {
     });
 
     await this.state.initialize();
-
-    const mqttResult = await this.mqtt.connect(this.config.mqtt);
-
-    if (!mqttResult) {
-      return false;
-    }
 
     try {
       await this.packages.startAll();

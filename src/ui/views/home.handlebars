@@ -11,29 +11,34 @@
     </thead>
     <tbody id='processes-table-body'>
       {{#each processes}}
-        <tr>
-          <td>
-            <a href='/process/{{identifier}}' class="has-text-primary">{{name}}</a>
-          </td>
-          <td width='220px'>
-            {{#if (eq availability true)}}
-              <span class='tag is-success' id='availability_{{identifier}}_chip'>AVAILABLE</span>
-            {{else}}
-              <span class='tag is-danger' id='availability_{{identifier}}_chip'>UNAVAILABLE</span>
-            {{/if}}
+      <tr>
+        <td>
+          <a href='/process/{{identifier}}' class="has-text-primary">{{name}}</a>
+        </td>
+        <td width="250px">{{packageName}} (v{{version}})</td>
+        <td width='220px'>
+          {{#if (eq availability true)}}
+          <span class='tag is-success' id='availability_{{identifier}}_chip'>AVAILABLE</span>
+          {{else}}
+          <span class='tag is-danger' id='availability_{{identifier}}_chip'>UNAVAILABLE</span>
+          {{/if}}
 
-            {{#if (eq status 'RUNNING')}}
-              <span class='tag is-success' id='status_{{identifier}}_chip'>{{status}}</span>
-            {{else}}
-              <span class='tag is-danger' id='status_{{identifier}}_chip'>{{status}}</span>
-            {{/if}}
-          </td>
-          <td class='start-time' width='140px'>{{startTime}}</td>
-          <td width='100px'>
-            <button id='status_{{identifier}}_start' {{#if (eq status 'RUNNING')}}disabled{{/if}} class='button is-success is-small' onclick='onStartProcessClicked("{{identifier}}")'><i class='fa-solid fa-play'></i></button>
-            <button id='status_{{identifier}}_stop' {{#if (eq status 'STOPPED')}}disabled{{/if}} class='button is-danger is-small' onclick='onStopProcessClicked("{{identifier}}")'><i class='fa-solid fa-stop'></i></button>
-          </td>
-        </tr>
+          {{#if (eq status 'RUNNING')}}
+          <span class='tag is-success' id='status_{{identifier}}_chip'>{{status}}</span>
+          {{else}}
+          <span class='tag is-danger' id='status_{{identifier}}_chip'>{{status}}</span>
+          {{/if}}
+        </td>
+        <td class='start-time' width='140px'>{{startTime}}</td>
+        <td width='100px'>
+          <button id='status_{{identifier}}_start' {{#if (eq status 'RUNNING' )}}disabled{{/if}}
+            class='button is-success is-small' onclick='onStartProcessClicked("{{identifier}}")'><i
+              class='fa-solid fa-play'></i></button>
+          <button id='status_{{identifier}}_stop' {{#if (eq status 'STOPPED' )}}disabled{{/if}}
+            class='button is-danger is-small' onclick='onStopProcessClicked("{{identifier}}")'><i
+              class='fa-solid fa-stop'></i></button>
+        </td>
+      </tr>
       {{/each}}
     </tbody>
   </table>

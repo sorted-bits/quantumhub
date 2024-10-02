@@ -29,6 +29,56 @@ export class PackageLoader {
     return this._definitions;
   }
 
+  reloadPackage = async (identifier: string): Promise<boolean> => {
+    const definition = this._definitions.find((elm) => elm.name === identifier);
+    if (!definition) {
+      this.logger.error('Package not found:', identifier);
+      return false;
+    }
+
+    // Lets stop all processes using this package
+    const values = Object.values(this.processes).filter((process) => process.provider.packageDefinition.name === identifier);
+
+    for (const process of values) {
+      this.logger.info('Stopping process:', process.uuid);
+      await this.stopProcess(process.uuid);
+      this.logger.info('Destroying process:', process.uuid);
+      await this.destroyProcess(process.uuid);
+    }
+
+    const uuids = values.map((process) => process.uuid);
+
+    for (const uuid of uuids) {
+      delete this.processes[uuid];
+    }
+
+    const configFile = definition.config_path;
+
+    this.logger.info('Reloading package:', identifier, configFile);
+
+    const newDefinition = this.readPackageConfig(configFile);
+
+    if (!newDefinition) {
+      this.logger.error('Failed to reload package:', identifier);
+      return false;
+    }
+
+    definition.name = newDefinition.name;
+    definition.entry = newDefinition.entry;
+    definition.author = newDefinition.author;
+    definition.description = newDefinition.description;
+    definition.version = newDefinition.version;
+    definition.attributes = newDefinition.attributes;
+
+    const packages = this.hub.config.packages.configuration.filter((elm) => elm.package === identifier);
+
+    for (const config of packages) {
+      await this.initializeProcess(definition, config);
+    }
+
+    return true;
+  };
+
   scanFolder = async (inputFolder: string): Promise<boolean> => {
     const folder = path.resolve(inputFolder);
 
@@ -70,12 +120,6 @@ export class PackageLoader {
     return true;
   };
 
-  readPackage = async (filename: string): Promise<any> => {
-    const content = fs.readFileSync(filename, 'utf8');
-    const output = JSON.parse(content);
-
-    return output;
-  };
 
   loadPackageFromConfig = async (config: PackageConfig): Promise<void> => {
     if (!config.config_file) {
@@ -131,6 +175,7 @@ export class PackageLoader {
     }
 
     const definition: Definition = {
+      config_path: configFile,
       path: entryFile,
       name,
       entry,
@@ -280,6 +325,16 @@ export class PackageLoader {
 
     process.status = ProcessStatus.STOPPED;
     this.hub.server.sendProcessUpdate(process);
+  };
+
+  destroyProcess = async (uuid: string): Promise<void> => {
+    const process = this.processes[uuid];
+    if (!process) {
+      this.logger.error('Process not found:', uuid);
+      return;
+    }
+
+    process.provider.device.destroy();
   };
 
   data = () => {
