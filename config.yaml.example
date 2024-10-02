@@ -1,0 +1,39 @@
+web:
+  port: 3000 # The port the webserver listens to
+
+instance_name: quantumhub
+
+log:
+  level: info
+  # included_modules:
+  #   - example-device
+  # excluded_modules:
+  #   - other-package
+
+mqtt:
+  host: <mqtt broker host> # The host of your MQTT broker
+# port: 1883 # The port your MQTT broker is listening on
+# username: # The username to authenticate with
+# password: # The password to authenticate with
+# protocol: mqtt # The protocol to use for MQTT, can be mqtt or ws
+# validate_certificate: true # Whether to validate the certificate of the MQTT broker
+  base_topic: quantumhub # The base topic to use for MQTT
+
+storage:
+  file: 'storage.sqlite'
+
+packages:
+  root: ./packages
+  configuration:
+    - package: example-device
+      identifier: new_york_clock
+      name: New York Clock
+      timezone: America/New_York
+    - package: example-device
+      identifier: amsterdam_clock
+      name: Amsterdam Clock
+      timezone: Europe/Amsterdam
+
+homeassistant:
+# availability: true # Whether to publish availability messages
+# base_topic: homeassistant # The base topic to use for Home Assistant discovery
