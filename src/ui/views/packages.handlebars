@@ -15,14 +15,14 @@
             {{#each packages}}
             <tr>
                 <td>
-                    {{name}}
+                    {{definition.name}}
                 </td>
-                <td>{{version}}</td>
-                <td>{{author}}</td>
-                <td>{{description}}</td>
+                <td>{{definition.version}}</td>
+                <td>{{definition.author}}</td>
+                <td>{{definition.description}}</td>
                 <td>{{processes}}</td>
                 <td>
-                    <button class='button is-small is-success' onclick='onReloadPackageClicked("{{identifier}}")'>
+                    <button class='button is-small is-success' onclick='onReloadPackageClicked("{{definition.name}}")'>
                         <span class="icon is-small">
                             <i class='fa-solid fa-rotate'></i>
                         </span>

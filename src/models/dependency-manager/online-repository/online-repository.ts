@@ -1,3 +1,4 @@
+import path from 'path';
 import { Logger } from "quantumhub-sdk";
 import { Hub } from "../../hub";
 import { RepositoryDependency } from "./repository-dependency";
@@ -40,12 +41,10 @@ export class OnlineRepository {
         this.logger.info('Downloading definitions from online repository', repository);
 
         try {
-            this.logger.info('Loading packages from repository:', repository);
             const response = await fetch(repository);
             const data = await response.json();
 
             const packages: RepositoryDependency[] = data.packages;
-
             for (const pack of packages) {
                 this.updateRepositoryDepencyMetadata(pack);
             }
@@ -60,12 +59,23 @@ export class OnlineRepository {
     }
 
     private isInstalled = (repositoryDependency: RepositoryDependency): boolean => {
-        return isInstalled(repositoryDependency.repository, repositoryDependency.config);
+        if (!repositoryDependency.repository || !repositoryDependency.config_file) {
+            this.logger.error('Repository or config file not set for package:', repositoryDependency);
+            return false;
+        }
+
+        return isInstalled(this.getInstalledPath(repositoryDependency), repositoryDependency.config_file);
+    }
+
+    private getInstalledPath = (repositoryDependency: RepositoryDependency): string => {
+        return path.join(this.hub.config.storage.dependencies, path.basename(repositoryDependency.repository));
     }
 
     private updateRepositoryDepencyMetadata = (repositoryDependency: RepositoryDependency): void => {
         const definition = this.dependencyManager.getDefinition(repositoryDependency.name);
+
         repositoryDependency.isInstalled = this.isInstalled(repositoryDependency);
+
         if (repositoryDependency.isInstalled) {
             const compared = compareVersions(repositoryDependency.version, definition?.version ?? '0.0.0');
             repositoryDependency.isNewer = compared === 1;

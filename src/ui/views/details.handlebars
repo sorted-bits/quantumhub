@@ -1,28 +1,30 @@
 <script>
   const identifier = '{{process.identifier}}';
   const status = '{{process.status}}';
-  const availability = {{process.availability}};
+  const availability = {{ process.availability }};
 </script>
 
 <section class='section'>
   <h1 class='title'>{{process.name}}
 
     {{#if (eq process.status 'RUNNING')}}
-      <span class='tag is-success' id='status_{{process.identifier}}_chip'>{{process.status}}</span>
+    <span class='tag is-success' id='status_{{process.identifier}}_chip'>{{process.status}}</span>
     {{else}}
-      <span class='tag is-danger' id='status_{{process.identifier}}_chip'>{{process.status}}</span>
+    <span class='tag is-danger' id='status_{{process.identifier}}_chip'>{{process.status}}</span>
     {{/if}}
 
     {{#if (eq process.availability true)}}
-      <span class='tag is-success' id='availability_{{process.identifier}}_chip'>AVAILABLE</span>
+    <span class='tag is-success' id='availability_{{process.identifier}}_chip'>AVAILABLE</span>
     {{else}}
-      <span class='tag is-danger' id='availability_{{process.identifier}}_chip'>UNAVAILABLE</span>
+    <span class='tag is-danger' id='availability_{{process.identifier}}_chip'>UNAVAILABLE</span>
     {{/if}}
   </h1>
 
   <div class="block">
-    <button id="status_{{process.identifier}}_start" disabled="true" class="button is-success is-small" onclick="onStartProcessClicked('{{process.identifier}}')"><i class="fa-solid fa-play"></i></button>
-    <button id="status_{{process.identifier}}_stop" disabled="true" class="button is-danger is-small" onclick="onStopProcessClicked('{{process.identifier}}')"><i class="fa-solid fa-stop"></i></button>
+    <button id="status_{{process.identifier}}_start" disabled="true" class="button is-success is-small"
+      onclick="onStartProcessClicked('{{process.identifier}}')"><i class="fa-solid fa-play"></i></button>
+    <button id="status_{{process.identifier}}_stop" disabled="true" class="button is-danger is-small"
+      onclick="onStopProcessClicked('{{process.identifier}}')"><i class="fa-solid fa-stop"></i></button>
   </div>
 
   <div class='tabs-container'>
@@ -48,7 +50,7 @@
     <div id='debug-tab' class='tab-content is-hidden'>
       {{> debugging}}
     </div>
-    
+
     <div id='state-tab' class='tab-content is-hidden'>
       {{> process-states}}
     </div>
@@ -67,4 +69,3 @@
 <script src='/scripts/api.js'></script>
 <script src='/scripts/details.js'></script>
 <script src='/scripts/debugging.js'></script>
-

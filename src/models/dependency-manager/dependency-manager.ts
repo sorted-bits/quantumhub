@@ -9,6 +9,12 @@ import { OnlineRepository } from './online-repository/online-repository';
 import { ProcessStatus } from '../process-manager/status';
 import { readPackageConfig } from './definition-helpers';
 
+interface ProcessState {
+    uuid: string;
+    identifier: string;
+    processStatus: ProcessStatus;
+}
+
 export class DependencyManager {
     private gitIsInstalled: boolean = false;
     private dependencies: Dependency[];
@@ -24,8 +30,6 @@ export class DependencyManager {
     }
 
     initialize = async (): Promise<boolean> => {
-        await this.onlineRepository.initialize();
-
         for (const dependency of this.dependencies) {
             if (!this.isInstalled(dependency)) {
                 await this.install(dependency);
@@ -33,6 +37,8 @@ export class DependencyManager {
 
             await this.reloadDefinition(dependency);
         }
+
+        await this.onlineRepository.initialize();
 
         return true;
     }
@@ -89,6 +95,47 @@ export class DependencyManager {
         return true;
     }
 
+    reload = async (dependencyName: string): Promise<boolean> => {
+        const dependency = this.get(dependencyName);
+        if (!dependency) {
+            this.logger.error('Dependency not found:', dependencyName);
+            return false;
+        }
+
+        const dependencies = this.dependencies.filter((dep) => dep.repository === dependency.repository);
+
+        const processStates = dependencies.flatMap(dep => this.getProcessStatuses(dep));
+
+        processStates.forEach((processState) => {
+            this.hub.processes.stopProcess(processState.uuid);
+            this.hub.processes.destroyProcess(processState.uuid);
+        });
+
+        for (const dep of dependencies) {
+            await this.reloadDefinition(dep);
+        }
+
+        for (const processState of processStates) {
+            await this.startFromProcessState(processState);
+        }
+
+        return true;
+    }
+
+    getProcessStatuses = (dependency: Dependency): ProcessState[] => {
+        const processes = this.hub.processes.processesUsingDependency(dependency);
+
+        const result = processes.map((process): ProcessState => {
+            return {
+                uuid: process.uuid,
+                identifier: process.identifier,
+                processStatus: process.status
+            };
+        });
+
+        return result;
+    }
+
     update = async (dependency: Dependency): Promise<boolean> => {
         this.gitIsInstalled = await isGitInstalled();
 
@@ -102,17 +149,13 @@ export class DependencyManager {
 
         // Get the status of all processes that are using this dependency or any other dependency that uses the same repository
         // This so we know which processes need to be restarted once the update has been completed
-        const processStates: { identifier: string, processStatus: ProcessStatus }[] = [];
-        for (const dep of dependencies) {
-            const processes = this.hub.processes.processesUsingDependency(dep);
-            for (const process of processes) {
-                processStates.push({ identifier: process.name, processStatus: process.status });
 
-                // Stop and destroy the process
-                await this.hub.processes.stopProcess(process.uuid);
-                await this.hub.processes.destroyProcess(process.uuid);
-            }
-        }
+        const processStates = dependencies.flatMap(dep => this.getProcessStatuses(dep));
+
+        processStates.forEach((processState) => {
+            this.hub.processes.stopProcess(processState.uuid);
+            this.hub.processes.destroyProcess(processState.uuid);
+        });
 
         const installerResult = await this.install(dependency);
         if (!installerResult) {
@@ -125,24 +168,29 @@ export class DependencyManager {
         }
 
         for (const processState of processStates) {
-            const config = this.hub.config.packages.find((elm) => elm.identifier === processState.identifier);
-
-            if (!config) {
-                this.logger.error('PackageConfig not found:', processState.identifier);
-                continue;
-            }
-
-            const definition = this.getDefinition(config.package);
-            if (!definition) {
-                this.logger.error('PackageDefinition not found:', config.package);
-                continue;
-            }
-
-            await this.hub.processes.initializeProcess(config, processState.processStatus === ProcessStatus.RUNNING);
+            await this.startFromProcessState(processState);
         }
 
         // Then we need to start any previously running processes
         return true;
+    }
+
+
+    startFromProcessState = async (processState: ProcessState): Promise<boolean> => {
+        const config = this.hub.config.packages.find((elm) => elm.identifier === processState.identifier);
+
+        if (!config) {
+            this.logger.error('PackageConfig not found:', processState.identifier);
+            return false;
+        }
+
+        const definition = this.getDefinition(config.package);
+        if (!definition) {
+            this.logger.error('PackageDefinition not found:', config.package);
+            return false;
+        }
+
+        return await this.hub.processes.initializeProcess(config, processState.processStatus === ProcessStatus.RUNNING);
     }
 
     updateRepository = async (repository: string): Promise<boolean> => {

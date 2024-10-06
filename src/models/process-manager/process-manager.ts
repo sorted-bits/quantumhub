@@ -1,7 +1,7 @@
 import { Attribute, Logger, PackageDefinition, Device } from 'quantumhub-sdk';
 
 import { Hub } from "../hub";
-import { Process, ProcessDto, processToDto } from "./process";
+import { Process } from "./process";
 import { PackageProvider } from '../package-provider/package-provider';
 import { v4 } from 'uuid';
 import { ProcessStatus } from './status';
@@ -29,10 +29,6 @@ export class ProcessManager {
         return Object.values(this.processes);
     }
 
-    public getProcessDtos(): ProcessDto[] {
-        return Object.values(this.processes).map((process) => processToDto(this.hub, process));
-    }
-
     public getProcessesUsingDependency = (dependency: Dependency): Process[] => {
         return Object.values(this.processes).filter((process) => process.provider.dependency.definition.name === dependency.definition.name);
     }
@@ -54,6 +50,7 @@ export class ProcessManager {
 
             const process: Process = {
                 uuid,
+                identifier: config.identifier,
                 name: config.name,
                 provider,
                 status: ProcessStatus.LOADED,

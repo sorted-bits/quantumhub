@@ -8,7 +8,7 @@ import YAML from 'yaml';
 import { WebConfig } from '../config/interfaces/web-config';
 import { Hub } from '../hub';
 import { LogData } from '../logger/logger';
-import { Process, processToDto } from '../process-manager/process';
+import { Process } from '../process-manager/process';
 import { debugEventsForDeviceType } from './debugging';
 import { apiProcessDebugRequest } from './requests/api-process-debug';
 import { ApiProcessAttributesWebsocket } from './websockets/api-process-attributes';
@@ -17,6 +17,7 @@ import { ApiProcessStatusWebsocket } from './websockets/api-process-status';
 import { ApiProcessesStatusWebsocket } from './websockets/api-processes-status';
 import { ApiProcessCacheWebsocket } from './websockets/api-process-cache';
 import { Dependency } from '../config/interfaces/dependencies';
+import { toProcessDTO } from '../../ui/views/dtos/process-dto';
 
 export class Webserver {
   private express: express.Express;
@@ -68,7 +69,7 @@ export class Webserver {
   }
 
   sendProcessUpdate = (process: Process): void => {
-    const data = processToDto(this.hub, process);
+    const data = toProcessDTO(this.hub, process);
 
     this.apiProcessStatusWebsocket.send(data);
     this.apiProcessesStatusWebsocket.send(data);
@@ -93,6 +94,7 @@ export class Webserver {
     this.apiProcessLogWebsocket.initialize(ws);
     this.apiProcessAttributesWebsocket.initialize(ws);
     this.apiProcessCacheWebsocket.initialize(ws);
+
     this.express.post('/api/process/:identifier/debug', (req, res) => apiProcessDebugRequest(this.hub, req, res));
 
     this.express.post('/api/processes/:identifier/states/:state', (req, res) => {
@@ -114,14 +116,17 @@ export class Webserver {
     });
 
     this.express.get('/', (req, res) => {
-      res.render('home', { processes: this.hub.processes.getProcessDtos() });
+      const processes = this.hub.processes.getProcesses().map((process) => toProcessDTO(this.hub, process));
+
+      this.logger.info('Sending home', processes);
+      res.render('home', { processes: processes });
     });
 
     this.express.get('/packages', (req, res) => {
       const dependencies: Dependency[] = this.hub.dependencyManager.all();
 
       for (const definition of dependencies) {
-        const count = this.hub.processes.getProcessDtos().filter((process) => process.packageName === definition.definition.name).length;
+        const count = this.hub.processes.getProcesses().filter((process) => process.provider.definition.name === definition.definition.name).length;
         (definition as any)['processes'] = count;
       }
       res.render('packages', { packages: dependencies, repositoryPackages: this.hub.dependencyManager.onlineRepository.dependencies });
@@ -137,7 +142,7 @@ export class Webserver {
 
     this.express.post('/package/:identifier/reload', (req, res) => {
       const identifier = req.params.identifier;
-      this.hub.processes.reloadProcess(identifier);
+      this.hub.dependencyManager.reload(identifier);
       res.send('OK');
     });
 
@@ -164,9 +169,11 @@ export class Webserver {
       const states = this.hub.state.getAttributes(process.provider) ?? {};
       const cache = await this.hub.data.cache.all(process.provider);
 
+      this.logger.info('Sending process details', process.provider.config);
+
       res.render('details', {
-        process: processToDto(this.hub, process),
-        config: YAML.stringify(process.provider.config),
+        process: toProcessDTO(this.hub, process),
+        configYAML: YAML.stringify(process.provider.config),
         definition: process.provider.dependency.definition,
         attributes: process.provider.getAttributes(),
         debugEvents: debugEventsForDeviceType(),

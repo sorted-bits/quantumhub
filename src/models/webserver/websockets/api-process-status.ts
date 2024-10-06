@@ -2,9 +2,10 @@ import expressWs from 'express-ws';
 import { Logger } from 'quantumhub-sdk';
 import { WebSocket } from 'ws';
 import { Hub } from '../../hub';
-import { Process, processToDto } from '../../process-manager/process';
+import { Process } from '../../process-manager/process';
 import { ApiSocketConnection } from '../api-socket-connection';
 import { Webserver } from '../webserver';
+import { toProcessDTO } from '../../../ui/views/dtos/process-dto';
 
 export class ApiProcessStatusWebsocket implements ApiSocketConnection {
   private logger: Logger;
@@ -24,10 +25,7 @@ export class ApiProcessStatusWebsocket implements ApiSocketConnection {
 
     ws.app.ws('/api/process/:identifier/status', (ws, req) => {
       const identifier = req.params.identifier;
-
       const process = this.hub.processes.getProcess(identifier);
-
-      this.logger.trace('Websocket connected', identifier);
 
       if (!process) {
         this.logger.error('Process not found', identifier);
@@ -48,16 +46,17 @@ export class ApiProcessStatusWebsocket implements ApiSocketConnection {
   };
 
   sendCurrentState = async (ws: WebSocket, process: Process): Promise<void> => {
-    const data = processToDto(this.hub, process) as any;
+    const data = toProcessDTO(this.hub, process) as any;
     ws.send(data);
   };
 
   send = async (data: any): Promise<void> => {
     const process = data as Process;
-    if (!this.sockets[process.name]) {
+
+    if (!this.sockets[process.identifier]) {
       return;
     }
 
-    this.sockets[process.name].forEach((socket) => socket.send(JSON.stringify(data)));
+    this.sockets[process.identifier].forEach((socket) => socket.send(JSON.stringify(data)));
   };
 }
