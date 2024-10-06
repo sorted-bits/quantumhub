@@ -32,7 +32,12 @@ export class DependencyManager {
     initialize = async (): Promise<boolean> => {
         for (const dependency of this.dependencies) {
             if (!this.isInstalled(dependency)) {
-                await this.install(dependency);
+                this.logger.info('Installing dependency', dependency.repository);
+                const installResult = await this.install(dependency);
+                if (!installResult) {
+                    this.logger.error('Failed to install dependency', dependency.repository);
+                    return false;
+                }
             }
 
             await this.reloadDefinition(dependency);

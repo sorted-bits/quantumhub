@@ -70,7 +70,11 @@ export class Hub {
     }
 
     await this.state.initialize();
-    await this.dependencyManager.initialize();
+    const dependencyResult = await this.dependencyManager.initialize();
+    if (!dependencyResult) {
+      this.logger.error('Failed to initialize dependencies');
+      return false;
+    }
 
     await this.processes.startAll();
 
