@@ -14,14 +14,19 @@
         <tbody>
             {{#each packages}}
             <tr>
-                <td>{{name}}</td>
+                <td>
+                    {{name}}
+                </td>
                 <td>{{version}}</td>
                 <td>{{author}}</td>
                 <td>{{description}}</td>
                 <td>{{processes}}</td>
                 <td>
-                    <button class='button is-small is-success' onclick='onReloadPackageClicked("{{name}}")'>
-                        <i class='fa-solid fa-rotate'></i>
+                    <button class='button is-small is-success' onclick='onReloadPackageClicked("{{identifier}}")'>
+                        <span class="icon is-small">
+                            <i class='fa-solid fa-rotate'></i>
+                        </span>
+                        <span>Reload</span>
                     </button>
                 </td>
             </tr>
@@ -29,11 +34,74 @@
         </tbody>
     </table>
 </section>
+
+<section class='section'>
+    <h1 class='title'>Available packages</h1>
+    <table class='table is-fullwidth is-striped'>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Author</th>
+                <th>Description</th>
+                <th>Version</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each repositoryPackages}}
+            <tr>
+                <td>{{name}}</td>
+                <td>{{author}}</td>
+                <td>{{description}}</td>
+                <td>{{version}}</td>
+                <td>
+                    {{#if isNewer}}
+                    <button class='button is-small is-success'
+                        onclick='onDownloadPackageClicked("{{repository}}", "{{config}}")'>
+                        <span class="icon is-small">
+                            <i class='fa-solid fa-download'></i>
+                        </span>
+                        <span>Upgrade</span>
+                    </button>
+                    {{/if}}
+                    {{#unless isInstalled}}
+                    <button class='button is-small is-success'
+                        onclick='onDownloadPackageClicked("{{repository}}", "{{config}}")'>
+                        <span class="icon is-small">
+                            <i class='fa-solid fa-download'></i>
+                        </span>
+                        <span>Install</span>
+                    </button>
+                    {{/unless}}
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+</section>
+
 <script>
     function onReloadPackageClicked(identifier) {
         console.log('Reload package:', identifier);
         fetch(`/package/${identifier}/reload`, { method: 'POST' }).then(() => {
             location.reload();
+        });
+    }
+
+    function onDownloadPackageClicked(repository, config) {
+        console.log('Download package:', repository, config);
+        fetch(`/package/install`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                repository,
+                config
+            })
+        }).then((response) => {
+            console.log('Response:', response);
+            //            location.reload();
         });
     }
 </script>

@@ -23,6 +23,7 @@ export interface ProcessDto {
   availability: boolean;
   version?: string;
   packageName: string;
+  packageIdentifier: string;
 }
 
 export const processToDto = (hub: Hub, process: Process): ProcessDto => {
@@ -35,6 +36,7 @@ export const processToDto = (hub: Hub, process: Process): ProcessDto => {
     stopTime: process.stopTime?.toFormat('HH:mm:ss'),
     availability: hub.state.getAvailability(process.provider),
     version: process.provider.definition.version,
+    packageIdentifier: process.provider.definition.identifier,
     packageName: process.provider.definition.name,
   };
 };

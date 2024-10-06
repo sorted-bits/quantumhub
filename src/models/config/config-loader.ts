@@ -31,6 +31,7 @@ export class ConfigLoader {
           ...defaults.homeassistant,
           ...output.homeassistant,
         },
+        packages_repository: output.packages_repository || defaults.packages_repository,
         instance_name: output.instance_name || defaults.instance_name,
         packages: {
           root: output.packages.root || defaults.packages.root,

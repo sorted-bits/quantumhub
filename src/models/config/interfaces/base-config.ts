@@ -7,6 +7,7 @@ import { WebConfig } from './web-config';
 
 export interface BaseConfig {
   instance_name: string;
+  packages_repository: string;
 
   web: WebConfig;
   log: LogConfig;

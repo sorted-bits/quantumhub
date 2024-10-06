@@ -41,7 +41,7 @@ export class StateManager {
     }
 
     await this.publishDeviceAvailability(provider, availability);
-    const process = this.hub.packages.getProcess(provider.config.identifier);
+    const process = this.hub.packages.processManager.getProcess(provider.config.identifier);
     if (process) {
       this.hub.server.sendProcessUpdate(process);
     }

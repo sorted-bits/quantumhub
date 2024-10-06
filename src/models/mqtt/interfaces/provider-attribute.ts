@@ -1,4 +1,4 @@
-import { Attribute } from '../../package-loader/interfaces/attribute';
+import { Attribute } from '../../package-manager/interfaces/attribute';
 import { PackageProvider } from '../../package-provider/package-provider';
 
 export interface ProviderAttribute {

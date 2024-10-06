@@ -8,7 +8,7 @@ import YAML from 'yaml';
 import { WebConfig } from '../config/interfaces/web-config';
 import { Hub } from '../hub';
 import { LogData } from '../logger/logger';
-import { Process, processToDto } from '../package-loader/interfaces/process';
+import { Process, processToDto } from '../package-manager/interfaces/process';
 import { debugEventsForDeviceType } from './debugging';
 import { apiProcessDebugRequest } from './requests/api-process-debug';
 import { ApiProcessAttributesWebsocket } from './websockets/api-process-attributes';
@@ -49,6 +49,7 @@ export class Webserver {
     this.express.set('view engine', 'handlebars');
     this.express.set('views', this.hub.options.uiPath + '/views');
     this.express.use(express.json());
+    this.express.use(express.urlencoded());
 
     this.express.on('error', (err) => {
       this.logger.error('Webserver error:', err);
@@ -96,33 +97,33 @@ export class Webserver {
     this.express.post('/api/processes/:identifier/states/:state', (req, res) => {
       const identifier = req.params.identifier;
       const state = req.params.state;
-      const process = this.hub.packages.getProcess(identifier);
+      const process = this.hub.packages.processManager.getProcess(identifier);
 
       if (!process) {
         return res.status(404).send('Process not found');
       }
 
       if (state === 'start') {
-        this.hub.packages.startProcess(process.uuid);
+        this.hub.packages.processManager.startProcess(process.uuid);
       } else if (state === 'stop') {
-        this.hub.packages.stopProcess(process.uuid);
+        this.hub.packages.processManager.stopProcess(process.uuid);
       }
 
       res.send('OK');
     });
 
     this.express.get('/', (req, res) => {
-      res.render('home', { processes: this.hub.packages.data() });
+      res.render('home', { processes: this.hub.packages.processManager.getProcessDtos() });
     });
 
     this.express.get('/packages', (req, res) => {
       const definitions: any[] = this.hub.packages.definitions;
 
       for (const definition of definitions) {
-        const processesPerDefinition = this.hub.packages.data().filter((process) => process.packageName === definition.name).length
+        const processesPerDefinition = this.hub.packages.processManager.getProcessDtos().filter((process) => process.packageName === definition.name).length
         definition['processes'] = processesPerDefinition;
       }
-      res.render('packages', { packages: definitions });
+      res.render('packages', { packages: definitions, repositoryPackages: this.hub.packages.repositoryPackages });
     });
 
     this.express.get('/mqtt', (req, res) => {
@@ -139,11 +140,22 @@ export class Webserver {
       res.send('OK');
     });
 
+    this.express.post('/package/install', (req, res) => {
+      const { repository } = req.body;
+
+
+      this.hub.packages.installManager.updatePackage(repository).then(() => {
+        res.send('OK');
+      }).catch((error) => {
+        res.status(500).send('Error installing package: ' + error);
+      });
+    });
+
     this.express.get('/process/:identifier', async (req, res) => {
       const identifier = req.params.identifier;
       this.logger.info('Getting process details', identifier);
 
-      const process = this.hub.packages.getProcess(identifier);
+      const process = this.hub.packages.processManager.getProcess(identifier);
 
       if (!process) {
         return res.status(404).send('Process not found');

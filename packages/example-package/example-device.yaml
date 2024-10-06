@@ -1,10 +1,10 @@
 package:
-  name: example-device
+  name: Example Device
   version: 1.0.1
   description: Example device, for demonstration purposes
   author: Wim Haanstra
   entry: example-device/example-device.ts
-
+  identifier: example-device
 attributes:
   time:
     name: Time
