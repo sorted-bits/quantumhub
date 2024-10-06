@@ -33,7 +33,7 @@ export class StateManager {
     this.deviceAvailability[provider.config.identifier] = availability;
 
     if (!availability) {
-      for (const attribute of provider.packageDefinition.attributes) {
+      for (const attribute of provider.definition.attributes) {
         if (attribute.unavailability_value !== undefined && !attribute.availability) {
           this.setAttributeValue(provider, attribute.key, attribute.unavailability_value);
         }
@@ -41,7 +41,7 @@ export class StateManager {
     }
 
     await this.publishDeviceAvailability(provider, availability);
-    const process = this.hub.packages.processManager.getProcess(provider.config.identifier);
+    const process = this.hub.processes.getProcess(provider.config.identifier);
     if (process) {
       this.hub.server.sendProcessUpdate(process);
     }
@@ -59,7 +59,7 @@ export class StateManager {
 
     this.states[key][attribute] = value;
 
-    const definition = provider.packageDefinition.attributes.find((a) => a.key === attribute);
+    const definition = provider.definition.attributes.find((a) => a.key === attribute);
 
     if (definition) {
       this.publishDeviceDescription(provider, definition);
@@ -440,7 +440,7 @@ export class StateManager {
     return {
       device: {
         identifiers: [provider.config.identifier],
-        manufacturer: provider.packageDefinition.author ?? 'QuantumHub',
+        manufacturer: provider.definition.author ?? 'QuantumHub',
         name: provider.config.name,
       },
     };

@@ -2,7 +2,7 @@ import expressWs from 'express-ws';
 import { Logger } from 'quantumhub-sdk';
 import { WebSocket } from 'ws';
 import { Hub } from '../../hub';
-import { Process, processToDto } from '../../package-manager/interfaces/process';
+import { Process, processToDto } from '../../process-manager/process';
 import { ApiSocketConnection } from '../api-socket-connection';
 import { Webserver } from '../webserver';
 
@@ -25,7 +25,7 @@ export class ApiProcessStatusWebsocket implements ApiSocketConnection {
     ws.app.ws('/api/process/:identifier/status', (ws, req) => {
       const identifier = req.params.identifier;
 
-      const process = this.hub.packages.processManager.getProcess(identifier);
+      const process = this.hub.processes.getProcess(identifier);
 
       this.logger.trace('Websocket connected', identifier);
 
@@ -54,10 +54,10 @@ export class ApiProcessStatusWebsocket implements ApiSocketConnection {
 
   send = async (data: any): Promise<void> => {
     const process = data as Process;
-    if (!this.sockets[process.identifier]) {
+    if (!this.sockets[process.name]) {
       return;
     }
 
-    this.sockets[process.identifier].forEach((socket) => socket.send(JSON.stringify(data)));
+    this.sockets[process.name].forEach((socket) => socket.send(JSON.stringify(data)));
   };
 }

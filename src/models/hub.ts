@@ -5,10 +5,11 @@ import { BaseConfig } from './config/interfaces/base-config';
 import { LogConfig } from './config/interfaces/log-config';
 import { Logger } from './logger/logger';
 import { MQTT } from './mqtt/mqtt';
-import { PackageManager } from './package-manager/package-manager';
 import { StateManager } from './state-manager/state-manager';
 import { Webserver } from './webserver/webserver';
 import { QuantumData } from './database/data';
+import { ProcessManager } from './process-manager/process-manager';
+import { DependencyManager } from './dependency-manager/dependency-manager';
 
 interface ConfigOptions {
   uiPath: string;
@@ -17,11 +18,13 @@ interface ConfigOptions {
 export class Hub {
   mqtt: MQTT;
   state: StateManager;
-  packages: PackageManager;
   logger: ILogger;
   server: Webserver;
   data: QuantumData;
   options: ConfigOptions;
+  processes: ProcessManager;
+
+  dependencyManager: DependencyManager;
   private _config: BaseConfig;
 
   get config(): BaseConfig {
@@ -37,8 +40,11 @@ export class Hub {
     this.logger = this.createLogger('Hub');
     this.state = new StateManager(this);
     this.mqtt = new MQTT(this);
-    this.packages = new PackageManager(this);
     this.server = new Webserver(this);
+
+    this.dependencyManager = new DependencyManager(this);
+
+    this.processes = new ProcessManager(this);
 
     this.data = new QuantumData(this, this._config.storage);
   }
@@ -62,15 +68,17 @@ export class Hub {
       this.logger.error('Failed to connect to MQTT');
       return false;
     }
-    await this.state.initialize();
 
-    this.packages.initialize();
+    await this.state.initialize();
+    await this.dependencyManager.initialize();
+
+    await this.processes.startAll();
 
     return true;
   };
 
   stop = async (): Promise<void> => {
-    await this.packages.processManager.stopAll();
+    await this.processes.stopAll();
     await this.state.publishBridgeAvailability(false);
     await this.server.stop();
   };

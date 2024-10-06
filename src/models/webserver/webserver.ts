@@ -8,7 +8,7 @@ import YAML from 'yaml';
 import { WebConfig } from '../config/interfaces/web-config';
 import { Hub } from '../hub';
 import { LogData } from '../logger/logger';
-import { Process, processToDto } from '../package-manager/interfaces/process';
+import { Process, processToDto } from '../process-manager/process';
 import { debugEventsForDeviceType } from './debugging';
 import { apiProcessDebugRequest } from './requests/api-process-debug';
 import { ApiProcessAttributesWebsocket } from './websockets/api-process-attributes';
@@ -16,6 +16,7 @@ import { ApiProcessLogWebsocket } from './websockets/api-process-log';
 import { ApiProcessStatusWebsocket } from './websockets/api-process-status';
 import { ApiProcessesStatusWebsocket } from './websockets/api-processes-status';
 import { ApiProcessCacheWebsocket } from './websockets/api-process-cache';
+import { Dependency } from '../config/interfaces/dependencies';
 
 export class Webserver {
   private express: express.Express;
@@ -97,33 +98,33 @@ export class Webserver {
     this.express.post('/api/processes/:identifier/states/:state', (req, res) => {
       const identifier = req.params.identifier;
       const state = req.params.state;
-      const process = this.hub.packages.processManager.getProcess(identifier);
+      const process = this.hub.processes.getProcess(identifier);
 
       if (!process) {
         return res.status(404).send('Process not found');
       }
 
       if (state === 'start') {
-        this.hub.packages.processManager.startProcess(process.uuid);
+        this.hub.processes.startProcess(process.uuid);
       } else if (state === 'stop') {
-        this.hub.packages.processManager.stopProcess(process.uuid);
+        this.hub.processes.stopProcess(process.uuid);
       }
 
       res.send('OK');
     });
 
     this.express.get('/', (req, res) => {
-      res.render('home', { processes: this.hub.packages.processManager.getProcessDtos() });
+      res.render('home', { processes: this.hub.processes.getProcessDtos() });
     });
 
     this.express.get('/packages', (req, res) => {
-      const definitions: any[] = this.hub.packages.definitions;
+      const dependencies: Dependency[] = this.hub.dependencyManager.all();
 
-      for (const definition of definitions) {
-        const processesPerDefinition = this.hub.packages.processManager.getProcessDtos().filter((process) => process.packageName === definition.name).length
-        definition['processes'] = processesPerDefinition;
+      for (const definition of dependencies) {
+        const count = this.hub.processes.getProcessDtos().filter((process) => process.packageName === definition.definition.name).length;
+        (definition as any)['processes'] = count;
       }
-      res.render('packages', { packages: definitions, repositoryPackages: this.hub.packages.repositoryPackages });
+      res.render('packages', { packages: dependencies, repositoryPackages: this.hub.dependencyManager.onlineRepository.dependencies });
     });
 
     this.express.get('/mqtt', (req, res) => {
@@ -136,15 +137,14 @@ export class Webserver {
 
     this.express.post('/package/:identifier/reload', (req, res) => {
       const identifier = req.params.identifier;
-      this.hub.packages.reloadPackage(identifier);
+      this.hub.processes.reloadProcess(identifier);
       res.send('OK');
     });
 
     this.express.post('/package/install', (req, res) => {
       const { repository } = req.body;
 
-
-      this.hub.packages.installManager.updatePackage(repository).then(() => {
+      this.hub.dependencyManager.updateRepository(repository).then(() => {
         res.send('OK');
       }).catch((error) => {
         res.status(500).send('Error installing package: ' + error);
@@ -155,7 +155,7 @@ export class Webserver {
       const identifier = req.params.identifier;
       this.logger.info('Getting process details', identifier);
 
-      const process = this.hub.packages.processManager.getProcess(identifier);
+      const process = this.hub.processes.getProcess(identifier);
 
       if (!process) {
         return res.status(404).send('Process not found');
@@ -167,7 +167,7 @@ export class Webserver {
       res.render('details', {
         process: processToDto(this.hub, process),
         config: YAML.stringify(process.provider.config),
-        definition: process.provider.packageDefinition,
+        definition: process.provider.dependency.definition,
         attributes: process.provider.getAttributes(),
         debugEvents: debugEventsForDeviceType(),
         cache: Object.keys(cache).sort().map((key) => {

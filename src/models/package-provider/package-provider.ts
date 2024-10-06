@@ -1,13 +1,14 @@
-import { Attribute, Device, DeviceType, Logger, PackageConfig, Provider, Definition } from 'quantumhub-sdk';
+import { Attribute, Device, DeviceType, Logger, PackageConfig, Provider, PackageDefinition } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { ProviderMQTT } from './provider-mqtt';
 import { ProviderTimeout } from './provider-timeout';
 import { ProviderCache } from './provider-cache';
+import { Dependency } from '../config/interfaces/dependencies';
 
 export class PackageProvider implements Provider {
   config: PackageConfig;
   hub: Hub;
-  packageDefinition: Definition;
+  dependency: Dependency;
   device: Device;
   deviceLogger: Logger;
 
@@ -15,10 +16,10 @@ export class PackageProvider implements Provider {
   providerTimeout: ProviderTimeout;
   providerCache: ProviderCache;
 
-  constructor(hub: Hub, config: PackageConfig, packageDefinition: Definition, device: Device) {
+  constructor(hub: Hub, config: PackageConfig, dependency: Dependency, device: Device) {
     this.config = config;
     this.hub = hub;
-    this.packageDefinition = packageDefinition;
+    this.dependency = dependency;
     this.device = device;
 
     this.deviceLogger = this.hub.createLogger(this.config.identifier);
@@ -50,8 +51,8 @@ export class PackageProvider implements Provider {
     return this.deviceLogger;
   }
 
-  get definition(): Definition {
-    return this.packageDefinition;
+  get definition(): PackageDefinition {
+    return this.dependency.definition;
   }
 
   get mqttTopic(): string {
@@ -59,11 +60,11 @@ export class PackageProvider implements Provider {
   }
 
   getAttribute = (attribute: string): Attribute | undefined => {
-    return this.packageDefinition.attributes.find((attr) => attr.key === attribute);
+    return this.dependency.definition.attributes.find((attr) => attr.key === attribute);
   };
 
   getAttributes = (): Attribute[] => {
-    const result = this.packageDefinition.attributes.sort((a, b) => a.key.localeCompare(b.key));
+    const result = this.dependency.definition.attributes.sort((a, b) => a.key.localeCompare(b.key));
 
     return result;
   };
@@ -102,7 +103,7 @@ export class PackageProvider implements Provider {
   };
 
   private registerAttributes = async (): Promise<void> => {
-    const attributes = this.packageDefinition.attributes;
+    const attributes = this.dependency.definition.attributes;
 
     for (const attribute of attributes) {
       if (attribute.type !== DeviceType.sensor) {

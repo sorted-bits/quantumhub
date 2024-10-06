@@ -4,6 +4,7 @@ export const defaultValues: BaseConfig = {
   packages_repository: 'https://quantumhub.app/packages.json',
   storage: {
     file: 'storage.sqlite',
+    dependencies: 'dependencies',
   },
   mqtt: {
     host: 'localhost',
@@ -14,14 +15,12 @@ export const defaultValues: BaseConfig = {
     protocol: 'mqtt',
     validate_certificate: true,
   },
+  dependencies: [],
   homeassistant: {
     availability: true,
     base_topic: 'homeassistant',
   },
-  packages: {
-    root: 'packages',
-    configuration: [],
-  },
+  packages: [],
   instance_name: 'quantumhub',
   web: {
     port: 3000,

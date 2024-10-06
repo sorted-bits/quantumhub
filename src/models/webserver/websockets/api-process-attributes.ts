@@ -30,7 +30,7 @@ export class ApiProcessAttributesWebsocket implements ApiSocketConnection {
 
     ws.app.ws('/api/process/:identifier/attributes', (ws, req) => {
       const identifier = req.params.identifier;
-      const process = this.hub.packages.processManager.getProcess(identifier);
+      const process = this.hub.processes.getProcess(identifier);
       if (!process) {
         this.logger.error('Process not found', identifier);
         return;

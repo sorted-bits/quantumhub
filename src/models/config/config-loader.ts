@@ -33,10 +33,8 @@ export class ConfigLoader {
         },
         packages_repository: output.packages_repository || defaults.packages_repository,
         instance_name: output.instance_name || defaults.instance_name,
-        packages: {
-          root: output.packages.root || defaults.packages.root,
-          configuration: [...defaults.packages.configuration, ...output.packages.configuration],
-        },
+        dependencies: output.dependencies || defaults.dependencies,
+        packages: output.packages || defaults.packages,
         web: {
           ...defaults.web,
           ...output.web,

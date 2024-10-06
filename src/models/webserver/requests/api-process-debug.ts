@@ -1,11 +1,11 @@
 import { Logger } from 'quantumhub-sdk';
 import { Hub } from '../../hub';
-import { Process } from '../../package-manager/interfaces/process';
+import { Process } from '../../process-manager/process';
 import { debugEventsForDeviceType } from '../debugging';
 
 export const apiProcessDebugRequest = (hub: Hub, request: any, response: any) => {
   const identifier = request.params.identifier;
-  const process = hub.packages.processManager.getProcess(identifier);
+  const process = hub.processes.getProcess(identifier);
   const logger = hub.createLogger('apiProcessDebugRequest');
 
   if (!process) {
@@ -60,12 +60,12 @@ const callDeviceMethod = async (logger: Logger, hub: Hub, process: Process, even
   }
 
   if (event === 'stop') {
-    hub.packages.processManager.stopProcess(process.uuid);
+    hub.processes.stopProcess(process.uuid);
     return { code: 200, message: 'OK' };
   }
 
   if (event === 'start') {
-    hub.packages.processManager.startProcess(process.uuid);
+    hub.processes.startProcess(process.uuid);
     return { code: 200, message: 'OK' };
   }
 
