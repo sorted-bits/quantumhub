@@ -21,18 +21,23 @@ mqtt:
 
 storage:
   file: 'storage.sqlite'
+  dependencies: 'packages'
+
+dependencies:
+  - repository: https://github.com/sorted-bits/example-package
+    file: example-device.yaml
+  - repository: https://github.com/sorted-bits/example-package
+    file: example-climate.yaml
 
 packages:
-  root: ./packages
-  configuration:
-    - package: example-device
-      identifier: new_york_clock
-      name: New York Clock
-      timezone: America/New_York
-    - package: example-device
-      identifier: amsterdam_clock
-      name: Amsterdam Clock
-      timezone: Europe/Amsterdam
+  - package: example-device
+    identifier: new_york_clock
+    name: New York Clock
+    timezone: America/New_York
+  - package: example-device
+    identifier: amsterdam_clock
+    name: Amsterdam Clock
+    timezone: Europe/Amsterdam
 
 homeassistant:
 # availability: true # Whether to publish availability messages

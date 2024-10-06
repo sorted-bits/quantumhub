@@ -117,8 +117,6 @@ export class Webserver {
 
     this.express.get('/', (req, res) => {
       const processes = this.hub.processes.getProcesses().map((process) => toProcessDTO(this.hub, process));
-
-      this.logger.info('Sending home', processes);
       res.render('home', { processes: processes });
     });
 
