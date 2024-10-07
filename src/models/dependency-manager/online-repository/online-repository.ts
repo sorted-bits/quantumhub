@@ -35,6 +35,11 @@ export class OnlineRepository {
         return true;
     }
 
+    refresh = async (): Promise<boolean> => {
+        this.logger.info('Refreshing online repository');
+        return await this.downloadDefinitions();
+    }
+
     private downloadDefinitions = async (): Promise<boolean> => {
         const repository = this.hub.config.packages_repository;
 
@@ -45,6 +50,9 @@ export class OnlineRepository {
             const data = await response.json();
 
             const packages: RepositoryDependency[] = data.packages;
+
+            this.logger.info('Downloaded', packages.length, 'packages');
+
             for (const pack of packages) {
                 this.updateRepositoryDepencyMetadata(pack);
             }
@@ -76,7 +84,7 @@ export class OnlineRepository {
 
         repositoryDependency.isInstalled = this.isInstalled(repositoryDependency);
 
-        if (repositoryDependency.isInstalled) {
+        if (repositoryDependency.isInstalled && definition) {
             const compared = compareVersions(repositoryDependency.version, definition?.version ?? '0.0.0');
             repositoryDependency.isNewer = compared === 1;
         } else {

@@ -16,7 +16,7 @@ import { ApiProcessLogWebsocket } from './websockets/api-process-log';
 import { ApiProcessStatusWebsocket } from './websockets/api-process-status';
 import { ApiProcessesStatusWebsocket } from './websockets/api-processes-status';
 import { ApiProcessCacheWebsocket } from './websockets/api-process-cache';
-import { Dependency } from '../config/interfaces/dependencies';
+import { Dependency } from '../config/interfaces/dependency';
 import { toProcessDTO } from '../../ui/views/dtos/process-dto';
 
 export class Webserver {
@@ -135,12 +135,17 @@ export class Webserver {
     });
 
     this.express.get('/configuration', (req, res) => {
-      res.render('configuration', { config: YAML.stringify(this.hub.config) });
+      res.render('configuration', { config: YAML.stringify(this.hub.config), configuration: this.hub.config });
     });
 
     this.express.post('/package/:identifier/reload', (req, res) => {
       const identifier = req.params.identifier;
       this.hub.dependencyManager.reload(identifier);
+      res.send('OK');
+    });
+
+    this.express.post('/package/refresh', async (req, res) => {
+      await this.hub.dependencyManager.onlineRepository.refresh();
       res.send('OK');
     });
 

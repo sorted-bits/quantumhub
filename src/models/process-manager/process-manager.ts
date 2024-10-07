@@ -6,7 +6,7 @@ import { PackageProvider } from '../package-provider/package-provider';
 import { v4 } from 'uuid';
 import { ProcessStatus } from './status';
 import { DateTime } from 'luxon';
-import { Dependency } from '../config/interfaces/dependencies';
+import { Dependency } from '../config/interfaces/dependency';
 
 export class ProcessManager {
     private processes: { [id: string]: Process } = {};

@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Logger, PackageDefinition } from 'quantumhub-sdk';
 
-import { Dependency } from "../config/interfaces/dependencies";
+import { Dependency } from "../config/interfaces/dependency";
 import { Hub } from "../hub";
 import { cloneRepository, isGitInstalled, isGitRepository, npmInstall, pullRepository } from './install-helpers';
 import { OnlineRepository } from './online-repository/online-repository';

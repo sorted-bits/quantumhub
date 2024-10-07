@@ -22,7 +22,7 @@
                 <td>{{definition.description}}</td>
                 <td>{{processes}}</td>
                 <td>
-                    <button class='button is-small is-success' onclick='onReloadPackageClicked("{{definition.name}}")'>
+                    <button class='button is-small is-warning' onclick='onReloadPackageClicked("{{definition.name}}")'>
                         <span class="icon is-small">
                             <i class='fa-solid fa-rotate'></i>
                         </span>
@@ -36,7 +36,14 @@
 </section>
 
 <section class='section'>
-    <h1 class='title'>Available packages</h1>
+    <h1 class='title'>Available packages
+        <button class='button is-small is-success' onclick='onRefreshPackageClicked()'>
+            <span class="icon is-small">
+                <i class='fa-solid fa-rotate'></i>
+            </span>
+            <span>Refresh</span>
+        </button>
+    </h1>
     <table class='table is-fullwidth is-striped'>
         <thead>
             <tr>
@@ -102,6 +109,13 @@
         }).then((response) => {
             console.log('Response:', response);
             //            location.reload();
+        });
+    }
+
+    function onRefreshPackageClicked() {
+        console.log('Refresh packages');
+        fetch(`/package/refresh`, { method: 'POST' }).then(() => {
+            location.reload();
         });
     }
 </script>

@@ -3,7 +3,7 @@ import { Hub } from '../hub';
 import { ProviderMQTT } from './provider-mqtt';
 import { ProviderTimeout } from './provider-timeout';
 import { ProviderCache } from './provider-cache';
-import { Dependency } from '../config/interfaces/dependencies';
+import { Dependency } from '../config/interfaces/dependency';
 
 export class PackageProvider implements Provider {
   config: PackageConfig;

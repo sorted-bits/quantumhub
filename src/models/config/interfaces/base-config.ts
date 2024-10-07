@@ -1,4 +1,4 @@
-import { Dependency } from './dependencies';
+import { Dependency } from './dependency';
 import { HomeAssistantConfig } from './home-assistant-config';
 import { LogConfig } from './log-config';
 import { MqttConfig } from './mqtt-config';
