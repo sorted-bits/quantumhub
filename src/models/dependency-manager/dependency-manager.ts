@@ -17,19 +17,21 @@ interface ProcessState {
 
 export class DependencyManager {
     private gitIsInstalled: boolean = false;
-    private dependencies: Dependency[];
+    private dependencies: Dependency[] = [];
     private logger: Logger;
 
     onlineRepository: OnlineRepository;
 
     constructor(private readonly hub: Hub) {
         this.logger = this.hub.createLogger('DependencyManager');
-        this.dependencies = hub.config.dependencies;
-
         this.onlineRepository = new OnlineRepository(hub, this);
     }
 
     initialize = async (): Promise<boolean> => {
+        await this.onlineRepository.initialize();
+
+        this.dependencies = await this.resolveDependencies();
+
         for (const dependency of this.dependencies) {
             if (!this.isInstalled(dependency)) {
                 this.logger.info('Installing dependency', dependency.repository);
@@ -40,12 +42,39 @@ export class DependencyManager {
                 }
             }
 
-            await this.reloadDefinition(dependency);
+            if (this.isInstalled(dependency)) {
+                await this.reloadDefinition(dependency);
+            }
         }
 
-        await this.onlineRepository.initialize();
+        this.dependencies = this.dependencies.filter((dep) => dep.definition !== undefined);
 
         return true;
+    }
+
+    resolveDependencies = async (): Promise<Dependency[]> => {
+        const resolvedDependencies: Dependency[] = [];
+
+        for (const dependency of this.hub.config.dependencies) {
+            if (typeof dependency === 'string') {
+                const repositoryDependency = this.onlineRepository.get(dependency);
+
+                this.logger.info(`Resolved dependency: ${dependency} to ${repositoryDependency?.repository}`);
+
+                if (repositoryDependency) {
+                    resolvedDependencies.push({
+                        repository: repositoryDependency.repository,
+                        file: repositoryDependency.config_file,
+                    } as any);
+                } else {
+                    this.logger.error('Dependency not found in online repository:', dependency);
+                }
+            } else {
+                resolvedDependencies.push(dependency);
+            }
+        }
+
+        return resolvedDependencies;
     }
 
     install = async (dependency: Dependency): Promise<boolean> => {
@@ -116,8 +145,8 @@ export class DependencyManager {
             this.hub.processes.destroyProcess(processState.uuid);
         });
 
-        for (const dep of dependencies) {
-            await this.reloadDefinition(dep);
+        for (const dependency of dependencies) {
+            await this.reloadDefinition(dependency);
         }
 
         for (const processState of processStates) {
@@ -168,8 +197,8 @@ export class DependencyManager {
             return false;
         }
 
-        for (const dep of dependencies) {
-            await this.reloadDefinition(dep);
+        for (const dependency of dependencies) {
+            await this.reloadDefinition(dependency);
         }
 
         for (const processState of processStates) {
@@ -223,7 +252,7 @@ export class DependencyManager {
     }
 
     get = (dependencyName: string): Dependency | undefined => {
-        return this.dependencies.find(dep => dep.definition.name === dependencyName);
+        return this.dependencies.find(dep => dep.definition?.name === dependencyName);
     }
 
     all = (): Dependency[] => {
@@ -231,7 +260,7 @@ export class DependencyManager {
     }
 
     getDefinition = (dependencyName: string): PackageDefinition | undefined => {
-        return this.dependencies.find(dep => dep.definition.name === dependencyName)?.definition;
+        return this.dependencies.find(dep => dep.definition?.name === dependencyName)?.definition;
     }
 
     reloadDefinition = async (dependency: Dependency): Promise<boolean> => {

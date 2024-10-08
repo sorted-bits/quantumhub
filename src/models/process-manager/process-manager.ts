@@ -91,8 +91,7 @@ export class ProcessManager {
         }
         await this.stopProcess(uuid);
 
-        this.hub.dependencyManager.reloadDefinition(process.provider.dependency);
-
+        await this.hub.dependencyManager.reloadDefinition(process.provider.dependency);
         return await this.initializeProcess(process.provider.config, true);
     }
 

@@ -1,7 +1,16 @@
 import { DateTime } from 'luxon';
-import { Attribute, ButtonAttribute, ClimateAttribute, DeviceAutomationAttribute, DeviceClass, DeviceType, Logger, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from 'quantumhub-sdk';
+import { Attribute, ButtonAttribute, ClimateAttribute, DeviceAutomationAttribute, DeviceClass, DeviceTrackerAttribute, DeviceType, Logger, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { PackageProvider } from '../package-provider/package-provider';
+import { BaseAttributeDescription } from './attribute-descriptions/base-attribute-description';
+import { ClimateAttributeDescription } from './attribute-descriptions/climate-description';
+import { DeviceTrackerDescription } from './attribute-descriptions/device-tracker-description';
+import { SceneDescription } from './attribute-descriptions/scene-description';
+import { SelectDescription } from './attribute-descriptions/select-description';
+import { NumberDescription } from './attribute-descriptions/number-description';
+import { SensorDescription } from './attribute-descriptions/sensor-description';
+import { ButtonDescription } from './attribute-descriptions/button-description';
+import { SwitchDescription } from './attribute-descriptions/switch-description';
 
 export class StateManager {
   private logger: Logger;
@@ -62,7 +71,7 @@ export class StateManager {
     const definition = provider.definition.attributes.find((a) => a.key === attribute);
 
     if (definition) {
-      this.publishDeviceDescription(provider, definition);
+      this.publishAttributeDescription(provider, definition);
     }
     this.publishDeviceStates(provider);
 
@@ -84,6 +93,7 @@ export class StateManager {
     }
 
     const topic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}`;
+
     await this.hub.mqtt.publish(topic, JSON.stringify(state));
 
     if (this.hub.config.homeassistant.availability) {
@@ -117,6 +127,17 @@ export class StateManager {
     const { payload, topic } = mqttData;
 
     this.logger.info('Received message:', topic, payload);
+
+    const deviceDescription = this.getDeviceDescription(provider, attribute);
+
+    if (!deviceDescription) {
+      this.logger.warn('No device description found for:', topic);
+      return;
+    }
+
+    const result = await deviceDescription.onMessage(mqttData);
+
+    this.logger.info('Device description processed message:', result);
 
     switch (attribute.type) {
       case DeviceType.climate: {
@@ -249,226 +270,60 @@ export class StateManager {
     }
   };
 
-  publishDeviceDescription = async (provider: PackageProvider, attribute: Attribute): Promise<void> => {
-    const attributeIdentifier = attribute.key;
-    const topic = `${this.hub.config.homeassistant.base_topic}/${attribute.type}/${provider.mqttTopic}/${attributeIdentifier}/config`;
+  publishAttributeDescription = async (provider: PackageProvider, attribute: Attribute): Promise<void> => {
+    const descriptor = this.getDeviceDescription(provider, attribute);
 
-    if (this.deviceDescriptionsPublished.includes(topic)) {
+    if (!descriptor) {
       return;
     }
 
-    this.logger.trace('Publishing device description:', topic);
-
-    const stateTopic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}`;
-
-    const config = {
-      ...this.deviceDetailsAttribute(provider),
-
-      enabled_by_default: true,
-      name: attribute.name,
-      object_id: `${provider.config.identifier}_${attributeIdentifier}`,
-
-      ...this.originAttribute(),
-
-      state_topic: stateTopic,
-      unique_id: `${provider.config.identifier}_${attributeIdentifier}`,
-      value_template: `{{ value_json.${attributeIdentifier} }}`,
-    };
-
-    if (attribute.availability) {
-      const availability = this.availabilityAttributes(provider);
-      config.availability = availability.availability;
+    if (this.deviceDescriptionsPublished.includes(descriptor.topic)) {
+      this.logger.trace('Device description already published:', descriptor.topic);
+      return;
     }
 
+    this.logger.info('Publishing device description:', provider.config.name, descriptor.topic);
+
+    if (descriptor.topic === 'homeassistant/sensor/qt_new_york_clock/random_temperature/config') {
+      this.logger.info('Publishing device description:', descriptor.topic, descriptor.toJson());
+    }
+
+    await this.hub.mqtt.publish(descriptor.topic, descriptor.toJson(), false);
+    this.deviceDescriptionsPublished.push(descriptor.topic);
+
+    descriptor.registerTopics();
+  };
+
+  getDeviceDescription = (provider: PackageProvider, attribute: Attribute): BaseAttributeDescription | undefined => {
     switch (attribute.type) {
+      case DeviceType.sensor: {
+        return new SensorDescription(this.hub, provider, attribute);
+      }
       case DeviceType.climate: {
-        const climateAttribute = attribute as ClimateAttribute;
-
-        delete config.state_topic;
-        delete config.value_template;
-
-        config.action_topic = `${stateTopic}/action/set`;
-        config.action_template = `{{ value_json.action }}`;
-        this.hub.mqtt.subscribeToAttribute(provider, attribute, config.action_topic);
-
-        config.current_temperature_topic = `${stateTopic}`;
-        config.current_temperature_template = `{{ value_json.current_temperature }}`;
-
-        config.temperature_command_topic = `${stateTopic}/temperature/set`;
-        config.temperature_state_topic = `${stateTopic}`;
-        config.temperature_state_template = `{{ value_json.target_temperature }}`;
-
-        this.hub.mqtt.subscribeToAttribute(provider, attribute, config.temperature_command_topic);
-
-        if (climateAttribute.has_mode_control) {
-          config.mode_command_topic = `${stateTopic}/mode/set`;
-          config.mode_state_topic = `${stateTopic}`;
-          config.mode_state_template = `{{ value_json.mode }}`;
-
-          this.hub.mqtt.subscribeToAttribute(provider, attribute, config.mode_command_topic);
-        }
-
-        if (climateAttribute.has_power_control) {
-          config.power_command_topic = `${stateTopic}/power/set`;
-          config.power_command_template = `{{ value_json.power }}`;
-
-          this.hub.mqtt.subscribeToAttribute(provider, attribute, config.power_command_topic);
-        }
-
-        if (climateAttribute.has_fanmode) {
-          config.fan_mode_command_topic = `${stateTopic}/fan_mode/set`;
-          config.fan_mode_state_topic = `${stateTopic}`;
-          config.fan_mode_state_template = `{{ value_json.fan_mode }}`;
-
-          this.hub.mqtt.subscribeToAttribute(provider, attribute, config.fan_mode_command_topic);
-        }
-
-        if (climateAttribute.has_swingmode) {
-          config.swing_mode_command_topic = `${stateTopic}/swing_mode/set`;
-          config.swing_mode_state_topic = `${stateTopic}`;
-          config.swing_mode_state_template = `{{ value_json.swing_mode }}`;
-
-          this.hub.mqtt.subscribeToAttribute(provider, attribute, config.swing_mode_command_topic);
-        }
-
-        if (climateAttribute.has_presetmode) {
-          config.preset_mode_command_topic = `${stateTopic}/preset_mode/set`;
-          config.preset_mode_state_topic = `${stateTopic}`;
-          config.preset_mode_value_template = `{{ value_json.preset_mode }}`;
-
-          this.hub.mqtt.subscribeToAttribute(provider, attribute, config.preset_mode_command_topic);
-        }
-
-        config.current_humidity_topic = `${stateTopic}`;
-        config.current_humidity_template = `{{ value_json.current_humidity }}`;
-
-        if (climateAttribute.has_humidity_control) {
-          config.target_humidity_command_topic = `${stateTopic}/target_humidity/set`;
-          config.target_humidity_state_topic = `${stateTopic}`;
-          config.target_humidity_state_template = `{{ value_json.target_humidity }}`;
-
-          this.hub.mqtt.subscribeToAttribute(provider, attribute, config.target_humidity_command_topic);
-        }
-
-        break;
+        return new ClimateAttributeDescription(this.hub, provider, attribute as ClimateAttribute);
       }
       case DeviceType.device_tracker: {
-        /* We don't need these for device_tracker */
-        delete config.state_topic;
-        delete config.value_template;
-
-        config.json_attributes_template = `{{ value_json.${attributeIdentifier} | tojson }}`;
-        config.json_attributes_topic = `${stateTopic}`;
-        break;
-      }
-      case DeviceType.scene: {
-        const sceneAttribute = attribute as SceneAttribute;
-        config.command_topic = `${stateTopic}/${attribute.key}/set`;
-
-        this.hub.mqtt.subscribeToAttribute(provider, attribute, config.command_topic);
-        break;
+        return new DeviceTrackerDescription(this.hub, provider, attribute as DeviceTrackerAttribute);
       }
       case DeviceType.button: {
-        const buttonAttribute = attribute as ButtonAttribute;
-        config.command_topic = `${stateTopic}/${attribute.key}/set`;
-
-        this.hub.mqtt.subscribeToAttribute(provider, attribute, config.command_topic);
-        break;
+        return new ButtonDescription(this.hub, provider, attribute as ButtonAttribute);
+      }
+      case DeviceType.scene: {
+        return new SceneDescription(this.hub, provider, attribute as SceneAttribute);
       }
       case DeviceType.select: {
-        const deviceAttribute = attribute as SelectAttribute;
-
-        const commandTopic = `${stateTopic}/${attribute.key}/set`;
-        config.command_topic = commandTopic;
-        config.options = deviceAttribute.options;
-
-        this.hub.mqtt.subscribeToAttribute(provider, attribute, commandTopic);
-        break;
+        return new SelectDescription(this.hub, provider, attribute as SelectAttribute);
       }
       case DeviceType.number: {
-        const numberAttribute = attribute as NumberAttribute;
-
-        const commandTopic = `${stateTopic}/${attribute.key}/set`;
-        config.command_topic = commandTopic;
-        config.step = numberAttribute.step;
-        config.min = numberAttribute.min;
-        config.max = numberAttribute.max;
-
-        this.hub.mqtt.subscribeToAttribute(provider, attribute, commandTopic);
-        break;
-      }
-      case DeviceType.device_automation: {
-        const deviceAutomationAttribute = attribute as DeviceAutomationAttribute;
-        const commandTopic = `${stateTopic}/action`;
-        config.type = 'action';
-        config.sub_type = 'device_automation';
-        config.payload = deviceAutomationAttribute.payload;
-        config.topic = commandTopic;
-
-        this.hub.mqtt.subscribeToAttribute(provider, attribute, commandTopic);
-        break;
+        return new NumberDescription(this.hub, provider, attribute as NumberAttribute);
       }
       case DeviceType.switch: {
-        const commandTopic = `${stateTopic}/${attribute.key}/set`;
-        config.command_topic = commandTopic;
-
-        this.hub.mqtt.subscribeToAttribute(provider, attribute, commandTopic);
-        break;
+        return new SwitchDescription(this.hub, provider, attribute as SwitchAttribute);
+      }
+      default: {
+        this.logger.warn('Unknown attribute type:', attribute.type);
+        return;
       }
     }
-
-    if (attribute.device_class && attribute.device_class !== DeviceClass.none) {
-      config.device_class = attribute.device_class;
-    }
-
-    if (attribute.unit_of_measurement) {
-      config.unit_of_measurement = attribute.unit_of_measurement;
-    }
-
-    if (attribute.state_class) {
-      config.state_class = attribute.state_class;
-    }
-
-    this.logger.trace('Publishing device description:', topic);
-
-    await this.hub.mqtt.publish(topic, JSON.stringify(config));
-
-    this.deviceDescriptionsPublished.push(topic);
-  };
-
-  private deviceDetailsAttribute = (provider: PackageProvider): any => {
-    return {
-      device: {
-        identifiers: [provider.config.identifier],
-        manufacturer: provider.definition.author ?? 'QuantumHub',
-        name: provider.config.name,
-      },
-    };
-  };
-
-  private availabilityAttributes = (provider: PackageProvider): any => {
-    const deviceAvailabilityTopic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}/availability`;
-    return {
-      availability: [
-        {
-          topic: `${this.hub.config.mqtt.base_topic}/bridge/state`,
-          value_template: '{{ value_json.state }}',
-        },
-        {
-          topic: deviceAvailabilityTopic,
-          value_template: '{{ value_json.state }}',
-        },
-      ],
-    };
-  };
-
-  private originAttribute = (): any => {
-    return {
-      origin: {
-        name: 'QuantumHub',
-        sw: '1.0.0',
-        url: 'https://quantumhub.app',
-      },
-    };
-  };
+  }
 }

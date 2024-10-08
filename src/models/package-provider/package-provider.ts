@@ -60,7 +60,7 @@ export class PackageProvider implements Provider {
   }
 
   getAttribute = (attribute: string): Attribute | undefined => {
-    return this.dependency.definition.attributes.find((attr) => attr.key === attribute);
+    return this.dependency.definition?.attributes.find((attr) => attr.key === attribute);
   };
 
   getAttributes = (): Attribute[] => {
@@ -107,7 +107,7 @@ export class PackageProvider implements Provider {
 
     for (const attribute of attributes) {
       if (attribute.type !== DeviceType.sensor) {
-        await this.hub.state.publishDeviceDescription(this, attribute);
+        await this.hub.state.publishAttributeDescription(this, attribute);
       }
     }
   };

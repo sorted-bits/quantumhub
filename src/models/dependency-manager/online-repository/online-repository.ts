@@ -27,6 +27,10 @@ export class OnlineRepository {
         return this.repositoryDependencies;
     }
 
+    get = (name: string): RepositoryDependency | undefined => {
+        return this.repositoryDependencies.find(pack => pack.name === name);
+    }
+
     initialize = async (): Promise<boolean> => {
         this.logger.info('Initializing online repository');
 
@@ -52,10 +56,6 @@ export class OnlineRepository {
             const packages: RepositoryDependency[] = data.packages;
 
             this.logger.info('Downloaded', packages.length, 'packages');
-
-            for (const pack of packages) {
-                this.updateRepositoryDepencyMetadata(pack);
-            }
 
             this.hasLoaded = true;
             this.repositoryDependencies = packages;

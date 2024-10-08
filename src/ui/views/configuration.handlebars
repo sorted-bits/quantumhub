@@ -1,198 +1,317 @@
-<!-- Storage -->
-<section class="section">
-  <h1 class="title">Storage</h1>
-  <h2 class="subtitle">
-    Configure the storage options for the QuantumHub.
-  </h2>
+<section class='section'>
+  <h1 class='title'>Configuration</h1>
 
-  <div class="field is-horizontal">
-    <div class="field-label is-normal">
-      <label class="label">Database file</label>
+  <div class='tabs-container'>
+    <div class='tabs is-boxed'>
+      <ul>
+        <li class='is-active'><a href='#storage-tab'>Storage</a></li>
+        <li><a href='#webserver-tab'>Webserver</a></li>
+        <li><a href='#mqtt-tab'>MQTT</a></li>
+        <li><a href='#homeassistant-tab'>Home Assistant</a></li>
+        <li><a href='#dependencies-tab'>Dependencies</a></li>
+        <li><a href='#yaml-tab'>Config file</a></li>
+      </ul>
     </div>
-    <div class="field-body">
-      <div class="field">
-        <div class="control is-expanded has-icons-left">
-          <input class="input" type="text" placeholder="SQLite database file" value="{{configuration.storage.file}}">
-          <span class="icon is-small is-left">
-            <i class="fa-solid fa-database"></i>
-          </span>
-        </div>
-        <p class="help">Full path (including file name) to the SQLite database file.</p>
-      </div>
-    </div>
-  </div>
-  <div class="field is-horizontal">
-    <div class="field-label is-normal">
-      <label class="label">Dependencies</label>
-    </div>
-    <div class="field-body">
-      <div class="field">
-        <div class="control is-expanded has-icons-left">
-          <input class="input" type="text" placeholder="Dependency storage folder"
-            value="{{configuration.storage.dependencies}}">
-          <span class="icon is-small is-left">
-            <i class="fa-solid fa-folder"></i>
-          </span>
-        </div>
-        <p class="help">Folder where to download dependencies to.</p>
-      </div>
-    </div>
-  </div>
-  <h1 class="title">Webserver</h1>
-  <h2 class="subtitle">
-    Webserver related configuration, such as port and authentication options.
-  </h2>
-  <div class="field is-horizontal">
-    <div class="field-label is-normal">
-      <label class="label">Port</label>
-    </div>
-    <div class="field-body">
-      <div class="field">
-        <div class="control is-expanded has-icons-left">
-          <input class="input" type="number" placeholder="Port for the webserver" value="{{configuration.web.port}}">
-          <span class="icon is-small is-left">
-            <i class="fa-solid fa-earth-europe"></i>
-          </span>
-        </div>
-        <p class="help">This change will only take effect after a restart of the hub.</p>
-      </div>
-    </div>
-  </div>
-  <h1 class="title">MQTT</h1>
-  <h2 class="subtitle">
-    Webserver related configuration, such as port and authentication options.
-  </h2>
 
-  <!-- Host -->
-  <div class="field is-horizontal">
-    <div class="field-label is-normal">
-      <label class="label">Host</label>
-    </div>
-    <div class="field-body">
-      <div class="field">
-        <div class="control is-expanded has-icons-left">
-          <input class="input" type="text" placeholder="Broker host" value="{{configuration.mqtt.host}}">
-          <span class="icon is-small is-left">
-            <i class="fa-solid fa-chart-network"></i>
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
+    <div id='storage-tab' class='tab-content'>
+      <section class="">
+        <h2 class="subtitle">
+          Configure the storage options for the QuantumHub.
+        </h2>
 
-  <!-- Port -->
-  <div class="field is-horizontal">
-    <div class="field-label is-normal">
-      <label class="label">Port</label>
-    </div>
-    <div class="field-body">
-      <div class="field">
-        <div class="control is-expanded has-icons-left">
-          <input class="input" type="number" placeholder="Broker port" value="{{configuration.mqtt.port}}">
-          <span class="icon is-small is-left">
-            <i class="fa-solid fa-earth-europe"></i>
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Username -->
-  <div class="field is-horizontal">
-    <div class="field-label is-normal">
-      <label class="label">Username</label>
-    </div>
-    <div class="field-body">
-      <div class="field">
-        <div class="control is-expanded has-icons-left">
-          <input class="input" type="text" placeholder="Broker username" value="{{configuration.mqtt.username}}">
-          <span class="icon is-small is-left">
-            <i class="fa-solid fa-user"></i>
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Password -->
-  <div class="field is-horizontal">
-    <div class="field-label is-normal">
-      <label class="label">Password</label>
-    </div>
-    <div class="field-body">
-      <div class="field">
-        <div class="control is-expanded has-icons-left">
-          <input class="input" type="password" placeholder="Broker password" value="{{configuration.mqtt.password}}">
-          <span class="icon is-small is-left">
-            <i class="fa-solid fa-lock"></i>
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Protocol -->
-  <div class="field is-horizontal">
-    <div class="field-label is-normal">
-      <label class="label">Protocol</label>
-    </div>
-    <div class="field-body">
-      <div class="field">
-        <div class="control has-icons-left">
-          <div class="select">
-            <select>
-              <option selected>MQTT</option>
-              <option>Websocket</option>
-            </select>
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Database file</label>
           </div>
-          <div class="icon is-small is-left">
-            <i class="fas fa-tower-broadcast"></i>
+          <div class="field-body">
+            <div class="field">
+              <div class="control is-expanded has-icons-left">
+                <input class="input" type="text" placeholder="SQLite database file"
+                  value="{{configuration.storage.file}}">
+                <span class="icon is-small is-left">
+                  <i class="fa-solid fa-database"></i>
+                </span>
+              </div>
+              <p class="help">Full path (including file name) to the SQLite database file.</p>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Validate certificate -->
-  <div class="field is-horizontal">
-    <div class="field-label">
-      <label class="label">Validate certificate</label>
-    </div>
-    <div class="field-body">
-      <div class="field is-narrow">
-        <div class="control has-icons-left">
-          <label class="checkbox">
-            <input type="checkbox" />
-            Yes
-          </label>
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Dependencies</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control is-expanded has-icons-left">
+                <input class="input" type="text" placeholder="Dependency storage folder"
+                  value="{{configuration.storage.dependencies}}">
+                <span class="icon is-small is-left">
+                  <i class="fa-solid fa-folder"></i>
+                </span>
+              </div>
+              <p class="help">Folder where to download dependencies to.</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
-  </div>
 
-  <!-- Base topic -->
-  <div class="field is-horizontal">
-    <div class="field-label is-normal">
-      <label class="label">Base topic</label>
-    </div>
-    <div class="field-body">
-      <div class="field">
-        <div class="control is-expanded has-icons-left">
-          <input class="input" type="text" placeholder="Base topic" value="{{configuration.mqtt.base_topic}}">
-          <span class="icon is-small is-left">
-            <i class="fa-solid fa-folder-tree"></i>
-          </span>
+    <div id='webserver-tab' class='tab-content is-hidden'>
+      <section class="">
+        <h2 class="subtitle">
+          Webserver related configuration, such as port and authentication options.
+        </h2>
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Port</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control is-expanded has-icons-left">
+                <input class="input" type="number" placeholder="Port for the webserver"
+                  value="{{configuration.web.port}}">
+                <span class="icon is-small is-left">
+                  <i class="fa-solid fa-earth-europe"></i>
+                </span>
+              </div>
+              <p class="help">This change will only take effect after a restart of the hub.</p>
+            </div>
+          </div>
         </div>
-        <p class="help">The base topic for the QuantumHub devices.</p>
-      </div>
+      </section>
     </div>
-  </div>
 
-  <h1 class="title">Current configuration</h1>
-  <div class='field'>
-    <label class='label'>Loaded Configuration</label>
-    <div class='control'>
-      <textarea class='textarea configuration' placeholder='Link textarea' disabled rows='30'>{{config}}</textarea>
+    <div id='mqtt-tab' class='tab-content is-hidden'>
+      <section class="">
+        <h2 class="subtitle">
+          Webserver related configuration, such as port and authentication options.
+        </h2>
+
+        <!-- Host -->
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Host</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control is-expanded has-icons-left">
+                <input class="input" type="text" placeholder="Broker host" value="{{configuration.mqtt.host}}">
+                <span class="icon is-small is-left">
+                  <i class="fa-solid fa-chart-network"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Port -->
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Port</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control is-expanded has-icons-left">
+                <input class="input" type="number" placeholder="Broker port" value="{{configuration.mqtt.port}}">
+                <span class="icon is-small is-left">
+                  <i class="fa-solid fa-earth-europe"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Username -->
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Username</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control is-expanded has-icons-left">
+                <input class="input" type="text" placeholder="Broker username" value="{{configuration.mqtt.username}}">
+                <span class="icon is-small is-left">
+                  <i class="fa-solid fa-user"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Password</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control is-expanded has-icons-left">
+                <input class="input" type="password" placeholder="Broker password"
+                  value="{{configuration.mqtt.password}}">
+                <span class="icon is-small is-left">
+                  <i class="fa-solid fa-lock"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Protocol -->
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Protocol</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control has-icons-left">
+                <div class="select">
+                  <select>
+                    <option selected>MQTT</option>
+                    <option>Websocket</option>
+                  </select>
+                </div>
+                <div class="icon is-small is-left">
+                  <i class="fas fa-tower-broadcast"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Validate certificate -->
+        <div class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Validate certificate</label>
+          </div>
+          <div class="field-body">
+            <div class="field is-narrow">
+              <div class="control has-icons-left">
+                <label class="checkbox">
+                  <input type="checkbox" />
+                  Yes
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Base topic -->
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Base topic</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control is-expanded has-icons-left">
+                <input class="input" type="text" placeholder="Base topic" value="{{configuration.mqtt.base_topic}}">
+                <span class="icon is-small is-left">
+                  <i class="fa-solid fa-folder-tree"></i>
+                </span>
+              </div>
+              <p class="help">The base topic for the QuantumHub devices.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id='homeassistant-tab' class='tab-content is-hidden'>
+      <section class="">
+
+        <!-- Base topic -->
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Base topic</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control is-expanded has-icons-left">
+                <input class="input" type="text" placeholder="Broker host"
+                  value="{{configuration.homeassistant.base_topic}}">
+                <span class="icon is-small is-left">
+                  <i class="fa-solid fa-folder-tree"></i>
+                </span>
+              </div>
+              <p class="help">The base topic Home Assistant uses to discover the devices.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enable availability -->
+        <div class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Enable availability</label>
+          </div>
+          <div class="field-body">
+            <div class="field is-narrow">
+              <div class="control has-icons-left">
+                <label class="checkbox">
+                  <input type="checkbox" />
+                  Yes
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id='dependencies-tab' class='tab-content is-hidden'>
+      <section class="">
+        <h2 class="subtitle">
+          Currently loaded dependencies.
+        </h2>
+
+        {{#each configuration.dependencies}}
+        <!-- Repository -->
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Host</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control is-expanded has-icons-left">
+                <input class="input" type="text" placeholder="Broker host" value="{{repository}}">
+                <span class="icon is-small is-left">
+                  <i class="fa-solid fa-brands fa-github"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">File</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control is-expanded has-icons-left">
+                <input class="input" type="text" placeholder="Broker host" value="{{file}}">
+                <span class="icon is-small is-left">
+                  <i class="fa-solid fa-brands fa-github"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        {{/each}}
+      </section>
+    </div>
+
+    <div id='yaml-tab' class='tab-content is-hidden'>
+      <section class="">
+        <h2 class="subtitle">
+          Currently loaded configuration file.
+        </h2>
+        <div class='field'>
+          <label class='label'>Loaded Configuration</label>
+          <div class='control'>
+            <textarea class='textarea configuration' placeholder='Link textarea' disabled
+              rows='30'>{{config}}</textarea>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 </section>

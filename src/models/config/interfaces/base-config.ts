@@ -10,7 +10,7 @@ export interface BaseConfig {
   instance_name: string;
   packages_repository: string;
 
-  dependencies: Dependency[];
+  dependencies: (Dependency | string)[];
 
   web: WebConfig;
   log: LogConfig;
