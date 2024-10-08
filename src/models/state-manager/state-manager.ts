@@ -124,150 +124,16 @@ export class StateManager {
   };
 
   onMessage = async (provider: PackageProvider, attribute: Attribute, mqttData: { payload: string; topic: string }): Promise<void> => {
-    const { payload, topic } = mqttData;
-
-    this.logger.info('Received message:', topic, payload);
-
     const deviceDescription = this.getDeviceDescription(provider, attribute);
 
     if (!deviceDescription) {
-      this.logger.warn('No device description found for:', topic);
+      this.logger.warn('No device description found for:', attribute.key);
       return;
     }
 
-    const result = await deviceDescription.onMessage(mqttData);
-
-    this.logger.info('Device description processed message:', result);
-
-    switch (attribute.type) {
-      case DeviceType.climate: {
-        this.logger.info('Received climate action:', topic);
-        const climateAttribute = attribute as ClimateAttribute;
-        const stateTopic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}`;
-        const actionPath = topic.replace(`${stateTopic}/`, '');
-
-        this.logger.info('Received action:', actionPath);
-
-        switch (actionPath) {
-          case 'temperature/set': {
-            const value = parseFloat(payload);
-
-            if (provider.device.onTargetTemperatureChanged) {
-              provider.device.onTargetTemperatureChanged(climateAttribute, value);
-            } else {
-              provider.logger.warn('No onTargetTemperatureChanged handler found on device', provider.config.identifier);
-            }
-
-            break;
-          }
-          case 'fan_mode/set': {
-            const value = payload;
-            if (provider.device.onClimateFanModeChanged) {
-              provider.device.onClimateFanModeChanged(climateAttribute, value);
-            } else {
-              provider.logger.warn('No onClimateFanModeChanged handler found on device', provider.config.identifier);
-            }
-            break;
-          }
-          case 'swing_mode/set': {
-            const value = payload;
-            if (provider.device.onClimateSwingModeChanged) {
-              provider.device.onClimateSwingModeChanged(climateAttribute, value);
-            } else {
-              provider.logger.warn('No onClimateSwingModeChanged handler found on device', provider.config.identifier);
-            }
-            break;
-          }
-          case 'target_humidity/set': {
-            const value = parseInt(payload);
-            if (provider.device.onTargetHumidityChanged) {
-              provider.device.onTargetHumidityChanged(climateAttribute, value);
-            } else {
-              provider.logger.warn('No onTargetHumidityChanged handler found on device', provider.config.identifier);
-            }
-            break;
-          }
-          case 'preset_mode/set': {
-            const value = payload;
-            if (provider.device.onClimatePresetModeChanged) {
-              provider.device.onClimatePresetModeChanged(climateAttribute, value);
-            } else {
-              provider.logger.warn('No onClimatePresetModeChanged handler found on device', provider.config.identifier);
-            }
-            break;
-          }
-          default: {
-            this.logger.warn('Unknown climate action:', actionPath);
-            break;
-          }
-        }
-        break;
-      }
-      case DeviceType.button: {
-        if (provider.device.onButtonPressed) {
-          provider.device.onButtonPressed(attribute as ButtonAttribute);
-        } else {
-          this.logger.warn('No onButtonPressed handler found on device', provider.config.identifier);
-        }
-        break;
-      }
-      case DeviceType.scene: {
-        if (provider.device.onSceneTriggered) {
-          provider.device.onSceneTriggered(attribute as SceneAttribute);
-        } else {
-          this.logger.warn('No onSceneTriggered handler found on device', provider.config.identifier);
-        }
-        break;
-      }
-      case DeviceType.switch: {
-        const switchAttribute = attribute as SwitchAttribute;
-        if (payload === 'ON' || payload === 'OFF') {
-          const value = payload === 'ON';
-
-          if (provider.device.onSwitchChanged) {
-            provider.device.onSwitchChanged(switchAttribute, value);
-          } else {
-            this.logger.warn('No onSwitchChanged handler found on device', provider.config.identifier);
-          }
-
-          if (switchAttribute.optimistic) {
-            this.setAttributeValue(provider, attribute.key, payload);
-          }
-        } else {
-          this.logger.error('Invalid payload:', payload);
-          return;
-        }
-
-        break;
-      }
-      case DeviceType.select: {
-        const selectAttribute = attribute as SelectAttribute;
-
-        if (provider.device.onSelectChanged) {
-          provider.device.onSelectChanged(selectAttribute, payload);
-        } else {
-          this.logger.warn('No onSelectChanged handler found on device', provider.config.identifier);
-        }
-
-        if (selectAttribute.optimistic) {
-          this.logger.info('Setting attribute value:', attribute.key, payload);
-          this.setAttributeValue(provider, attribute.key, payload);
-        }
-        break;
-      }
-      case DeviceType.number: {
-        if (provider.device.onNumberChanged) {
-          provider.device.onNumberChanged(attribute as NumberAttribute, parseFloat(payload));
-        } else {
-          this.logger.warn('No onNumberChanged handler found on device', provider.config.identifier);
-        }
-
-        break;
-      }
-      case DeviceType.device_automation: {
-        break;
-      }
-    }
+    deviceDescription.onMessage(mqttData).catch((error) => {
+      this.logger.error('Error processing message:', error);
+    });
   };
 
   publishAttributeDescription = async (provider: PackageProvider, attribute: Attribute): Promise<void> => {

@@ -192,7 +192,11 @@ export class MQTT {
 
     for (const subscription of subscriptions) {
       const { provider, attribute } = subscription;
-      this.hub.state.onMessage(provider, attribute, { payload, topic });
+      try {
+        await this.hub.state.onMessage(provider, attribute, { payload, topic });
+      } catch (error) {
+        this.logger.error('Error processing message on attribute subscription:', topic, payload, error);
+      }
     }
   };
 }

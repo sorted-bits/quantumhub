@@ -15,6 +15,7 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
     temperature_state_topic: string;
     temperature_state_template: string;
 
+    modes?: string[];
     mode_command_topic?: string;
     mode_state_topic?: string;
     mode_state_template?: string;
@@ -22,14 +23,17 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
     power_command_topic?: string;
     power_command_template?: string;
 
+    fan_modes?: string[];
     fan_mode_command_topic?: string;
     fan_mode_state_topic?: string;
     fan_mode_state_template?: string;
 
+    swing_modes?: string[];
     swing_mode_command_topic?: string;
     swing_mode_state_topic?: string;
     swing_mode_state_template?: string;
 
+    preset_modes?: string[];
     preset_mode_command_topic?: string;
     preset_mode_state_topic?: string;
     preset_mode_state_template?: string;
@@ -38,8 +42,8 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
     target_humidity_state_topic?: string;
     target_humidity_state_template?: string;
 
-    current_humidity_topic: string;
-    current_humidity_template: string;
+    current_humidity_topic?: string;
+    current_humidity_template?: string;
 
     constructor(hub: Hub, provider: PackageProvider, attribute: ClimateAttribute) {
         super(hub, provider, attribute);
@@ -55,6 +59,7 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
         this.temperature_state_template = `{{ value_json.target_temperature }}`;
 
         if (attribute.has_mode_control) {
+            this.modes = attribute.modes;
             this.mode_command_topic = `${this.stateTopic}/mode/set`;
             this.mode_state_topic = this.stateTopic;
             this.mode_state_template = `{{ value_json.mode }}`;
@@ -66,18 +71,21 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
         }
 
         if (attribute.has_fanmode) {
+            this.fan_modes = attribute.fan_modes;
             this.fan_mode_command_topic = `${this.stateTopic}/fan_mode/set`;
             this.fan_mode_state_topic = this.stateTopic;
             this.fan_mode_state_template = `{{ value_json.fan_mode }}`;
         }
 
         if (attribute.has_swingmode) {
+            this.swing_modes = attribute.swing_modes;
             this.swing_mode_command_topic = `${this.stateTopic}/swing_mode/set`;
             this.swing_mode_state_topic = this.stateTopic;
             this.swing_mode_state_template = `{{ value_json.swing_mode }}`;
         }
 
         if (attribute.has_presetmode) {
+            this.preset_modes = attribute.preset_modes;
             this.preset_mode_command_topic = `${this.stateTopic}/preset_mode/set`;
             this.preset_mode_state_topic = this.stateTopic;
             this.preset_mode_state_template = `{{ value_json.preset_mode }}`;
@@ -91,6 +99,7 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
             this.target_humidity_state_topic = this.stateTopic;
             this.target_humidity_state_template = `{{ value_json.target_humidity }}`;
         }
+
     }
 
     get climateAttribute(): ClimateAttribute {
@@ -128,11 +137,8 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
         }
     }
 
-    onMessage = async (mqttData: { payload: string, topic: string }): Promise<boolean> => {
+    onMessage = async (mqttData: { payload: string, topic: string }): Promise<void> => {
         const { payload, topic } = mqttData;
-
-        this.provider.logger.info('Received message:', topic, payload);
-
 
         switch (topic) {
             case this.temperature_command_topic: {
@@ -140,12 +146,66 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
                 if (this.provider.device.onTargetTemperatureChanged) {
                     this.provider.device.onTargetTemperatureChanged(this.attribute as ClimateAttribute, value);
                 } else {
-                    this.provider.logger.warn('No onTargetTemperatureChanged handler found on device', this.provider.config.identifier);
+                    this.provider.logger.
+                        warn('No onTargetTemperatureChanged handler found on device', this.provider.config.identifier);
                 }
                 break;
             }
-        }
+            case this.mode_command_topic: {
+                const value = payload;
+                this.provider.logger.info('Received mode command:', value);
 
-        return true;
+                if (this.provider.device.onModeChanged) {
+                    this.provider.device.onModeChanged(this.attribute as ClimateAttribute, value);
+                } else {
+                    this.provider.logger.warn('No onModeChanged handler found on device', this.provider.config.identifier);
+                }
+
+                break;
+            }
+            case this.power_command_topic: {
+                const value = payload;
+                this.provider.logger.info('Received power command:', value);
+                break;
+            }
+            case this.fan_mode_command_topic: {
+                const value = payload;
+                this.provider.logger.info('Received fan mode command:', value);
+                if (this.provider.device.onClimateFanModeChanged) {
+                    this.provider.device.onClimateFanModeChanged(this.attribute as ClimateAttribute, value);
+                } else {
+                    this.provider.logger.warn('No onClimateFanModeChanged handler found on device', this.provider.config.identifier);
+                }
+                break;
+            }
+            case this.swing_mode_command_topic: {
+                const value = payload;
+                this.provider.logger.info('Received swing mode command:', value);
+                if (this.provider.device.onClimateSwingModeChanged) {
+                    this.provider.device.onClimateSwingModeChanged(this.attribute as ClimateAttribute, value);
+                } else {
+                    this.provider.logger.warn('No onClimateSwingModeChanged handler found on device', this.provider.config.identifier);
+                }
+                break;
+            }
+            case this.preset_mode_command_topic: {
+                const value = payload;
+                this.provider.logger.info('Received preset mode command:', value);
+                if (this.provider.device.onClimatePresetModeChanged) {
+                    this.provider.device.onClimatePresetModeChanged(this.attribute as ClimateAttribute, value);
+                } else {
+                    this.provider.logger.warn('No onClimatePresetModeChanged handler found on device', this.provider.config.identifier);
+                }
+            }
+            case this.target_humidity_command_topic: {
+                const value = parseFloat(payload);
+                this.provider.logger.info('Received target humidity command:', value);
+                if (this.provider.device.onTargetHumidityChanged) {
+                    this.provider.device.onTargetHumidityChanged(this.attribute as ClimateAttribute, value);
+                } else {
+                    this.provider.logger.warn('No onTargetHumidityChanged handler found on device', this.provider.config.identifier);
+                }
+            }
+        }
     }
 }

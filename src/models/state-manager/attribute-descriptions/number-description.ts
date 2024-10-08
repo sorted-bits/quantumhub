@@ -28,4 +28,17 @@ export class NumberDescription extends BaseAttributeDescription {
 
         this.hub.mqtt.subscribeToAttribute(this.provider, this.attribute, this.command_topic);
     }
+
+    onMessage = async (mqttData: { payload: string, topic: string }): Promise<void> => {
+        const { payload, topic } = mqttData;
+        const numberAttribute = this.attribute as NumberAttribute;
+
+        this.hub.logger.info('Received message:', topic, payload);
+
+        if (this.provider.device.onNumberChanged) {
+            this.provider.device.onNumberChanged(numberAttribute, parseFloat(payload));
+        } else {
+            this.hub.logger.warn('No onNumberChanged handler found on device', this.provider.config.identifier);
+        }
+    }
 }

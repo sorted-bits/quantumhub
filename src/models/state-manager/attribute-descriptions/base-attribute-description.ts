@@ -110,7 +110,6 @@ export class BaseAttributeDescription {
     registerTopics(): void {
     }
 
-    onMessage = async (mqttData: { payload: string, topic: string }): Promise<boolean> => {
-        return true;
+    onMessage = async (mqttData: { payload: string, topic: string }): Promise<void> => {
     }
 };
