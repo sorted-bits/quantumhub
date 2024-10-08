@@ -35,8 +35,8 @@ export class BaseAttributeDescription {
 
     constructor(protected hub: Hub, protected provider: PackageProvider, protected attribute: Attribute) {
         this.name = attribute.name;
-        this.object_id = `${provider.config.identifier}_${attribute.key}`;
-        this.unique_id = `${provider.config.identifier}_${attribute.key}`;
+        this.object_id = `${hub.config.instance_name}_${provider.config.identifier}_${attribute.key}`;
+        this.unique_id = `${hub.config.instance_name}_${provider.config.identifier}_${attribute.key}`;
         this.enabled_by_default = true;
 
         this.origin = this.originAttribute();
