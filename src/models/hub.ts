@@ -58,21 +58,20 @@ export class Hub {
 
     const result = await this.server.start();
     if (!result) {
-      this.logger.error('Failed to start webserver');
+      this.logger.fatal('Failed to start webserver');
       return false;
     }
 
-
     const mqttResult = await this.mqtt.connect(this.config.mqtt);
     if (!mqttResult) {
-      this.logger.error('Failed to connect to MQTT');
+      this.logger.fatal('Failed to connect to MQTT');
       return false;
     }
 
     await this.state.initialize();
     const dependencyResult = await this.dependencyManager.initialize();
     if (!dependencyResult) {
-      this.logger.error('Failed to initialize dependencies');
+      this.logger.fatal('Failed to initialize dependencies');
       return false;
     }
 

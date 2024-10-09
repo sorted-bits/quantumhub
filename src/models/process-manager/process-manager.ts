@@ -200,5 +200,7 @@ export class ProcessManager {
         }
 
         process.provider.device.destroy();
+
+        delete this.processes[uuid];
     };
 }

@@ -52,7 +52,7 @@ export class DependencyManager {
         return true;
     }
 
-    resolveDependencies = async (): Promise<Dependency[]> => {
+    private resolveDependencies = async (): Promise<Dependency[]> => {
         const resolvedDependencies: Dependency[] = [];
 
         for (const dependency of this.hub.config.dependencies) {
@@ -77,7 +77,7 @@ export class DependencyManager {
         return resolvedDependencies;
     }
 
-    install = async (dependency: Dependency): Promise<boolean> => {
+    private install = async (dependency: Dependency): Promise<boolean> => {
         this.gitIsInstalled = await isGitInstalled();
 
         if (!this.gitIsInstalled) {
@@ -140,27 +140,10 @@ export class DependencyManager {
             return false;
         }
 
-        const dependencies = this.dependencies.filter((dep) => dep.repository === dependency.repository);
-
-        const processStates = dependencies.flatMap(dep => this.getProcessStatuses(dep));
-
-        processStates.forEach((processState) => {
-            this.hub.processes.stopProcess(processState.uuid);
-            this.hub.processes.destroyProcess(processState.uuid);
-        });
-
-        for (const dependency of dependencies) {
-            await this.reloadDefinition(dependency);
-        }
-
-        for (const processState of processStates) {
-            await this.startFromProcessState(processState);
-        }
-
-        return true;
+        return await this.restartProcessesForDependency(dependency, false);
     }
 
-    getProcessStatuses = (dependency: Dependency): ProcessState[] => {
+    private getProcessStatuses = (dependency: Dependency): ProcessState[] => {
         const processes = this.hub.processes.processesUsingDependency(dependency);
 
         const result = processes.map((process): ProcessState => {
@@ -174,47 +157,12 @@ export class DependencyManager {
         return result;
     }
 
-    update = async (dependency: Dependency): Promise<boolean> => {
-        this.gitIsInstalled = await isGitInstalled();
-
-        if (!this.gitIsInstalled) {
-            this.logger.error('Git is not installed, unable to install dependencies');
-            return false;
-        }
-
-        // Which dependencies are using the same repository?
-        const dependencies = this.dependencies.filter((dep) => dep.repository === dependency.repository);
-
-        // Get the status of all processes that are using this dependency or any other dependency that uses the same repository
-        // This so we know which processes need to be restarted once the update has been completed
-
-        const processStates = dependencies.flatMap(dep => this.getProcessStatuses(dep));
-
-        processStates.forEach((processState) => {
-            this.hub.processes.stopProcess(processState.uuid);
-            this.hub.processes.destroyProcess(processState.uuid);
-        });
-
-        const installerResult = await this.install(dependency);
-        if (!installerResult) {
-            this.logger.error('Failed to install dependency', dependency.repository);
-            return false;
-        }
-
-        for (const dependency of dependencies) {
-            await this.reloadDefinition(dependency);
-        }
-
-        for (const processState of processStates) {
-            await this.startFromProcessState(processState);
-        }
-
-        // Then we need to start any previously running processes
-        return true;
+    private update = async (dependency: Dependency): Promise<boolean> => {
+        return await this.restartProcessesForDependency(dependency, true);
     }
 
 
-    startFromProcessState = async (processState: ProcessState): Promise<boolean> => {
+    private startFromProcessState = async (processState: ProcessState): Promise<boolean> => {
         const config = this.hub.config.packages.find((elm) => elm.identifier === processState.identifier);
 
         if (!config) {
@@ -240,6 +188,40 @@ export class DependencyManager {
         }
 
         return await this.update(dependencies[0]);
+    }
+
+    private restartProcessesForDependency = async (dependency: Dependency, performUpdate: boolean = false): Promise<boolean> => {
+        const dependencies = this.dependencies.filter((dep) => dep.repository === dependency.repository);
+
+        // Get the status of all processes that are using this dependency or any other dependency that uses the same repository
+        // This so we know which processes need to be restarted once the update has been completed
+
+        const processStates = dependencies.flatMap(dep => this.getProcessStatuses(dep));
+        this.logger.info('Restarting processes:', processStates);
+
+        processStates.forEach((processState) => {
+            this.hub.processes.stopProcess(processState.uuid);
+            this.hub.processes.destroyProcess(processState.uuid);
+        });
+
+        if (performUpdate) {
+            const installerResult = await this.install(dependency);
+            if (!installerResult) {
+                this.logger.error('Failed to install dependency', dependency.repository);
+                return false;
+            }
+        }
+
+        for (const dependency of dependencies) {
+            await this.reloadDefinition(dependency);
+        }
+
+        for (const processState of processStates) {
+            await this.startFromProcessState(processState);
+        }
+
+        // Then we need to start any previously running processes
+        return true;
     }
 
     isInstalled = (dependency: Dependency): boolean => {
