@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon src/app.ts --config=config.yaml",
+    "monitor": "nodemon src/app.ts --config=config.yaml",
+    "start": "ts-node src/app.ts --config=config.yaml",
     "lint": "eslint .",
     "update-version": "versi",
     "test": "echo \"Error: no test specified\" && exit 1",
