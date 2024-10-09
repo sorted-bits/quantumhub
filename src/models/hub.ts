@@ -83,6 +83,7 @@ export class Hub {
   stop = async (): Promise<void> => {
     await this.processes.stopAll();
     await this.state.publishBridgeAvailability(false);
+    await this.mqtt.disconnect();
     await this.server.stop();
   };
 }

@@ -83,34 +83,6 @@ export class StateManager {
     this.hub.server.sendStateUpdate(data);
   };
 
-  publishDeviceStates = async (provider: PackageProvider): Promise<void> => {
-    const state = this.states[provider.config.identifier];
-    if (!state) {
-      this.logger.error('State not found for:', provider.config.identifier);
-      return;
-    }
-
-    const topic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}`;
-
-    await this.hub.mqtt.publish(topic, JSON.stringify(state));
-
-    if (this.hub.config.homeassistant.availability) {
-      const availabilityTopic = `${topic}/availability`;
-
-      await this.hub.mqtt.publish(availabilityTopic, JSON.stringify({ state: 'online' }));
-    }
-  };
-
-  publishDeviceAvailability = async (provider: PackageProvider, online: boolean): Promise<void> => {
-    const topic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}/availability`;
-    const payload = online ? 'online' : 'offline';
-    const json = JSON.stringify({ state: payload });
-
-    this.logger.trace('Publishing device status:', json);
-    await this.hub.mqtt.publish(topic, json);
-    this.logger.trace('Device status published');
-  };
-
   publishBridgeAvailability = async (online: boolean): Promise<void> => {
     const topic = `${this.hub.config.mqtt.base_topic}/bridge/state`;
     const payload = online ? 'online' : 'offline';
@@ -158,7 +130,35 @@ export class StateManager {
     descriptor.registerTopics();
   };
 
-  getDeviceDescription = (provider: PackageProvider, attribute: Attribute): BaseAttributeDescription | undefined => {
+  private publishDeviceStates = async (provider: PackageProvider): Promise<void> => {
+    const state = this.states[provider.config.identifier];
+    if (!state) {
+      this.logger.error('State not found for:', provider.config.identifier);
+      return;
+    }
+
+    const topic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}`;
+
+    await this.hub.mqtt.publish(topic, JSON.stringify(state));
+
+    if (this.hub.config.homeassistant.availability) {
+      const availabilityTopic = `${topic}/availability`;
+
+      await this.hub.mqtt.publish(availabilityTopic, JSON.stringify({ state: 'online' }));
+    }
+  };
+
+  private publishDeviceAvailability = async (provider: PackageProvider, online: boolean): Promise<void> => {
+    const topic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}/availability`;
+    const payload = online ? 'online' : 'offline';
+    const json = JSON.stringify({ state: payload });
+
+    this.logger.trace('Publishing device status:', json);
+    await this.hub.mqtt.publish(topic, json);
+    this.logger.trace('Device status published');
+  };
+
+  private getDeviceDescription = (provider: PackageProvider, attribute: Attribute): BaseAttributeDescription | undefined => {
     switch (attribute.type) {
       case DeviceType.sensor: {
         return new SensorDescription(this.hub, provider, attribute);

@@ -20,16 +20,16 @@ export class ProcessManager {
         return Object.values(this.processes).filter((process) => process.provider.dependency.definition.name === dependency.definition.name);
     }
 
-    public getProcess(identifier: string): Process | undefined {
+    getProcess(identifier: string): Process | undefined {
         const process = Object.values(this.processes).find((elm) => elm.provider.config.identifier === identifier);
         return process;
     }
 
-    public getProcesses(): Process[] {
+    getProcesses(): Process[] {
         return Object.values(this.processes);
     }
 
-    public getProcessesUsingDependency = (dependency: Dependency): Process[] => {
+    getProcessesUsingDependency = (dependency: Dependency): Process[] => {
         return Object.values(this.processes).filter((process) => process.provider.dependency.definition.name === dependency.definition.name);
     }
 
@@ -83,18 +83,6 @@ export class ProcessManager {
         }
     };
 
-    reloadProcess = async (uuid: string): Promise<boolean> => {
-        const process = this.processes[uuid];
-        if (!process) {
-            this.logger.error('Process not found:', uuid);
-            return false;
-        }
-        await this.stopProcess(uuid);
-
-        await this.hub.dependencyManager.reloadDefinition(process.provider.dependency);
-        return await this.initializeProcess(process.provider.config, true);
-    }
-
     startProcess = async (uuid: string): Promise<boolean> => {
         const process = this.processes[uuid];
 
@@ -137,19 +125,7 @@ export class ProcessManager {
     };
 
     startAll = async (): Promise<void> => {
-        if (!this.hub.config.packages) {
-            this.logger.error('No packages found in config');
-            return;
-        }
-
-        const configurations = this.hub.config.packages;
-
-        for (const config of configurations) {
-            if (config.disabled) {
-                this.logger.trace('Package disabled:', config.name);
-                continue;
-            }
-
+        for (const config of this.hub.config.packages.filter((elm) => !elm.disabled)) {
             this.initializeProcess(config);
         }
     };
