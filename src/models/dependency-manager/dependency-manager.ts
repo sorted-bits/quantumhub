@@ -4,7 +4,7 @@ import { Logger, PackageDefinition } from 'quantumhub-sdk';
 
 import { Dependency } from "../config/interfaces/dependency";
 import { Hub } from "../hub";
-import { cloneRepository, isGitInstalled, isGitRepository, npmInstall, pullRepository } from './install-helpers';
+import { cloneRepository, isGitInstalled, isGitRepository, isLocalFolder, npmInstall, pullRepository } from './install-helpers';
 import { OnlineRepository } from './online-repository/online-repository';
 import { ProcessStatus } from '../process-manager/status';
 import { readPackageConfig } from './definition-helpers';
@@ -88,7 +88,7 @@ export class DependencyManager {
         const installPath = this.path(dependency);
         const isInstalled = this.isInstalled(dependency);
 
-        if (isInstalled && isGitRepository(installPath)) {
+        if (isInstalled && isGitRepository(installPath) && !isLocalFolder(dependency.repository)) {
             this.logger.info('Git repository already cloned, we should be pulling', installPath);
 
             const result = await pullRepository(this.logger, installPath);
@@ -106,7 +106,7 @@ export class DependencyManager {
             }
 
             this.logger.info('NPM packages installed:', installPath);
-        } else if (!isInstalled) {
+        } else if (!isInstalled && !isLocalFolder(dependency.repository)) {
             this.logger.info('Cloning git repository:', installPath);
             const result = await cloneRepository(this.logger, dependency.repository, installPath);
             if (!result) {
@@ -120,6 +120,10 @@ export class DependencyManager {
             if (!npmResult) {
                 this.logger.error('Failed to perform npm install', installPath);
                 return false;
+            }
+            else if (isInstalled && isLocalFolder(dependency.repository)) {
+                this.logger.info('Local package, skipping install');
+                return true;
             }
         } else {
             this.logger.info('Package already installed, but it is not a git repository, skipping');
@@ -246,9 +250,17 @@ export class DependencyManager {
     }
 
     path = (dependency: Dependency): string => {
-        const packageRoot = this.hub.config.storage.dependencies;
-        const directoryName = path.basename(dependency.repository);
-        return path.resolve(`${packageRoot}/${directoryName}`);
+        if (dependency.repository.startsWith('http')) {
+            const packageRoot = this.hub.config.storage.dependencies;
+            const directoryName = path.basename(dependency.repository);
+            return path.resolve(`${packageRoot}/${directoryName}`);
+        } else {
+            if (dependency.repository.startsWith('/')) {
+                return dependency.repository;
+            } else {
+                return path.resolve(dependency.repository);
+            }
+        }
     }
 
     get = (dependencyName: string): Dependency | undefined => {

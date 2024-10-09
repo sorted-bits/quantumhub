@@ -3,6 +3,10 @@ import path from 'path';
 import { exec } from 'child_process';
 import { Logger } from 'quantumhub-sdk';
 
+export const isLocalFolder = (folder: string): boolean => {
+    return folder.startsWith('/');
+}
+
 export const isGitRepository = (folder: string): boolean => {
     return fs.existsSync(path.join(folder, '.git'));
 }
