@@ -1,7 +1,7 @@
 import { BaseConfig } from './interfaces/base-config';
 
 export const defaultValues: BaseConfig = {
-  packages_repository: 'https://quantumhub.app/packages.json',
+  packages_repository: 'https://repository.quantumhub.app/packages.json',
   storage: {
     file: 'storage.sqlite',
     dependencies: 'dependencies',
