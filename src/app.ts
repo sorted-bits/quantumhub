@@ -1,6 +1,7 @@
-import path from 'path';
-import { parseArguments } from './models/helpers/parse-arguments';
 import { Hub } from './models/hub';
+import { parseArguments } from './models/helpers/parse-arguments';
+
+import path from 'path';
 
 const configFile = parseArguments(process.argv);
 
@@ -42,7 +43,7 @@ const exitRouter = (error: any, options: any) => {
 // Catching all other exit codes and route to process.exit() ('exit' code)
 // Then handler exit code to do cleanup
 [`SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
-  process.on(eventType, (error, source) => {
+  process.on(eventType, (error) => {
     hub.logger.error('Error:', error, eventType);
     exitRouter(error, { exit: true, eventType: eventType });
   });

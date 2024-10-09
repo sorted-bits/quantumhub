@@ -22,7 +22,7 @@ export class ApiProcessesStatusWebsocket implements ApiSocketConnection {
   initialize = async (ws: expressWs.Instance): Promise<void> => {
     this.logger.trace('Initializing');
 
-    ws.app.ws('/api/processes/status', (ws, req) => {
+    ws.app.ws('/api/processes/status', (ws) => {
       this.sockets.push(ws);
 
       this.sendLastData(ws);

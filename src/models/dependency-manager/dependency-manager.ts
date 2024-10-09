@@ -1,13 +1,20 @@
-import fs from 'fs';
 import path from 'path';
+import {
+    cloneRepository,
+    isGitInstalled,
+    isGitRepository,
+    isLocalFolder,
+    npmInstall,
+    pullRepository
+} from './install-helpers';
+import { Dependency } from '../config/interfaces/dependency';
+import { Hub } from '../hub';
 import { Logger, PackageDefinition } from 'quantumhub-sdk';
-
-import { Dependency } from "../config/interfaces/dependency";
-import { Hub } from "../hub";
-import { cloneRepository, isGitInstalled, isGitRepository, isLocalFolder, npmInstall, pullRepository } from './install-helpers';
 import { OnlineRepository } from './online-repository/online-repository';
 import { ProcessStatus } from '../process-manager/status';
 import { readPackageConfig } from './definition-helpers';
+import fs from 'fs';
+
 
 interface ProcessState {
     uuid: string;

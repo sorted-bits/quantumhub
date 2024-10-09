@@ -95,8 +95,8 @@ const callDeviceMethod = async (logger: Logger, hub: Hub, process: Process, even
   }
 
   logger.trace('Calling debug event', event, methodParameters);
-  (process.provider.device as any)
-  [event](...methodParameters)
+
+  (process.provider.device as any)[event](...methodParameters)
     .then((result: any) => {
       logger.info('Method result', result);
     })

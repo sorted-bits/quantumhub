@@ -1,5 +1,4 @@
 import { DateTime } from 'luxon';
-import { Hub } from '../hub';
 import { PackageProvider } from '../package-provider/package-provider';
 import { ProcessStatus } from './status';
 

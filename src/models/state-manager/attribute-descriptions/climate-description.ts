@@ -196,6 +196,7 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
                 } else {
                     this.provider.logger.warn('No onClimatePresetModeChanged handler found on device', this.provider.config.identifier);
                 }
+                break;
             }
             case this.target_humidity_command_topic: {
                 const value = parseFloat(payload);
@@ -205,6 +206,7 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
                 } else {
                     this.provider.logger.warn('No onTargetHumidityChanged handler found on device', this.provider.config.identifier);
                 }
+                break;
             }
         }
     }

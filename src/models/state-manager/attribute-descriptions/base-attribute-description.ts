@@ -110,6 +110,7 @@ export class BaseAttributeDescription {
     registerTopics(): void {
     }
 
-    onMessage = async (mqttData: { payload: string, topic: string }): Promise<void> => {
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    onMessage = async (dataData: { payload: string, topic: string }): Promise<void> => {
     }
 };

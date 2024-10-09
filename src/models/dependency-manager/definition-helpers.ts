@@ -1,7 +1,8 @@
+import { Attribute, Logger, PackageDefinition } from 'quantumhub-sdk';
+
+import YAML from 'yaml';
 import fs from 'fs';
 import path from 'path';
-import YAML from 'yaml';
-import { Attribute, Logger, PackageDefinition } from 'quantumhub-sdk';
 
 export const readPackageConfig = (logger: Logger, configFile: string): PackageDefinition | undefined => {
     if (!fs.existsSync(configFile)) {

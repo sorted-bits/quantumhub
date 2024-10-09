@@ -1,10 +1,10 @@
 import path from 'path';
-import { Logger } from "quantumhub-sdk";
-import { Hub } from "../../hub";
-import { RepositoryDependency } from "./repository-dependency";
-import { DependencyManager } from "../dependency-manager";
-import { isInstalled } from "../install-helpers";
 import { compareVersions } from 'compare-versions';
+import { DependencyManager } from '../dependency-manager';
+import { Hub } from '../../hub';
+import { isInstalled } from '../install-helpers';
+import { Logger } from 'quantumhub-sdk';
+import { RepositoryDependency } from './repository-dependency';
 
 export class OnlineRepository {
     private logger: Logger;

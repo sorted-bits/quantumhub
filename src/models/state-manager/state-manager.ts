@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { Attribute, ButtonAttribute, ClimateAttribute, DeviceAutomationAttribute, DeviceClass, DeviceTrackerAttribute, DeviceType, Logger, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from 'quantumhub-sdk';
+import { Attribute, ButtonAttribute, ClimateAttribute, DeviceTrackerAttribute, DeviceType, Logger, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { PackageProvider } from '../package-provider/package-provider';
 import { BaseAttributeDescription } from './attribute-descriptions/base-attribute-description';
@@ -56,15 +56,13 @@ export class StateManager {
     }
   };
 
-  setAttributeValue = async (provider: PackageProvider, attribute: string, value: any, force: boolean = false): Promise<void> => {
+  setAttributeValue = async (provider: PackageProvider, attribute: string, value: any): Promise<void> => {
     const key = provider.config.identifier;
 
     if (!this.states[key]) {
       this.logger.trace('Creating state for:', key);
       this.states[key] = {};
     }
-
-    const previousValue = this.states[key][attribute];
 
     this.states[key][attribute] = value;
 

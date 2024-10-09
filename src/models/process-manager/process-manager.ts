@@ -1,4 +1,4 @@
-import { Attribute, Logger, PackageDefinition, Device } from 'quantumhub-sdk';
+import { Logger, Device } from 'quantumhub-sdk';
 
 import { Hub } from "../hub";
 import { Process } from "./process";
