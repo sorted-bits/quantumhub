@@ -24,10 +24,8 @@ storage:
   dependencies: 'packages'
 
 dependencies:
-  - repository: https://github.com/sorted-bits/example-package
-    file: example-device.yaml
-  - repository: https://github.com/sorted-bits/example-package
-    file: example-climate.yaml
+  - example-device
+  - example-climate
 
 packages:
   - package: example-device
