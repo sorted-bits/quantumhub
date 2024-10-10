@@ -1,4 +1,4 @@
-import { NumberAttribute } from "quantumhub-sdk";
+import { NumberAttribute, NumberDevice } from "quantumhub-sdk";
 import { Hub } from "../../hub";
 import { PackageProvider } from "../../package-provider/package-provider";
 import { BaseAttributeDescription } from "./base-attribute-description";
@@ -23,22 +23,15 @@ export class NumberDescription extends BaseAttributeDescription {
         this.value_template = `{{ value_json.${attribute.key} }}`;
     }
 
-    registerTopics(): void {
-        super.registerTopics();
-
+    registerTopics = (): void => {
         this.hub.mqtt.subscribeToAttribute(this.provider, this.attribute, this.command_topic);
     }
 
     onMessage = async (mqttData: { payload: string, topic: string }): Promise<void> => {
-        const { payload, topic } = mqttData;
+        const { payload } = mqttData;
+        const device = this.provider.device as NumberDevice;
         const numberAttribute = this.attribute as NumberAttribute;
 
-        this.hub.logger.info('Received message:', topic, payload);
-
-        if (this.provider.device.onNumberChanged) {
-            this.provider.device.onNumberChanged(numberAttribute, parseFloat(payload));
-        } else {
-            this.hub.logger.warn('No onNumberChanged handler found on device', this.provider.config.identifier);
-        }
+        device.onNumberChanged(numberAttribute, parseFloat(payload));
     }
 }

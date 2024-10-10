@@ -8,7 +8,7 @@ export interface Origin {
     url: string;
 }
 
-export interface Device {
+export interface DeviceDetails {
     identifiers: string[];
     manufacturer: string;
     name: string;
@@ -23,12 +23,10 @@ export class BaseAttributeDescription {
     name: string;
     object_id: string;
     unique_id: string;
-
     enabled_by_default: boolean;
     origin: Origin;
-    device: Device;
+    device: DeviceDetails;
     availability?: Availability[];
-
     device_class?: string;
     unit_of_measurement?: string;
     state_class?: string;
@@ -37,7 +35,7 @@ export class BaseAttributeDescription {
         this.name = attribute.name;
         this.object_id = `${hub.config.instance_name}_${provider.config.identifier}_${attribute.key}`;
         this.unique_id = `${hub.config.instance_name}_${provider.config.identifier}_${attribute.key}`;
-        this.enabled_by_default = true;
+        this.enabled_by_default = attribute.enabled_by_default ?? true;
 
         this.origin = this.originAttribute();
         this.device = this.deviceDetailsAttribute(provider);
@@ -76,7 +74,7 @@ export class BaseAttributeDescription {
         });
     }
 
-    private originAttribute = (): any => {
+    private originAttribute = (): Origin => {
         return {
             name: 'QuantumHub',
             sw: '1.0.0',
@@ -84,7 +82,7 @@ export class BaseAttributeDescription {
         };
     }
 
-    private deviceDetailsAttribute = (provider: PackageProvider): any => {
+    private deviceDetailsAttribute = (provider: PackageProvider): DeviceDetails => {
         return {
             identifiers: [provider.config.identifier],
             manufacturer: provider.definition.author ?? 'QuantumHub',
@@ -107,7 +105,7 @@ export class BaseAttributeDescription {
         ];
     };
 
-    registerTopics(): void {
+    registerTopics = (): void => {
     }
 
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */

@@ -1,4 +1,4 @@
-import { SelectAttribute } from "quantumhub-sdk";
+import { SelectAttribute, SelectDevice } from "quantumhub-sdk";
 import { Hub } from "../../hub";
 import { PackageProvider } from "../../package-provider/package-provider";
 import { BaseAttributeDescription } from "./base-attribute-description";
@@ -19,23 +19,19 @@ export class SelectDescription extends BaseAttributeDescription {
         this.options = attribute.options;
     }
 
-    registerTopics(): void {
-        super.registerTopics();
-
+    registerTopics = (): void => {
         this.hub.mqtt.subscribeToAttribute(this.provider, this.attribute, this.command_topic);
     }
 
     onMessage = async (mqttData: { payload: string, topic: string }): Promise<void> => {
         const { payload, topic } = mqttData;
+
+        const device = this.provider.device as SelectDevice;
         const selectAttribute = this.attribute as SelectAttribute;
 
         this.hub.logger.info('Received message:', topic, payload);
 
-        if (this.provider.device.onSelectChanged) {
-            this.provider.device.onSelectChanged(selectAttribute, payload);
-        } else {
-            this.hub.logger.warn('No onSelectChanged handler found on device', this.provider.config.identifier);
-        }
+        device.onSelectChanged(selectAttribute, payload);
 
         if (selectAttribute.optimistic) {
             this.hub.logger.info('Setting attribute value:', this.attribute.key, payload);

@@ -1,16 +1,8 @@
 import { DateTime } from 'luxon';
-import { Attribute, ButtonAttribute, ClimateAttribute, DeviceTrackerAttribute, DeviceType, Logger, NumberAttribute, SceneAttribute, SelectAttribute, SwitchAttribute } from 'quantumhub-sdk';
+import { Attribute, Logger } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { PackageProvider } from '../package-provider/package-provider';
-import { BaseAttributeDescription } from './attribute-descriptions/base-attribute-description';
-import { ClimateAttributeDescription } from './attribute-descriptions/climate-description';
-import { DeviceTrackerDescription } from './attribute-descriptions/device-tracker-description';
-import { SceneDescription } from './attribute-descriptions/scene-description';
-import { SelectDescription } from './attribute-descriptions/select-description';
-import { NumberDescription } from './attribute-descriptions/number-description';
-import { SensorDescription } from './attribute-descriptions/sensor-description';
-import { ButtonDescription } from './attribute-descriptions/button-description';
-import { SwitchDescription } from './attribute-descriptions/switch-description';
+import { getDeviceDescriptionForAttribute } from './utils/device-description-for-attribute';
 
 export class StateManager {
   private logger: Logger;
@@ -94,12 +86,14 @@ export class StateManager {
   };
 
   onMessage = async (provider: PackageProvider, attribute: Attribute, mqttData: { payload: string; topic: string }): Promise<void> => {
-    const deviceDescription = this.getDeviceDescription(provider, attribute);
+    const deviceDescription = getDeviceDescriptionForAttribute(this.hub, provider, attribute);
 
     if (!deviceDescription) {
       this.logger.warn('No device description found for:', attribute.key);
       return;
     }
+
+    this.logger.info('Received message:', mqttData);
 
     deviceDescription.onMessage(mqttData).catch((error) => {
       this.logger.error('Error processing message:', error);
@@ -107,7 +101,7 @@ export class StateManager {
   };
 
   publishAttributeDescription = async (provider: PackageProvider, attribute: Attribute): Promise<void> => {
-    const descriptor = this.getDeviceDescription(provider, attribute);
+    const descriptor = getDeviceDescriptionForAttribute(this.hub, provider, attribute);
 
     if (!descriptor) {
       return;
@@ -158,36 +152,4 @@ export class StateManager {
     this.logger.trace('Device status published');
   };
 
-  private getDeviceDescription = (provider: PackageProvider, attribute: Attribute): BaseAttributeDescription | undefined => {
-    switch (attribute.type) {
-      case DeviceType.sensor: {
-        return new SensorDescription(this.hub, provider, attribute);
-      }
-      case DeviceType.climate: {
-        return new ClimateAttributeDescription(this.hub, provider, attribute as ClimateAttribute);
-      }
-      case DeviceType.device_tracker: {
-        return new DeviceTrackerDescription(this.hub, provider, attribute as DeviceTrackerAttribute);
-      }
-      case DeviceType.button: {
-        return new ButtonDescription(this.hub, provider, attribute as ButtonAttribute);
-      }
-      case DeviceType.scene: {
-        return new SceneDescription(this.hub, provider, attribute as SceneAttribute);
-      }
-      case DeviceType.select: {
-        return new SelectDescription(this.hub, provider, attribute as SelectAttribute);
-      }
-      case DeviceType.number: {
-        return new NumberDescription(this.hub, provider, attribute as NumberAttribute);
-      }
-      case DeviceType.switch: {
-        return new SwitchDescription(this.hub, provider, attribute as SwitchAttribute);
-      }
-      default: {
-        this.logger.warn('Unknown attribute type:', attribute.type);
-        return;
-      }
-    }
-  }
 }

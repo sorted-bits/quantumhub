@@ -1,4 +1,4 @@
-import { ClimateAttribute } from "quantumhub-sdk";
+import { ClimateAttribute, ClimateDevice } from "quantumhub-sdk";
 import { PackageProvider } from "../../package-provider/package-provider";
 import { BaseAttributeDescription } from "./base-attribute-description";
 import { Hub } from "../../hub";
@@ -106,9 +106,7 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
         return this.attribute as ClimateAttribute;
     }
 
-    registerTopics(): void {
-        super.registerTopics();
-
+    registerTopics = (): void => {
         this.hub.mqtt.subscribeToAttribute(this.provider, this.attribute, this.action_topic);
         this.hub.mqtt.subscribeToAttribute(this.provider, this.attribute, this.temperature_command_topic);
 
@@ -138,25 +136,21 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
     }
 
     onMessage = async (mqttData: { payload: string, topic: string }): Promise<void> => {
+        const device = this.provider.device as ClimateDevice;
         const { payload, topic } = mqttData;
 
         switch (topic) {
             case this.temperature_command_topic: {
                 const value = parseFloat(payload);
-                if (this.provider.device.onTargetTemperatureChanged) {
-                    this.provider.device.onTargetTemperatureChanged(this.attribute as ClimateAttribute, value);
-                } else {
-                    this.provider.logger.
-                        warn('No onTargetTemperatureChanged handler found on device', this.provider.config.identifier);
-                }
+                device.onClimateTargetTemperatureChanged(this.attribute as ClimateAttribute, value);
                 break;
             }
             case this.mode_command_topic: {
                 const value = payload;
                 this.provider.logger.info('Received mode command:', value);
 
-                if (this.provider.device.onModeChanged) {
-                    this.provider.device.onModeChanged(this.attribute as ClimateAttribute, value);
+                if (device.onClimateModeChanged) {
+                    device.onClimateModeChanged(this.attribute as ClimateAttribute, value);
                 } else {
                     this.provider.logger.warn('No onModeChanged handler found on device', this.provider.config.identifier);
                 }
@@ -171,8 +165,8 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
             case this.fan_mode_command_topic: {
                 const value = payload;
                 this.provider.logger.info('Received fan mode command:', value);
-                if (this.provider.device.onClimateFanModeChanged) {
-                    this.provider.device.onClimateFanModeChanged(this.attribute as ClimateAttribute, value);
+                if (device.onClimateFanModeChanged) {
+                    device.onClimateFanModeChanged(this.attribute as ClimateAttribute, value);
                 } else {
                     this.provider.logger.warn('No onClimateFanModeChanged handler found on device', this.provider.config.identifier);
                 }
@@ -181,8 +175,8 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
             case this.swing_mode_command_topic: {
                 const value = payload;
                 this.provider.logger.info('Received swing mode command:', value);
-                if (this.provider.device.onClimateSwingModeChanged) {
-                    this.provider.device.onClimateSwingModeChanged(this.attribute as ClimateAttribute, value);
+                if (device.onClimateSwingModeChanged) {
+                    device.onClimateSwingModeChanged(this.attribute as ClimateAttribute, value);
                 } else {
                     this.provider.logger.warn('No onClimateSwingModeChanged handler found on device', this.provider.config.identifier);
                 }
@@ -191,8 +185,8 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
             case this.preset_mode_command_topic: {
                 const value = payload;
                 this.provider.logger.info('Received preset mode command:', value);
-                if (this.provider.device.onClimatePresetModeChanged) {
-                    this.provider.device.onClimatePresetModeChanged(this.attribute as ClimateAttribute, value);
+                if (device.onClimatePresetModeChanged) {
+                    device.onClimatePresetModeChanged(this.attribute as ClimateAttribute, value);
                 } else {
                     this.provider.logger.warn('No onClimatePresetModeChanged handler found on device', this.provider.config.identifier);
                 }
@@ -201,8 +195,8 @@ export class ClimateAttributeDescription extends BaseAttributeDescription {
             case this.target_humidity_command_topic: {
                 const value = parseFloat(payload);
                 this.provider.logger.info('Received target humidity command:', value);
-                if (this.provider.device.onTargetHumidityChanged) {
-                    this.provider.device.onTargetHumidityChanged(this.attribute as ClimateAttribute, value);
+                if (device.onClimateTargetHumidityChanged) {
+                    device.onClimateTargetHumidityChanged(this.attribute as ClimateAttribute, value);
                 } else {
                     this.provider.logger.warn('No onTargetHumidityChanged handler found on device', this.provider.config.identifier);
                 }

@@ -114,6 +114,11 @@ export class MQTT {
       await this.subscribe(topic);
     }
 
+    const subscriptions = this._attributeSubscriptions[topic];
+    if (subscriptions.find((s) => s.provider === provider && s.attribute === attribute)) {
+      return;
+    }
+
     this._attributeSubscriptions[topic].push({ provider, attribute: attribute });
   };
 
@@ -187,8 +192,6 @@ export class MQTT {
     }
 
     const subscriptions = this._attributeSubscriptions[topic];
-
-    this.logger.trace('Received message on attribute subscription:', topic, payload, subscriptions);
 
     for (const subscription of subscriptions) {
       const { provider, attribute } = subscription;

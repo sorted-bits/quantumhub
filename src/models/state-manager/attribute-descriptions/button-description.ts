@@ -1,4 +1,4 @@
-import { ButtonAttribute } from "quantumhub-sdk";
+import { ButtonAttribute, ButtonDevice } from "quantumhub-sdk";
 import { Hub } from "../../hub";
 import { PackageProvider } from "../../package-provider/package-provider";
 import { BaseAttributeDescription } from "./base-attribute-description";
@@ -17,19 +17,14 @@ export class ButtonDescription extends BaseAttributeDescription {
         this.value_template = `{{ value_json.${attribute.key} }}`;
     }
 
-    registerTopics(): void {
-        super.registerTopics();
-
+    registerTopics = (): void => {
         this.hub.mqtt.subscribeToAttribute(this.provider, this.attribute, this.command_topic);
     }
 
     onMessage = async (mqttData: { payload: string, topic: string }): Promise<void> => {
         this.hub.logger.info('Button pressed:', mqttData);
 
-        if (this.provider.device.onButtonPressed) {
-            await this.provider.device.onButtonPressed(this.attribute as ButtonAttribute)
-        } else {
-            this.hub.logger.warn('No onButtonPressed handler found on device', this.provider.config.identifier);
-        }
+        const device = this.provider.device as ButtonDevice;
+        await device.onButtonPressed(this.attribute as ButtonAttribute)
     }
 }

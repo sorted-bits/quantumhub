@@ -31,9 +31,25 @@ export const readPackageConfig = (logger: Logger, configFile: string): PackageDe
         return undefined;
     }
 
+    const definition: PackageDefinition = {
+        config_file: configFile,
+        path: entryFile,
+        name,
+        entry,
+        description,
+        author,
+        version,
+        attributes: parseAttributes(logger, output.attributes),
+        repository
+    };
+    return definition;
+};
+
+const parseAttributes = (logger: Logger, fileAttributes: any): Attribute[] => {
     const attributes: Attribute[] = [];
-    for (const key in output.attributes) {
-        const data = output.attributes[key];
+
+    for (const key in fileAttributes) {
+        const data = fileAttributes[key];
         data.key = key;
 
         data.availability = data.availability ?? (data.unavailability_value === undefined);
@@ -43,16 +59,5 @@ export const readPackageConfig = (logger: Logger, configFile: string): PackageDe
         attributes.push(data);
     }
 
-    const definition: PackageDefinition = {
-        config_file: configFile,
-        path: entryFile,
-        name,
-        entry,
-        description,
-        author,
-        version,
-        attributes,
-        repository
-    };
-    return definition;
+    return attributes;
 };

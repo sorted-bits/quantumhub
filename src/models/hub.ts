@@ -23,7 +23,6 @@ export class Hub {
   data: QuantumData;
   options: ConfigOptions;
   processes: ProcessManager;
-
   dependencyManager: DependencyManager;
   private _config: BaseConfig;
 
