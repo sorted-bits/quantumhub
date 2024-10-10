@@ -1,11 +1,13 @@
 import path from 'path';
 import {
+    pullAndInstall,
     cloneRepository,
     isGitInstalled,
     isGitRepository,
     isLocalFolder,
     npmInstall,
-    pullRepository
+    pullRepository,
+    cloneAndInstall
 } from './install-helpers';
 import { Dependency } from '../config/interfaces/dependency';
 import { Hub } from '../hub';
@@ -35,6 +37,13 @@ export class DependencyManager {
     }
 
     initialize = async (): Promise<boolean> => {
+        this.gitIsInstalled = await isGitInstalled();
+
+        if (!this.gitIsInstalled) {
+            this.logger.error('Git is not installed, unable to install dependencies');
+            return false;
+        }
+
         await this.onlineRepository.initialize();
 
         this.dependencies = await this.resolveDependencies();
@@ -85,56 +94,39 @@ export class DependencyManager {
     }
 
     private install = async (dependency: Dependency): Promise<boolean> => {
-        this.gitIsInstalled = await isGitInstalled();
-
-        if (!this.gitIsInstalled) {
-            this.logger.error('Git is not installed, unable to install dependencies');
-            return false;
-        }
-
         const installPath = this.path(dependency);
         const isInstalled = this.isInstalled(dependency);
 
-        if (isInstalled && isGitRepository(installPath) && !isLocalFolder(dependency.repository)) {
-            this.logger.info('Git repository already cloned, we should be pulling', installPath);
+        if (isLocalFolder(dependency.repository)) {
+            this.logger.info('Local package, skipping install');
+            return true;
+        }
 
-            const result = await pullRepository(this.logger, installPath);
-            if (!result) {
-                this.logger.error('Failed to pull repository', installPath);
+        if (isInstalled) {
+            if (isGitRepository(installPath)) {
+                this.logger.info('Git repository already cloned, we should be pulling', installPath);
+
+                const result = await pullAndInstall(this.logger, installPath);
+                if (!result) {
+                    this.logger.error('Failed to install', installPath);
+                    return false;
+                }
+
+                this.logger.info('NPM packages installed:', installPath);
+            } else {
+                this.logger.info('Package already installed, but it is not a git repository, skipping');
                 return false;
             }
-
-            this.logger.info('Repository updated:', installPath);
-
-            const npmResult = await npmInstall(this.logger, installPath);
-            if (!npmResult) {
-                this.logger.error('Failed to perform npm install', installPath);
-                return false;
-            }
-
-            this.logger.info('NPM packages installed:', installPath);
-        } else if (!isInstalled && !isLocalFolder(dependency.repository)) {
+        } else if (!isInstalled) {
             this.logger.info('Cloning git repository:', installPath);
-            const result = await cloneRepository(this.logger, dependency.repository, installPath);
+            const result = await cloneAndInstall(this.logger, dependency.repository, installPath);
+
             if (!result) {
                 this.logger.error('Failed to clone repository', installPath);
                 return false;
             }
 
             this.logger.info('Repository cloned:', installPath);
-
-            const npmResult = await npmInstall(this.logger, installPath);
-            if (!npmResult) {
-                this.logger.error('Failed to perform npm install', installPath);
-                return false;
-            }
-            else if (isInstalled && isLocalFolder(dependency.repository)) {
-                this.logger.info('Local package, skipping install');
-                return true;
-            }
-        } else {
-            this.logger.info('Package already installed, but it is not a git repository, skipping');
-            return false;
         }
 
         return true;
@@ -167,8 +159,6 @@ export class DependencyManager {
     private update = async (dependency: Dependency): Promise<boolean> => {
         return await this.restartProcessesForDependency(dependency, true);
     }
-
-
     private startFromProcessState = async (processState: ProcessState): Promise<boolean> => {
         const config = this.hub.config.packages.find((elm) => elm.identifier === processState.identifier);
 
@@ -185,7 +175,6 @@ export class DependencyManager {
 
         return await this.hub.processes.initializeProcess(config, processState.processStatus === ProcessStatus.RUNNING);
     }
-
     updateRepository = async (repository: string): Promise<boolean> => {
         const dependencies = this.dependencies.filter((dep) => dep.repository === repository);
 

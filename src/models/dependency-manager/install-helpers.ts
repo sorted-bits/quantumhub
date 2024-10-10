@@ -40,6 +40,39 @@ export const cloneRepository = async (logger: Logger, repository: string, instal
     });
 }
 
+export const pullAndInstall = async (logger: Logger, installPath: string): Promise<boolean> => {
+    const pullResult = await pullRepository(logger, installPath);
+    if (!pullResult) {
+        logger.error('Failed to pull repository', installPath);
+        return false;
+    }
+
+    const npmResult = await npmInstall(logger, installPath);
+    if (!npmResult) {
+        logger.error('Failed to perform npm install', installPath);
+        return false;
+    }
+
+    return true;
+}
+
+export const cloneAndInstall = async (logger: Logger, repository: string, installPath: string): Promise<boolean> => {
+    const cloneResult = await cloneRepository(logger, repository, installPath);
+    if (!cloneResult) {
+        logger.error('Failed to clone repository', installPath);
+        return false;
+    }
+
+    const npmResult = await npmInstall(logger, installPath);
+    if (!npmResult) {
+        logger.error('Failed to perform npm install', installPath);
+        return false;
+    }
+
+    return true;
+}
+
+
 export const pullRepository = async (logger: Logger, installPath: string): Promise<boolean> => {
     return new Promise((resolve, reject) => {
         exec(`git pull`, { cwd: installPath }, (error) => {
