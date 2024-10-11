@@ -11,9 +11,8 @@ export class DeviceTrackerDescription extends BaseAttributeDescription {
 
     constructor(hub: Hub, provider: PackageProvider, attribute: DeviceTrackerAttribute) {
         super(hub, provider, attribute);
-        const attributeIdentifier = attribute.key;
 
-        this.json_attributes_template = `{{ value_json.${attributeIdentifier} | tojson }}`;
+        this.json_attributes_template = `{{ value_json.${attribute.key} | tojson }}`;
         this.json_attributes_topic = `${this.stateTopic}`;
     }
 }

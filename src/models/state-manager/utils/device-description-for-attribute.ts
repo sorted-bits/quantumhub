@@ -1,4 +1,4 @@
-import { Attribute, DeviceType, ClimateAttribute, DeviceTrackerAttribute, ButtonAttribute, SceneAttribute, SelectAttribute, NumberAttribute, SwitchAttribute, LightAttribute } from "quantumhub-sdk";
+import { Attribute, DeviceType, ClimateAttribute, DeviceTrackerAttribute, ButtonAttribute, SceneAttribute, SelectAttribute, NumberAttribute, SwitchAttribute, LightAttribute, FanAttribute } from "quantumhub-sdk";
 import { Hub } from "../../hub";
 import { PackageProvider } from "../../package-provider/package-provider";
 import { BaseAttributeDescription } from "../attribute-descriptions/base-attribute-description";
@@ -11,6 +11,7 @@ import { SelectDescription } from "../attribute-descriptions/select-description"
 import { SensorDescription } from "../attribute-descriptions/sensor-description";
 import { SwitchDescription } from "../attribute-descriptions/switch-description";
 import { LightDescription } from "../attribute-descriptions/light-description";
+import { FanDescription } from "../attribute-descriptions/fan-description";
 
 export const getDeviceDescriptionForAttribute = (hub: Hub, provider: PackageProvider, attribute: Attribute): BaseAttributeDescription | undefined => {
     switch (attribute.type) {
@@ -40,6 +41,9 @@ export const getDeviceDescriptionForAttribute = (hub: Hub, provider: PackageProv
         }
         case DeviceType.light: {
             return new LightDescription(hub, provider, attribute as LightAttribute);
+        }
+        case DeviceType.fan: {
+            return new FanDescription(hub, provider, attribute as FanAttribute);
         }
         default: {
             provider.logger.warn('Unknown attribute type:', attribute);

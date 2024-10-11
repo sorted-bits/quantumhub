@@ -1,12 +1,9 @@
 import path from 'path';
 import {
     pullAndInstall,
-    cloneRepository,
     isGitInstalled,
     isGitRepository,
     isLocalFolder,
-    npmInstall,
-    pullRepository,
     cloneAndInstall
 } from './install-helpers';
 import { Dependency } from '../config/interfaces/dependency';

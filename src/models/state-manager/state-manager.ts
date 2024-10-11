@@ -118,7 +118,7 @@ export class StateManager {
       this.logger.info('Publishing device description:', descriptor.topic, descriptor.toJson());
     }
 
-    await this.hub.mqtt.publish(descriptor.topic, descriptor.toJson(), false);
+    await this.hub.mqtt.publish(descriptor.topic, descriptor.toJson(), true);
     this.deviceDescriptionsPublished.push(descriptor.topic);
 
     descriptor.registerTopics();
