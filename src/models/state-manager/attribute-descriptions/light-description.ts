@@ -44,9 +44,9 @@ export class LightDescription extends BaseAttributeDescription {
         this.supported_color_modes = attribute.supported_color_modes;
         this.white_scale = attribute.white_scale ?? 255;
 
-        this.command_topic = `${this.stateTopic}/${attribute.key}/set`;
+        this.command_topic = `${this.stateTopic}/set`;
 
-        this.json_attributes_template = `{{ value_json.${attribute.key} | tojson }}`;
+        this.json_attributes_template = `{{ value_json | tojson }}`;
         this.json_attributes_topic = this.stateTopic;
     }
 

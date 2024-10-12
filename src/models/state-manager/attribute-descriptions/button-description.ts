@@ -6,15 +6,13 @@ import { BaseAttributeDescription } from "./base-attribute-description";
 export class ButtonDescription extends BaseAttributeDescription {
     command_topic: string;
     state_topic: string;
-    value_template: string;
 
     constructor(hub: Hub, provider: PackageProvider, attribute: ButtonAttribute) {
         super(hub, provider, attribute);
 
-        this.command_topic = `${this.stateTopic}/${attribute.key}/set`;
+        this.command_topic = `${this.stateTopic}/set`;
 
         this.state_topic = this.stateTopic;
-        this.value_template = `{{ value_json.${attribute.key} }}`;
     }
 
     registerTopics = (): void => {

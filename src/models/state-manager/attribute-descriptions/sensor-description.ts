@@ -11,6 +11,6 @@ export class SensorDescription extends BaseAttributeDescription {
         super(hub, provider, attribute);
 
         this.state_topic = this.stateTopic;
-        this.value_template = `{{ value_json.${attribute.key} }}`;
+        this.value_template = `{{ value_json.state }}`;
     }
 }

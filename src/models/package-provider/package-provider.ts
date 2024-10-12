@@ -1,4 +1,4 @@
-import { Attribute, Device, DeviceType, Logger, PackageConfig, Provider, PackageDefinition } from 'quantumhub-sdk';
+import { Attribute, Device, DeviceType, Logger, PackageConfig, Provider, PackageDefinition, BaseAttributeWithState, BaseAttribute } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { ProviderMQTT } from './provider-mqtt';
 import { ProviderTimeout } from './provider-timeout';
@@ -59,27 +59,15 @@ export class PackageProvider implements Provider {
     return `${this.hub.config.instance_name}_${this.config.identifier}`;
   }
 
-  getAttribute = (attribute: string): Attribute | undefined => {
-    return this.dependency.definition?.attributes.find((attr) => attr.key === attribute);
-  };
-
   getAttributes = (): Attribute[] => {
     const result = this.dependency.definition.attributes.sort((a, b) => a.key.localeCompare(b.key));
 
     return result;
   };
 
-  /**
-   * Stores the value of the attribute in the state manager and publishes the changes to MQTT
-   *
-   * @param {string} attribute The name of the attribute
-   * @param {*} value The value of the attribute
-   * @memberof PackageProvider
-   */
-  setAttributeValue = (attribute: string, value: any): Promise<void> => {
-    this.deviceLogger.trace('Setting attribute value', attribute, value);
-    return this.hub.state.setAttributeValue(this, attribute, value);
-  };
+  setAttributeState = async <T extends BaseAttributeWithState>(attribute: T, state: T['stateDefinition'], options?: { overwrite?: boolean }): Promise<void> => {
+    await this.hub.state.setAttributeState(this, attribute, state, options);
+  }
 
   /**
    * Sets the availability of the device and publishes the changes to MQTT
@@ -100,6 +88,10 @@ export class PackageProvider implements Provider {
    */
   getConfig = (): any => {
     return this.config as any;
+  };
+
+  getAttribute = <T extends BaseAttribute>(name: string): T | undefined => {
+    return this.dependency.definition.attributes.find((attr) => attr.key === name) as T | undefined;
   };
 
   private registerAttributes = async (): Promise<void> => {

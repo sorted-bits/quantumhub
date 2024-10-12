@@ -14,13 +14,13 @@ export class NumberDescription extends BaseAttributeDescription {
     constructor(hub: Hub, provider: PackageProvider, attribute: NumberAttribute) {
         super(hub, provider, attribute);
 
-        this.command_topic = `${this.stateTopic}/${attribute.key}/set`;
+        this.command_topic = `${this.stateTopic}/set`;
         this.step = attribute.step;
         this.min = attribute.min;
         this.max = attribute.max;
 
         this.state_topic = this.stateTopic;
-        this.value_template = `{{ value_json.${attribute.key} }}`;
+        this.value_template = `{{ value_json }}`;
     }
 
     registerTopics = (): void => {

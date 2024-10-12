@@ -1,4 +1,4 @@
-import { SwitchAttribute, SwitchDevice } from "quantumhub-sdk";
+import { SwitchAttribute, SwitchDevice, SwitchState } from "quantumhub-sdk";
 import { Hub } from "../../hub";
 import { PackageProvider } from "../../package-provider/package-provider";
 import { BaseAttributeDescription } from "./base-attribute-description";
@@ -11,10 +11,10 @@ export class SwitchDescription extends BaseAttributeDescription {
     constructor(hub: Hub, provider: PackageProvider, attribute: SwitchAttribute) {
         super(hub, provider, attribute);
 
-        this.command_topic = `${this.stateTopic}/${attribute.key}/set`;
+        this.command_topic = `${this.stateTopic}/set`;
 
         this.state_topic = this.stateTopic;
-        this.value_template = `{{ value_json.${attribute.key} }}`;
+        this.value_template = `{{ value_json.state }}`;
     }
 
     registerTopics = (): void => {
@@ -31,10 +31,15 @@ export class SwitchDescription extends BaseAttributeDescription {
         const value = payload === 'ON';
         device.onSwitchChanged(switchAttribute, value);
 
-
         if (switchAttribute.optimistic) {
             this.hub.logger.info('Setting attribute value:', this.attribute.key, value);
-            this.hub.state.setAttributeValue(this.provider, this.attribute.key, value);
+            this.hub.state.setAttributeState(this.provider, switchAttribute, { state: value });
+        }
+    }
+
+    getPublishState = (state: SwitchState): any => {
+        return {
+            state: state.state ? 'ON' : 'OFF'
         }
     }
 }

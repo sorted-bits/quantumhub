@@ -12,10 +12,10 @@ export class SelectDescription extends BaseAttributeDescription {
     constructor(hub: Hub, provider: PackageProvider, attribute: SelectAttribute) {
         super(hub, provider, attribute);
 
-        this.command_topic = `${this.stateTopic}/${attribute.key}/set`;
+        this.command_topic = `${this.stateTopic}/set`;
 
         this.state_topic = this.stateTopic;
-        this.value_template = `{{ value_json.${attribute.key} }}`;
+        this.value_template = `{{ value_json }}`;
         this.options = attribute.options;
     }
 
@@ -35,7 +35,7 @@ export class SelectDescription extends BaseAttributeDescription {
 
         if (selectAttribute.optimistic) {
             this.hub.logger.info('Setting attribute value:', this.attribute.key, payload);
-            this.hub.state.setAttributeValue(this.provider, this.attribute.key, payload);
+            this.hub.state.setAttributeState(this.provider, selectAttribute, { state: payload });
         }
     }
 }

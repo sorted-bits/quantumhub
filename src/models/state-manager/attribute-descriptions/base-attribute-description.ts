@@ -58,7 +58,7 @@ export class BaseAttributeDescription {
     }
 
     get stateTopic(): string {
-        return `${this.hub.config.mqtt.base_topic}/${this.provider.config.name}`;
+        return `${this.hub.config.mqtt.base_topic}/${this.provider.config.name}/${this.attribute.key}`;
     }
 
     get topic(): string {
@@ -110,5 +110,9 @@ export class BaseAttributeDescription {
 
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     onMessage = async (dataData: { payload: string, topic: string }): Promise<void> => {
+    }
+
+    getPublishState = (state: any): any => {
+        return state;
     }
 };

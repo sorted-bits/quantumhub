@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { Attribute, Logger } from 'quantumhub-sdk';
+import { Attribute, BaseAttributeWithState, Logger } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { PackageProvider } from '../package-provider/package-provider';
 import { getDeviceDescriptionForAttribute } from './utils/device-description-for-attribute';
@@ -33,13 +33,15 @@ export class StateManager {
 
     this.deviceAvailability[provider.config.identifier] = availability;
 
+    /* TODO: Unavailability handling needs to be fixed
     if (!availability) {
       for (const attribute of provider.definition.attributes) {
         if (attribute.unavailability_value !== undefined && !attribute.availability) {
-          this.setAttributeValue(provider, attribute.key, attribute.unavailability_value);
+          this.setAttributeState(provider, attribute, attribute.unavailability_value);
         }
       }
     }
+    */
 
     await this.publishDeviceAvailability(provider, availability);
     const process = this.hub.processes.getProcess(provider.config.identifier);
@@ -48,7 +50,7 @@ export class StateManager {
     }
   };
 
-  setAttributeValue = async (provider: PackageProvider, attribute: string, value: any): Promise<void> => {
+  setAttributeState = async <T extends BaseAttributeWithState>(provider: PackageProvider, attribute: T, state: T['stateDefinition'], options?: { overwrite?: boolean }): Promise<void> => {
     const key = provider.config.identifier;
 
     if (!this.states[key]) {
@@ -56,20 +58,24 @@ export class StateManager {
       this.states[key] = {};
     }
 
-    this.states[key][attribute] = value;
+    this.logger.info('Setting attribute value:', attribute.key, JSON.stringify(state), options);
 
-    const definition = provider.definition.attributes.find((a) => a.key === attribute);
-
-    if (definition) {
-      this.publishAttributeDescription(provider, definition);
+    if (options?.overwrite) {
+      this.states[key][attribute.key] = state;
+    } else {
+      this.states[key][attribute.key] = { ...this.states[key][attribute.key], ...state };
     }
-    this.publishDeviceStates(provider);
+
+    this.logger.info('Current state:', attribute.key, this.states[key][attribute.key]);
+
+    this.publishAttributeDescription(provider, attribute);
+    this.publishAttributeState(provider, attribute, this.states[key][attribute.key]);
 
     const data = {
       time: DateTime.now().toFormat('HH:mm:ss.SSS'),
       identifier: provider.config.identifier,
       attribute: attribute,
-      value: value,
+      value: state,
     };
 
     this.hub.server.sendStateUpdate(data);
@@ -124,16 +130,14 @@ export class StateManager {
     descriptor.registerTopics();
   };
 
-  private publishDeviceStates = async (provider: PackageProvider): Promise<void> => {
-    const state = this.states[provider.config.identifier];
-    if (!state) {
-      this.logger.error('State not found for:', provider.config.identifier);
-      return;
-    }
-
+  // TODO: Only publish the changed attributes
+  private publishAttributeState = async (provider: PackageProvider, attribute: BaseAttributeWithState, value: any): Promise<void> => {
     const topic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}`;
+    const attributeTopic = `${topic}/${attribute.key}`;
 
-    await this.hub.mqtt.publish(topic, JSON.stringify(state));
+    const publishState = getDeviceDescriptionForAttribute(this.hub, provider, attribute)?.getPublishState(value);
+
+    await this.hub.mqtt.publish(attributeTopic, JSON.stringify(publishState));
 
     if (this.hub.config.homeassistant.availability) {
       const availabilityTopic = `${topic}/availability`;
