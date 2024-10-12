@@ -58,15 +58,13 @@ export class StateManager {
       this.states[key] = {};
     }
 
-    this.logger.info('Setting attribute value:', attribute.key, JSON.stringify(state), options);
+    this.logger.trace('Setting attribute value:', attribute.key, JSON.stringify(state), options);
 
     if (options?.overwrite) {
       this.states[key][attribute.key] = state;
     } else {
       this.states[key][attribute.key] = { ...this.states[key][attribute.key], ...state };
     }
-
-    this.logger.info('Current state:', attribute.key, this.states[key][attribute.key]);
 
     this.publishAttributeDescription(provider, attribute);
     this.publishAttributeState(provider, attribute, this.states[key][attribute.key]);

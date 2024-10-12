@@ -172,26 +172,21 @@ export class Webserver {
       const states = this.hub.state.getAttributes(process.provider) ?? {};
       const cache = await this.hub.data.cache.all(process.provider);
 
-      this.logger.info('Sending process details', process.provider.config);
 
       res.render('details', {
+        cache: false,
         process: toProcessDTO(this.hub, process),
         configYAML: YAML.stringify(process.provider.config),
         definition: process.provider.dependency.definition,
         attributes: process.provider.getAttributes(),
         debugEvents: debugEventsForDeviceType(),
-        cache: Object.keys(cache).sort().map((key) => {
+        cacheData: Object.keys(cache).sort().map((key) => {
           return {
             key,
             value: cache[key],
           };
         }),
-        states: Object.keys(states).sort().map((key) => {
-          return {
-            key,
-            value: typeof states[key] === 'object' ? JSON.stringify(states[key]) : states[key],
-          };
-        }),
+        states: this.displayStates(states)
       });
     });
 
@@ -202,6 +197,25 @@ export class Webserver {
     this.server = server;
     return true;
   };
+
+  displayStates = (states: { [key: string]: any }): { [key: string]: any } => {
+    const result: { [key: string]: any } = {};
+
+    for (const key in states) {
+      const state = states[key];
+
+      const stateObject: { [key: string]: any } = {};
+
+      for (const stateKey in state) {
+        stateObject[stateKey] = JSON.stringify(state[stateKey]);
+      }
+
+      result[key] = stateObject;
+
+    }
+
+    return result;
+  }
 
   stop = async (): Promise<void> => {
     if (!this.server) {
