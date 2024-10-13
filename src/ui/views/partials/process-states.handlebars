@@ -29,7 +29,7 @@
           {{#each this}}
           <tr>
             <td width='20%'>{{@key}}</td>
-            <td>{{this}}</td>
+            <td id="attribute-{{../../process.identifier}}-{{@../key}}-{{@key}}-value">{{this}}</td>
           </tr>
           {{/each}}
         </tbody>

@@ -18,6 +18,7 @@ import { ApiProcessesStatusWebsocket } from './websockets/api-processes-status';
 import { ApiProcessCacheWebsocket } from './websockets/api-process-cache';
 import { Dependency } from '../config/interfaces/dependency';
 import { toProcessDTO } from '../../ui/views/dtos/process-dto';
+import { MqttStatusWebsocket } from './websockets/mqtt-status';
 
 export class Webserver {
   private express: express.Express;
@@ -31,6 +32,7 @@ export class Webserver {
   private apiProcessLogWebsocket: ApiProcessLogWebsocket;
   private apiProcessAttributesWebsocket: ApiProcessAttributesWebsocket;
   private apiProcessCacheWebsocket: ApiProcessCacheWebsocket;
+  private mqttStatusWebsocket: MqttStatusWebsocket;
 
   constructor(hub: Hub) {
     this.hub = hub;
@@ -43,7 +45,6 @@ export class Webserver {
       },
       partialsDir: this.hub.options.uiPath + '/views/partials',
     });
-
 
     this.express = express();
     this.express.disable('view cache');
@@ -65,8 +66,13 @@ export class Webserver {
     this.apiProcessLogWebsocket = new ApiProcessLogWebsocket(this.hub, this);
     this.apiProcessAttributesWebsocket = new ApiProcessAttributesWebsocket(this.hub, this);
     this.apiProcessCacheWebsocket = new ApiProcessCacheWebsocket(this.hub, this);
+    this.mqttStatusWebsocket = new MqttStatusWebsocket(this.hub, this);
     this.logger.info('Webserver initialized');
   }
+
+  sendMqttUpdate = (data: any): void => {
+    this.mqttStatusWebsocket.send(data);
+  };
 
   sendProcessUpdate = (process: Process): void => {
     const data = toProcessDTO(this.hub, process);
@@ -94,6 +100,7 @@ export class Webserver {
     this.apiProcessLogWebsocket.initialize(ws);
     this.apiProcessAttributesWebsocket.initialize(ws);
     this.apiProcessCacheWebsocket.initialize(ws);
+    this.mqttStatusWebsocket.initialize(ws);
 
     this.express.post('/api/process/:identifier/debug', (req, res) => apiProcessDebugRequest(this.hub, req, res));
 
@@ -131,7 +138,28 @@ export class Webserver {
     });
 
     this.express.get('/mqtt', (req, res) => {
-      res.render('mqtt', { topics: this.hub.mqtt.topicSubscriptions, attributes: this.hub.mqtt.attributeSubscriptions });
+      res.render('mqtt', {
+        connected: this.hub.mqtt.isConnected,
+        topics: this.hub.mqtt.topicSubscriptions,
+        attributes: this.hub.mqtt.attributeSubscriptions
+      });
+    });
+
+    this.express.post('/api/mqtt/status/:command', async (req, res) => {
+      const command = req.params.command.toLocaleLowerCase();
+
+      if (command === 'disconnect') {
+        await this.hub.mqtt.disconnect();
+      } else if (command === 'connect') {
+        await this.hub.mqtt.connect(this.hub.config.mqtt);
+      } else if (command === 'reconnect') {
+        await this.hub.mqtt.reconnect();
+      } else {
+        res.status(400).send('Invalid command');
+        return;
+      }
+
+      res.send('OK');
     });
 
     this.express.get('/configuration', (req, res) => {

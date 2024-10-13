@@ -61,11 +61,15 @@ export class Hub {
       return false;
     }
 
-    const mqttResult = await this.mqtt.connect(this.config.mqtt);
-    if (!mqttResult) {
-      this.logger.fatal('Failed to connect to MQTT');
-      return false;
-    }
+    this.mqtt.connect(this.config.mqtt).then(result => {
+      if (!result) {
+        this.logger.error('Failed to connect');
+      } else {
+        this.logger.info('Connected to MQTT');
+      }
+    }).catch(error => {
+      this.logger.error(error);
+    })
 
     await this.state.initialize();
     const dependencyResult = await this.dependencyManager.initialize();

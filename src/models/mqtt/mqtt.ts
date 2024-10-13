@@ -40,7 +40,8 @@ export class MQTT {
     const { host, port, username, password, protocol, validate_certificate: validateCertificate } = this.config;
 
     if (this.client && this.client.connected) {
-      this.logger.trace('Already connected, reconnecting');
+      this.disconnecting = true;
+      this.logger.trace('Already connected, first disconnecting');
       this.client.end();
     }
 
@@ -56,6 +57,10 @@ export class MQTT {
       });
 
       this.client.on('connect', () => {
+        this.disconnecting = false;
+
+        this.sendMqttUpdate();
+
         this.logger.info('Connected to broker:', brokerUrl);
 
         this.hub.state.publishBridgeAvailability(true).then(() => {
@@ -137,6 +142,10 @@ export class MQTT {
   };
 
   onDisconnect = (): void => {
+
+    this.logger.error('onDisconnect');
+    this.sendMqttUpdate();
+
     if (!this.disconnecting) {
       this.logger.error('Disconnected from broker');
 
@@ -152,11 +161,15 @@ export class MQTT {
 
   reconnect = async (): Promise<void> => {
     this.logger.warn('Reconnecting to broker');
-    await this.connect(this.config!);
+    const isConnected = await this.connect(this.config!);
 
-    for (const topic in this._attributeSubscriptions) {
-      this.logger.trace('Resubscribing to:', topic);
-      await this.subscribe(topic);
+    if (isConnected) {
+      this.sendMqttUpdate();
+
+      for (const topic in this._attributeSubscriptions) {
+        this.logger.trace('Resubscribing to:', topic);
+        await this.subscribe(topic);
+      }
     }
   };
 
@@ -164,7 +177,10 @@ export class MQTT {
     if (this.client) {
       this.disconnecting = true;
       this.logger.info('Disconnecting from broker');
-      this.client.end();
+      this.client.end(() => {
+        this.sendMqttUpdate();
+      });
+
     }
   };
 
@@ -201,5 +217,11 @@ export class MQTT {
         this.logger.error('Error processing message on attribute subscription:', topic, payload, error);
       }
     }
+  }
+
+  private sendMqttUpdate = (): void => {
+    this.hub.server.sendMqttUpdate({
+      connected: this.isConnected
+    });
   };
 }

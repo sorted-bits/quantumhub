@@ -58,47 +58,19 @@ startAttributeSubscription(identifier, (state) => {
 
   const { attribute, value } = state;
 
-  if (!states[attribute]) {
-    states[attribute] = [];
-  }
+  // attribute-debug_amsterdam_clock-random_temperature-state-value
+  const valuePrefix = `attribute-${identifier}-${attribute.key}-`;
+  console.log(state);
 
-  const history = states[attribute];
-  history.push(state);
-
-  states[attribute] = history.slice(-10);
-
-  if (attribute === selectedState) {
-    renderHistory();
-  }
-
-  const id = `attribute-${attribute}-row`;
-
-  const existingRow = document.getElementById(id);
-  if (existingRow) {
-    existingRow.querySelector('.value').innerText = JSON.stringify(value);
-  } else {
-    const row = document.createElement('tr');
-    row.id = id;
-
-    const link = document.createElement('a');
-    link.setAttribute('onclick', `selectState('${attribute}')`);
-    link.href = '#';
-    link.title = attribute;
-
-    link.appendChild(document.createTextNode(attribute));
-
-    const nameCell = document.createElement('td');
-    nameCell.classList.add('attribute');
-    //      nameCell.innerText = key;
-    nameCell.appendChild(link);
-
-    const valueCell = document.createElement('td');
-    valueCell.classList.add('value');
-    valueCell.innerText = JSON.stringify(value);
-
-    row.appendChild(nameCell);
-    row.appendChild(valueCell);
-
-    table.appendChild(row);
+  for (const key in value) {
+    const valueId = `${valuePrefix}${key}-value`;
+    const existingValue = document.getElementById(valueId);
+    if (existingValue) {
+      if (typeof value[key] === 'object') {
+        existingValue.innerText = JSON.stringify(value[key]);
+      } else {
+        existingValue.innerText = value[key];
+      }
+    }
   }
 });
