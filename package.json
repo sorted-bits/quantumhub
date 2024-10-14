@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "monitor": "nodemon src/app.ts -e js,yaml,ts --config=config.yaml",
+    "monitor": "nodemon src/app.ts -e yaml,ts --config=config.yaml",
     "start": "ts-node src/app.ts --config=config.yaml",
     "lint": "eslint .",
     "update-version": "versi",

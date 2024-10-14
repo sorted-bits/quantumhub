@@ -162,6 +162,10 @@ export class Webserver {
       res.send('OK');
     });
 
+    this.express.get('/logs', (req, res) => {
+      res.render('logs');
+    });
+
     this.express.get('/configuration', (req, res) => {
       res.render('configuration', { config: YAML.stringify(this.hub.config), configuration: this.hub.config });
     });

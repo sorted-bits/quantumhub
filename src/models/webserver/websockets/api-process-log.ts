@@ -50,7 +50,7 @@ export class ApiProcessLogWebsocket implements ApiSocketConnection {
       return;
     }
 
-    const sockets = this.logWebsockets.filter((logWebsocket) => logWebsocket.identifier === logData.identifier);
+    const sockets = this.logWebsockets.filter((logWebsocket) => logWebsocket.identifier === logData.identifier || logWebsocket.identifier === '__ALL__');
     sockets.forEach((logWebsocket) => {
       const logLevelIndex = getLevelIndex(logData.level);
       const logWebsocketLevelIndex = getLevelIndex(logWebsocket.level);

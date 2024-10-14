@@ -1,39 +1,27 @@
 $primary: #D05A11;
 $info: #595B65;
 
-
-
-@use '../../../node_modules/bulma/sass' with (
-  $family-primary: '"Roboto", sans-serif',
+@use '../../../node_modules/bulma/sass' with ($family-primary: '"Roboto", sans-serif',
   $success: #067b38,
   $primary: $primary,
   $danger: #e63946,
   $info: $info,
 
+  /*
   $tabs-boxed-link-active-background-color: $primary,
   $tabs-boxed-link-active-border-color: $primary,
   $tabs-boxed-link-active-border-bottom-color: $primary,
   $tabs-boxed-link-hover-border-bottom-color: $info,
   $tabs-border-bottom-color: $info,
-
-/*
+  $tabs-link-active-color: white,
+  */
+  /*
   $input-disabled-background-color: #8D86C9,
   $input-disabled-color: white,
 */
-  $tabs-link-active-color: white,
   $tabs-link-color: $info,
 
-  $title-color: $info
-);
-
-a {
-  color: $primary !important;
-}
-
-nav.navbar a,
-div.tabs ul li.is-active a {
-  color: white !important;
-}
+  $title-color: $info);
 
 aside.menu ul.menu-list li a.is-active {
   background-color: $primary !important;

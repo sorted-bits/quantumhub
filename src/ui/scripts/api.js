@@ -39,7 +39,6 @@ function processStatusSubscription(identifier, callback) {
   let ws = new WebSocket(`/api/process/${identifier}/status`);
 
   ws.onmessage = (event) => {
-    console.log('Process status message', event.data);
     const data = JSON.parse(event.data);
     callback(data);
   };
@@ -62,5 +61,13 @@ function processLogsSubscription(identifier, level, callback) {
     const data = JSON.parse(event.data);
     callback(data);
   };
+
+  ws.onclose = () => {
+    console.log('Log subscription closed', identifier);
+    setTimeout(() => {
+      processLogsSubscription(identifier, level, callback);
+    }, 500);
+  };
+
   return ws;
 }

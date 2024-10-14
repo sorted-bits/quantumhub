@@ -1,0 +1,17 @@
+<script>
+    const identifier = '__ALL__';
+</script>
+
+<section class='section'>
+    <h1 class='title'>Logs</h1>
+
+    {{> process-logging}}
+</section>
+
+<script src='/scripts/api.js'></script>
+<script src='/scripts/logs.js'></script>
+
+<script>
+    setButtonState(logLevel);
+    subscribeToLogs(identifier, logLevel);
+</script>

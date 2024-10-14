@@ -112,7 +112,6 @@ export class StateManager {
     }
 
     if (this.deviceDescriptionsPublished.includes(descriptor.topic)) {
-      this.logger.trace('Device description already published:', descriptor.topic);
       return;
     }
 
@@ -128,7 +127,6 @@ export class StateManager {
     descriptor.registerTopics();
   };
 
-  // TODO: Only publish the changed attributes
   private publishAttributeState = async (provider: PackageProvider, attribute: BaseAttributeWithState, value: any): Promise<void> => {
     const topic = `${this.hub.config.mqtt.base_topic}/${provider.config.name}`;
     const attributeTopic = `${topic}/${attribute.key}`;
