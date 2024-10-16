@@ -4,6 +4,7 @@ import { WebSocket } from 'ws';
 import { Hub } from '../../hub';
 import { ApiSocketConnection } from '../api-socket-connection';
 import { Webserver } from '../webserver';
+import { ProcessDTO, toProcessDTO } from '../../../ui/views/dtos/process-dto';
 
 export class ApiProcessesStatusWebsocket implements ApiSocketConnection {
   private logger: Logger;
@@ -25,7 +26,8 @@ export class ApiProcessesStatusWebsocket implements ApiSocketConnection {
     ws.app.ws('/api/processes/status', (ws) => {
       this.sockets.push(ws);
 
-      this.sendLastData(ws);
+      const data = this.hub.processes.getProcesses().map((process) => toProcessDTO(this.hub, process));
+      this.send(data);
 
       ws.on('close', () => {
         this.sockets = this.sockets.filter((socket) => socket !== ws);
@@ -34,7 +36,7 @@ export class ApiProcessesStatusWebsocket implements ApiSocketConnection {
     });
   };
 
-  send = async (data: any): Promise<void> => {
+  send = async (data: ProcessDTO[]): Promise<void> => {
     this.lastData = data;
     this.sockets.forEach((socket) => socket.send(JSON.stringify(data)));
   };

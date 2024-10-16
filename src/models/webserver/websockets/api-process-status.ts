@@ -36,7 +36,10 @@ export class ApiProcessStatusWebsocket implements ApiSocketConnection {
         this.sockets[identifier] = [];
       }
 
+      this.logger.info('Websocket connected', identifier);
       this.sockets[identifier].push(ws);
+
+      //this.send(toProcessDTO(this.hub, process));
 
       ws.on('close', () => {
         this.sockets[identifier] = this.sockets[identifier].filter((socket) => socket !== ws);

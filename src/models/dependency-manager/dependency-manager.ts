@@ -77,7 +77,7 @@ export class DependencyManager {
                 if (repositoryDependency) {
                     resolvedDependencies.push({
                         repository: repositoryDependency.repository,
-                        file: repositoryDependency.config_file,
+                        file: repositoryDependency.file,
                     } as any);
                 } else {
                     this.logger.error('Dependency not found in online repository:', dependency);
@@ -156,6 +156,7 @@ export class DependencyManager {
     private update = async (dependency: Dependency): Promise<boolean> => {
         return await this.restartProcessesForDependency(dependency, true);
     }
+
     private startFromProcessState = async (processState: ProcessState): Promise<boolean> => {
         const config = this.hub.config.packages.find((elm) => elm.identifier === processState.identifier);
 
@@ -173,14 +174,19 @@ export class DependencyManager {
         return await this.hub.processes.initializeProcess(config, processState.processStatus === ProcessStatus.RUNNING);
     }
     updateRepository = async (repository: string): Promise<boolean> => {
-        const dependencies = this.dependencies.filter((dep) => dep.repository === repository);
+        const dependency = this.dependencies.find((dep) => dep.repository === repository);
 
-        if (dependencies.length === 0) {
-            this.logger.error('No dependencies found for repository:', repository);
-            return false;
+        if (dependency) {
+            return await this.update(dependency);
         }
 
-        return await this.update(dependencies[0]);
+        const repositoryDependency = this.onlineRepository.dependencies.find((dep) => dep.repository === repository);
+        if (repositoryDependency) {
+            return await this.update(repositoryDependency);
+        }
+
+        this.logger.error('Dependency not found:', repository);
+        return false;
     }
 
     private restartProcessesForDependency = async (dependency: Dependency, performUpdate: boolean = false): Promise<boolean> => {

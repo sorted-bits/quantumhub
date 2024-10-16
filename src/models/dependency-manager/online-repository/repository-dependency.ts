@@ -1,7 +1,7 @@
-export interface RepositoryDependency {
+import { Dependency } from "../../config/interfaces/dependency";
+
+export interface RepositoryDependency extends Dependency {
     name: string;
-    repository: string;
-    config_file: string;
     description: string;
     author: string;
     version: string;

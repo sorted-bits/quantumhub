@@ -67,12 +67,12 @@ export class OnlineRepository {
     }
 
     private isInstalled = (repositoryDependency: RepositoryDependency): boolean => {
-        if (!repositoryDependency.repository || !repositoryDependency.config_file) {
+        if (!repositoryDependency.repository || !repositoryDependency.file) {
             this.logger.error('Repository or config file not set for package:', repositoryDependency);
             return false;
         }
 
-        return isInstalled(this.getInstalledPath(repositoryDependency), repositoryDependency.config_file);
+        return isInstalled(this.getInstalledPath(repositoryDependency), repositoryDependency.file);
     }
 
     private getInstalledPath = (repositoryDependency: RepositoryDependency): string => {

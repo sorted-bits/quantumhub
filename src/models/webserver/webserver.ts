@@ -5,6 +5,8 @@ import http from 'http';
 import { Logger } from 'quantumhub-sdk';
 import YAML from 'yaml';
 
+import cors from 'cors';
+
 import { WebConfig } from '../config/interfaces/web-config';
 import { Hub } from '../hub';
 import { LogData } from '../logger/logger';
@@ -53,7 +55,7 @@ export class Webserver {
     this.express.set('views', this.hub.options.uiPath + '/views');
     this.express.use(express.json());
     this.express.use(express.urlencoded());
-
+    this.express.use(cors());
     this.express.on('error', (err) => {
       this.logger.error('Webserver error:', err);
     });
@@ -78,7 +80,7 @@ export class Webserver {
     const data = toProcessDTO(this.hub, process);
 
     this.apiProcessStatusWebsocket.send(data);
-    this.apiProcessesStatusWebsocket.send(data);
+    this.apiProcessesStatusWebsocket.send([data]);
   };
 
   sendStateUpdate = (data: any): void => {
@@ -122,29 +124,6 @@ export class Webserver {
       res.send('OK');
     });
 
-    this.express.get('/', (req, res) => {
-      const processes = this.hub.processes.getProcesses().map((process) => toProcessDTO(this.hub, process));
-      res.render('home', { processes: processes });
-    });
-
-    this.express.get('/packages', (req, res) => {
-      const dependencies: Dependency[] = this.hub.dependencyManager.all();
-
-      for (const definition of dependencies) {
-        const count = this.hub.processes.getProcesses().filter((process) => process.provider.definition.name === definition.definition.name).length;
-        (definition as any)['processes'] = count;
-      }
-      res.render('packages', { packages: dependencies, repositoryPackages: this.hub.dependencyManager.onlineRepository.dependencies });
-    });
-
-    this.express.get('/mqtt', (req, res) => {
-      res.render('mqtt', {
-        connected: this.hub.mqtt.isConnected,
-        topics: this.hub.mqtt.topicSubscriptions,
-        attributes: this.hub.mqtt.attributeSubscriptions
-      });
-    });
-
     this.express.post('/api/mqtt/status/:command', async (req, res) => {
       const command = req.params.command.toLocaleLowerCase();
 
@@ -162,65 +141,78 @@ export class Webserver {
       res.send('OK');
     });
 
-    this.express.get('/logs', (req, res) => {
-      res.render('logs');
-    });
 
-    this.express.get('/configuration', (req, res) => {
-      res.render('configuration', { config: YAML.stringify(this.hub.config), configuration: this.hub.config });
-    });
-
-    this.express.post('/package/:identifier/reload', (req, res) => {
+    this.express.post('/api/package/:identifier/reload', (req, res) => {
       const identifier = req.params.identifier;
       this.hub.dependencyManager.reload(identifier);
-      res.send('OK');
+      res.send({ status: 'ok' });
     });
 
-    this.express.post('/package/refresh', async (req, res) => {
+    this.express.post('/api/package/refresh', async (req, res) => {
       await this.hub.dependencyManager.onlineRepository.refresh();
       res.send('OK');
     });
 
-    this.express.post('/package/install', (req, res) => {
+    this.express.post('/api/package/install', (req, res) => {
       const { repository } = req.body;
 
       this.hub.dependencyManager.updateRepository(repository).then(() => {
-        res.send('OK');
+        res.send({ status: 'ok' });
       }).catch((error) => {
-        res.status(500).send('Error installing package: ' + error);
+        res.status(500).send({ status: 'error', error: error.message });
       });
     });
 
-    this.express.get('/process/:identifier', async (req, res) => {
+    this.express.get('/api/process/:identifier', async (req, res) => {
       const identifier = req.params.identifier;
-      this.logger.info('Getting process details', identifier);
-
       const process = this.hub.processes.getProcess(identifier);
 
+      this.logger.info('Getting process details', identifier);
+
       if (!process) {
+        this.logger.error('Process not found', identifier);
         return res.status(404).send('Process not found');
       }
 
+      this.logger.info('Process found', identifier);
       const states = this.hub.state.getAttributes(process.provider) ?? {};
-      const cache = await this.hub.data.cache.all(process.provider);
 
-
-      res.render('details', {
+      return res.json({
         cache: false,
         process: toProcessDTO(this.hub, process),
         configYAML: YAML.stringify(process.provider.config),
         definition: process.provider.dependency.definition,
         attributes: process.provider.getAttributes(),
         debugEvents: debugEventsForDeviceType(),
-        cacheData: Object.keys(cache).sort().map((key) => {
-          return {
-            key,
-            value: cache[key],
-          };
-        }),
         states: this.displayStates(states)
       });
     });
+
+    this.express.get('/api/packages', (req, res) => {
+      const dependencies: Dependency[] = this.hub.dependencyManager.all();
+
+      for (const definition of dependencies) {
+        const count = this.hub.processes.getProcesses().filter((process) => process.provider.definition.name === definition.definition.name).length;
+        (definition as any)['processes'] = count;
+      }
+
+      res.json({
+        packages: dependencies, repositoryPackages: this.hub.dependencyManager.onlineRepository.dependencies
+      });
+    });
+
+    this.express.get('/mqtt', (req, res) => {
+      res.render('mqtt', {
+        connected: this.hub.mqtt.isConnected,
+        topics: this.hub.mqtt.topicSubscriptions,
+        attributes: this.hub.mqtt.attributeSubscriptions
+      });
+    });
+
+    this.express.get('/configuration', (req, res) => {
+      res.render('configuration', { config: YAML.stringify(this.hub.config), configuration: this.hub.config });
+    });
+
 
     const server = this.express.listen(this.config.port, () => {
       this.logger.info('Webserver started on port:', this.config.port);
