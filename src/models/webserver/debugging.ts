@@ -23,7 +23,7 @@ export const debugEventsForDeviceType = () => {
           deviceType: 'General',
           optional: false,
           parameters: [],
-        },        
+        },
         {
           name: 'onMessage',
           description: 'This will call the onMessage function of the device, this method is optional and is triggered when the device manually subscribes to a MQTT topic.',
@@ -79,7 +79,7 @@ export const debugEventsForDeviceType = () => {
           optional: true,
           parameters: []
         },
-      ]      
+      ]
     },
     {
       name: 'button',
@@ -261,8 +261,9 @@ export const debugEventsForDeviceType = () => {
             },
             {
               name: 'value',
-              type: 'string',
+              type: 'option',
               description: 'The value of the attribute',
+              attributeName: 'fan_modes'
             },
           ],
         },
