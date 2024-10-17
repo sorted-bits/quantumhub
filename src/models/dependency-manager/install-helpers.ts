@@ -12,7 +12,8 @@ export const isGitRepository = (folder: string): boolean => {
 }
 
 export const isInstalled = (repository: string, file: string): boolean => {
-    return fs.existsSync(path.join(repository, file));
+    const installPath = path.join(repository, file);
+    return fs.existsSync(installPath);
 }
 
 export const isGitInstalled = async (): Promise<boolean> => {

@@ -94,9 +94,6 @@ export class Webserver {
   start = async (): Promise<boolean> => {
     const ws = expressWs(this.express);
 
-    this.express.use('/scripts', express.static(this.hub.options.uiPath + '/scripts'));
-    this.express.use('/css', express.static(this.hub.options.uiPath + '/css'));
-
     this.apiProcessesStatusWebsocket.initialize(ws);
     this.apiProcessStatusWebsocket.initialize(ws);
     this.apiProcessLogWebsocket.initialize(ws);
@@ -140,7 +137,6 @@ export class Webserver {
 
       res.send('OK');
     });
-
 
     this.express.post('/api/package/:identifier/reload', (req, res) => {
       const identifier = req.params.identifier;
@@ -201,16 +197,16 @@ export class Webserver {
       });
     });
 
-    this.express.get('/mqtt', (req, res) => {
-      res.render('mqtt', {
+    this.express.get('/api/mqtt', (req, res) => {
+      res.json({
         connected: this.hub.mqtt.isConnected,
         topics: this.hub.mqtt.topicSubscriptions,
         attributes: this.hub.mqtt.attributeSubscriptions
       });
     });
 
-    this.express.get('/configuration', (req, res) => {
-      res.render('configuration', { config: YAML.stringify(this.hub.config), configuration: this.hub.config });
+    this.express.get('/api/configuration', (req, res) => {
+      res.json({ config: YAML.stringify(this.hub.config), configuration: this.hub.config });
     });
 
 

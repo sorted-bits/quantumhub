@@ -76,7 +76,8 @@ export class OnlineRepository {
     }
 
     private getInstalledPath = (repositoryDependency: RepositoryDependency): string => {
-        return path.join(this.hub.config.storage.dependencies, path.basename(repositoryDependency.repository));
+        const installPath = path.join(this.hub.config.storage.dependencies, path.basename(repositoryDependency.repository));
+        return installPath
     }
 
     private updateRepositoryDepencyMetadata = (repositoryDependency: RepositoryDependency): void => {
