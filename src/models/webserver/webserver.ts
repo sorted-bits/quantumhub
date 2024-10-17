@@ -176,7 +176,7 @@ export class Webserver {
       return res.json({
         cache: false,
         process: toProcessDTO(this.hub, process),
-        configYAML: YAML.stringify(process.provider.config),
+        config: process.provider.config,
         definition: process.provider.dependency.definition,
         attributes: process.provider.getAttributes(),
         debugEvents: debugEventsForDeviceType(),
