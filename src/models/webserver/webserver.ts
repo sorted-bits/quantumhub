@@ -171,7 +171,7 @@ export class Webserver {
       }
 
       this.logger.info('Process found', identifier);
-      const states = this.hub.state.getAttributes(process.provider) ?? {};
+      const states = await this.hub.state.getAttributes(process.provider) ?? {};
 
       return res.json({
         cache: false,
@@ -180,7 +180,7 @@ export class Webserver {
         definition: process.provider.dependency.definition,
         attributes: process.provider.getAttributes(),
         debugEvents: debugEventsForDeviceType(),
-        states: this.displayStates(states)
+        states: states
       });
     });
 

@@ -28,7 +28,7 @@ export class ApiProcessAttributesWebsocket implements ApiSocketConnection {
   initialize = async (ws: expressWs.Instance): Promise<void> => {
     this.logger.trace('Initializing');
 
-    ws.app.ws('/api/process/:identifier/attributes', (ws, req) => {
+    ws.app.ws('/api/process/:identifier/attributes', async (ws, req) => {
       const identifier = req.params.identifier;
       this.logger.info('Subscribing to process', identifier)
       const process = this.hub.processes.getProcess(identifier);

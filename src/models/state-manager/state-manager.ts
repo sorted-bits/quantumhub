@@ -1,12 +1,12 @@
-import { DateTime } from 'luxon';
 import { Attribute, BaseAttributeWithState, Logger } from 'quantumhub-sdk';
 import { Hub } from '../hub';
 import { PackageProvider } from '../package-provider/package-provider';
 import { getDeviceDescriptionForAttribute } from './utils/device-description-for-attribute';
+import { State } from '../database/state';
 
 export class StateManager {
   private logger: Logger;
-  private states: { [id: string]: { [attribute: string]: any } } = {};
+  //  private states: { [id: string]: { [attribute: string]: any } } = {};
   private deviceAvailability: { [id: string]: boolean } = {};
   private deviceDescriptionsPublished: string[] = [];
   private hub: Hub;
@@ -20,8 +20,10 @@ export class StateManager {
     this.logger.info('Initializing state manager');
   };
 
-  getAttributes = (provider: PackageProvider): { [attribute: string]: any } => {
-    return this.states[provider.config.identifier];
+  getAttributes = async (provider: PackageProvider): Promise<State[]> => {
+    const result = await this.hub.data.state.getAll(provider);
+    this.logger.info('Attributes:', result);
+    return result;
   };
 
   getAvailability = (provider: PackageProvider): boolean => {
@@ -50,33 +52,13 @@ export class StateManager {
     }
   };
 
-  setAttributeState = async <T extends BaseAttributeWithState>(provider: PackageProvider, attribute: T, state: T['stateDefinition'], options?: { overwrite?: boolean }): Promise<void> => {
-    const key = provider.config.identifier;
-
-    if (!this.states[key]) {
-      this.logger.trace('Creating state for:', key);
-      this.states[key] = {};
-    }
-
-    this.logger.trace('Setting attribute value:', attribute.key, JSON.stringify(state), options);
-
-    if (options?.overwrite) {
-      this.states[key][attribute.key] = state;
-    } else {
-      this.states[key][attribute.key] = { ...this.states[key][attribute.key], ...state };
-    }
+  setAttributeState = async <T extends BaseAttributeWithState>(provider: PackageProvider, attribute: T, state: T['stateDefinition']): Promise<void> => {
+    const quantumState = await this.hub.data.state.set(provider, attribute.key, state);
 
     this.publishAttributeDescription(provider, attribute);
-    this.publishAttributeState(provider, attribute, this.states[key][attribute.key]);
+    this.publishAttributeState(provider, attribute, state);
 
-    const data = {
-      time: DateTime.now().toFormat('HH:mm:ss.SSS'),
-      identifier: provider.config.identifier,
-      attribute: attribute,
-      value: state,
-    };
-
-    this.hub.server.sendStateUpdate(data);
+    this.hub.server.sendStateUpdate(quantumState);
   };
 
   publishBridgeAvailability = async (online: boolean): Promise<void> => {

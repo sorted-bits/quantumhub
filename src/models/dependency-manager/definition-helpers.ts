@@ -45,7 +45,7 @@ export const readPackageConfig = (logger: Logger, configFile: string): PackageDe
     return definition;
 };
 
-const parseAttributes = (logger: Logger, fileAttributes: any): Attribute[] => {
+export const parseAttributes = (logger: Logger, fileAttributes: any): Attribute[] => {
     const attributes: Attribute[] = [];
 
     for (const key in fileAttributes) {

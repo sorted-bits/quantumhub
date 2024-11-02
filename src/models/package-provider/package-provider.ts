@@ -65,8 +65,8 @@ export class PackageProvider implements Provider {
     return result;
   };
 
-  setAttributeState = async <T extends BaseAttributeWithState>(attribute: T, state: T['stateDefinition'], options?: { overwrite?: boolean }): Promise<void> => {
-    await this.hub.state.setAttributeState(this, attribute, state, options);
+  setAttributeState = async <T extends BaseAttributeWithState>(attribute: T, state: T['stateDefinition']): Promise<void> => {
+    await this.hub.state.setAttributeState(this, attribute, state);
   }
 
   /**
