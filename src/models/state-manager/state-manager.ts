@@ -22,7 +22,6 @@ export class StateManager {
 
   getAttributes = async (provider: PackageProvider): Promise<State[]> => {
     const result = await this.hub.data.state.getAll(provider);
-    this.logger.info('Attributes:', result);
     return result;
   };
 
