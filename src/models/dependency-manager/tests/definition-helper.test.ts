@@ -1,5 +1,5 @@
 import { readPackageConfig, parseAttributes } from '../definition-helpers';
-import { Logger, PackageDefinition, Attribute } from 'quantumhub-sdk';
+import { Logger } from 'quantumhub-sdk';
 import fs from 'fs';
 import YAML from 'yaml';
 
