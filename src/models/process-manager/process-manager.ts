@@ -118,7 +118,6 @@ export class ProcessManager {
         process.status = ProcessStatus.RUNNING;
         process.startTime = DateTime.now();
 
-        this.hub.state.setAvailability(process.provider, true);
         this.hub.server.sendProcessUpdate(process);
 
         return true;

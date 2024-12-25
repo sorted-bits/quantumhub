@@ -4,7 +4,7 @@ import { Hub } from '../hub';
 import { PackageProvider } from '../package-provider/package-provider';
 
 interface CacheRow {
-    id: string;
+    key: string;
     value: string;
     identifier: string;
     created_at: Date;
@@ -72,9 +72,10 @@ export class QuantumCache {
                     if (err) {
                         reject(err);
                     } else {
+
                         const returnObject: { [key: string]: string } = {};
                         rows.forEach((row: CacheRow) => {
-                            returnObject[row.id] = row.value;
+                            returnObject[row.key] = JSON.parse(row.value);
                         });
                         resolve(returnObject)
                     }
