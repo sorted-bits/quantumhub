@@ -7,6 +7,7 @@ import { v4 } from 'uuid';
 import { ProcessStatus } from './status';
 import { DateTime } from 'luxon';
 import { Dependency } from '../config/interfaces/dependency';
+import { delay } from '../helpers/delay';
 
 export class ProcessManager {
     private processes: { [id: string]: Process } = {};
@@ -46,7 +47,7 @@ export class ProcessManager {
         try {
             const loadedPackage = await import(dependency.definition.path);
             const device = new loadedPackage.default() as Device;
-            const provider = new PackageProvider(this.hub, config, dependency, device);
+            const provider = new PackageProvider(this.hub, config, dependency, device, uuid);
 
             const process: Process = {
                 uuid,
@@ -166,6 +167,12 @@ export class ProcessManager {
         process.status = ProcessStatus.STOPPED;
         this.hub.server.sendProcessUpdate(process);
     };
+
+    restartProcess = async (uuid: string, startDelay: number = 2000): Promise<void> => {
+        await this.stopProcess(uuid);
+        await delay(startDelay);
+        await this.startProcess(uuid);
+    }
 
     destroyProcess = async (uuid: string): Promise<void> => {
         const process = this.processes[uuid];

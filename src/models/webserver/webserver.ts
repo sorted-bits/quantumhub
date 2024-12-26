@@ -116,6 +116,8 @@ export class Webserver {
         this.hub.processes.startProcess(process.uuid);
       } else if (state === 'stop') {
         this.hub.processes.stopProcess(process.uuid);
+      } else if (state === 'restart') {
+        this.hub.processes.restartProcess(process.uuid, 2000);
       }
 
       res.send('OK');

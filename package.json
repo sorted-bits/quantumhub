@@ -46,7 +46,7 @@
     "luxon": "3.5.0",
     "mqtt": "5.10.1",
     "nodemon": "3.1.4",
-    "quantumhub-sdk": "1.7.0-beta.3",
+    "quantumhub-sdk": "1.7.2",
     "sqlite3": "5.1.7",
     "ts-node": "^10.9.2",
     "typescript": "5.6.2",

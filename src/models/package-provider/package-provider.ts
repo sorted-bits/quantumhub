@@ -16,11 +16,15 @@ export class PackageProvider implements Provider {
   providerTimeout: ProviderTimeout;
   providerCache: ProviderCache;
 
-  constructor(hub: Hub, config: PackageConfig, dependency: Dependency, device: Device) {
+  processUUID: string;
+
+  constructor(hub: Hub, config: PackageConfig, dependency: Dependency, device: Device, processUUID: string) {
     this.config = config;
     this.hub = hub;
     this.dependency = dependency;
     this.device = device;
+
+    this.processUUID = processUUID;
 
     this.deviceLogger = this.hub.createLogger(this.config.identifier);
 
@@ -93,6 +97,10 @@ export class PackageProvider implements Provider {
   getAttribute = <T extends BaseAttribute>(name: string): T | undefined => {
     return this.dependency.definition.attributes.find((attr) => attr.key === name) as T | undefined;
   };
+
+  restart = async (): Promise<void> => {
+    this.hub.processes.restartProcess(this.processUUID);
+  }
 
   private registerAttributes = async (): Promise<void> => {
     const attributes = this.dependency.definition.attributes;
