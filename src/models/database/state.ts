@@ -19,6 +19,19 @@ export class QuantumState {
         this.logger = hub.createLogger('QuantumState');
     }
 
+    getLastUpdated = async (provider: PackageProvider): Promise<State | undefined> => {
+        return new Promise((resolve) => {
+            try {
+                this.database.get('SELECT attribute, value, created_at FROM states WHERE identifier = ? ORDER BY created_at DESC LIMIT 1', [provider.config.identifier], (err, row: State) => {
+                    resolve(row);
+                });
+            } catch (error) {
+                this.logger.error('Error getting last updated state', error);
+                resolve(undefined);
+            }
+        });
+    }
+
     getAll = async (provider: PackageProvider): Promise<State[]> => {
         this.logger.trace(`Getting all states for ${provider.config.identifier}}`);
         return new Promise((resolve, reject) => {

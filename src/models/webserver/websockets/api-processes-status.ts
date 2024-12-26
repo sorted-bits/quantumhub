@@ -23,10 +23,18 @@ export class ApiProcessesStatusWebsocket implements ApiSocketConnection {
   initialize = async (ws: expressWs.Instance): Promise<void> => {
     this.logger.trace('Initializing');
 
-    ws.app.ws('/api/processes/status', (ws) => {
+    ws.app.ws('/api/processes/status', async (ws) => {
       this.sockets.push(ws);
 
-      const data = this.hub.processes.getProcesses().map((process) => toProcessDTO(this.hub, process));
+      const data: ProcessDTO[] = [];
+
+      const processes = this.hub.processes.getProcesses();
+
+      for (const process of processes) {
+        const dto = await toProcessDTO(this.hub, process);
+        data.push(dto);
+      }
+
       this.send(data);
 
       ws.on('close', () => {

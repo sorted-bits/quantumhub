@@ -25,6 +25,11 @@ export class StateManager {
     return result;
   };
 
+  getLastUpdatedState = async (provider: PackageProvider): Promise<State | undefined> => {
+    const lastState = await this.hub.data.state.getLastUpdated(provider);
+    return lastState;
+  }
+
   getAvailability = (provider: PackageProvider): boolean => {
     return this.deviceAvailability[provider.config.identifier];
   };
@@ -47,7 +52,7 @@ export class StateManager {
     await this.publishDeviceAvailability(provider, availability);
     const process = this.hub.processes.getProcess(provider.config.identifier);
     if (process) {
-      this.hub.server.sendProcessUpdate(process);
+      await this.hub.server.sendProcessUpdate(process);
     }
   };
 
@@ -58,6 +63,12 @@ export class StateManager {
     this.publishAttributeState(provider, attribute, state);
 
     this.hub.server.sendStateUpdate(quantumState);
+
+    const process = this.hub.processes.getProcess(provider.processUUID);
+
+    if (process) {
+      this.hub.server.sendProcessUpdate(process)
+    }
   };
 
   publishBridgeAvailability = async (online: boolean): Promise<void> => {

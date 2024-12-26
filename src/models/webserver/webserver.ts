@@ -76,8 +76,8 @@ export class Webserver {
     this.mqttStatusWebsocket.send(data);
   };
 
-  sendProcessUpdate = (process: Process): void => {
-    const data = toProcessDTO(this.hub, process);
+  sendProcessUpdate = async (process: Process): Promise<void> => {
+    const data = await toProcessDTO(this.hub, process);
 
     this.apiProcessStatusWebsocket.send(data);
     this.apiProcessesStatusWebsocket.send([data]);
@@ -174,10 +174,11 @@ export class Webserver {
 
       this.logger.info('Process found', identifier);
       const states = await this.hub.state.getAttributes(process.provider) ?? {};
+      const processDto = await toProcessDTO(this.hub, process);
 
       return res.json({
         cache: false,
-        process: toProcessDTO(this.hub, process),
+        process: processDto,
         config: process.provider.config,
         definition: process.provider.dependency.definition,
         attributes: process.provider.getAttributes(),

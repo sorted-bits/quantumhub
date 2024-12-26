@@ -68,13 +68,13 @@ export class ProcessManager {
 
             process.status = ProcessStatus.INITIALIZED;
 
-            this.hub.server.sendProcessUpdate(process);
+            await this.hub.server.sendProcessUpdate(process);
 
             if (start) {
                 return await this.startProcess(uuid);
             } else {
                 process.status = ProcessStatus.STOPPED;
-                this.hub.server.sendProcessUpdate(process);
+                await this.hub.server.sendProcessUpdate(process);
             }
 
             return true;
@@ -107,7 +107,7 @@ export class ProcessManager {
         }
 
         process.status = ProcessStatus.STARTING;
-        this.hub.server.sendProcessUpdate(process);
+        await this.hub.server.sendProcessUpdate(process);
 
         try {
             await process.provider.device.start();
@@ -119,7 +119,7 @@ export class ProcessManager {
         process.status = ProcessStatus.RUNNING;
         process.startTime = DateTime.now();
 
-        this.hub.server.sendProcessUpdate(process);
+        await this.hub.server.sendProcessUpdate(process);
 
         return true;
     };
@@ -155,7 +155,7 @@ export class ProcessManager {
 
         process.status = ProcessStatus.STOPPING;
         this.hub.state.setAvailability(process.provider, false);
-        this.hub.server.sendProcessUpdate(process);
+        await this.hub.server.sendProcessUpdate(process);
 
         this.logger.trace('Stopping:', process.provider.config.identifier);
         try {
@@ -165,7 +165,7 @@ export class ProcessManager {
         }
 
         process.status = ProcessStatus.STOPPED;
-        this.hub.server.sendProcessUpdate(process);
+        await this.hub.server.sendProcessUpdate(process);
     };
 
     restartProcess = async (uuid: string, startDelay: number = 2000): Promise<void> => {
