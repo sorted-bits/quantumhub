@@ -80,7 +80,6 @@ export class PackageProvider implements Provider {
    * @memberof PackageProvider
    */
   setAvailability = async (availability: boolean): Promise<void> => {
-    this.deviceLogger.trace('Setting availability to', availability);
     return this.hub.state.setAvailability(this, availability);
   };
 
