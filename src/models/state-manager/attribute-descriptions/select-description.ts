@@ -15,7 +15,7 @@ export class SelectDescription extends BaseAttributeDescription {
         this.command_topic = `${this.stateTopic}/set`;
 
         this.state_topic = this.stateTopic;
-        this.value_template = `{{ value_json }}`;
+        this.value_template = `{{ value_json.state }}`;
         this.options = attribute.options;
     }
 
