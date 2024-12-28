@@ -79,7 +79,7 @@ export class QuantumState {
 
     set = async (provider: PackageProvider, attribute: string, value: any): Promise<State> => {
         const serializedValue = JSON.stringify(value);
-        this.logger.trace(`Setting state for ${provider.config.identifier}.${attribute}`);
+        this.logger.trace(`Setting state for ${provider.config.identifier}.${attribute}: ${JSON.stringify(value)}`);
 
         try {
             const result = await this.execute(`INSERT OR REPLACE INTO states (identifier, attribute, value) VALUES (?, ?, ?)`, [provider.config.identifier, attribute, serializedValue]);
