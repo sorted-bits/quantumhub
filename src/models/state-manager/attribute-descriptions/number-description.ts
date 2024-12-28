@@ -20,7 +20,7 @@ export class NumberDescription extends BaseAttributeDescription {
         this.max = attribute.max;
 
         this.state_topic = this.stateTopic;
-        this.value_template = `{{ value_json }}`;
+        this.value_template = `{{ value_json.state }}`;
     }
 
     registerTopics = (): void => {
