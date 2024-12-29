@@ -198,10 +198,10 @@ export class DependencyManager {
         const processStates = dependencies.flatMap(dep => this.getProcessStatuses(dep));
         this.logger.info('Restarting processes:', processStates);
 
-        processStates.forEach((processState) => {
-            this.hub.processes.stopProcess(processState.uuid);
-            this.hub.processes.destroyProcess(processState.uuid);
-        });
+        for (const state of processStates) {
+            await this.hub.processes.stopProcess(state.uuid);
+            await this.hub.processes.destroyProcess(state.uuid);
+        }
 
         if (performUpdate) {
             const installerResult = await this.install(dependency);

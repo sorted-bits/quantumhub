@@ -140,9 +140,11 @@ export class Webserver {
       res.send('OK');
     });
 
-    this.express.post('/api/package/:identifier/reload', (req, res) => {
+    this.express.post('/api/package/:identifier/reload', async (req, res) => {
       const identifier = req.params.identifier;
-      this.hub.dependencyManager.reload(identifier);
+
+      await this.hub.dependencyManager.reload(identifier);
+
       res.send({ status: 'ok' });
     });
 

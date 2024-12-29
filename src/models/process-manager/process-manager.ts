@@ -145,7 +145,6 @@ export class ProcessManager {
             this.logger.error('Process not found:', uuid);
             return;
         }
-        process.provider.timeout.clearAll();
 
         if (process.status === ProcessStatus.STOPPING || process.status === ProcessStatus.STOPPED) {
             return;
@@ -159,6 +158,8 @@ export class ProcessManager {
 
         this.logger.trace('Stopping:', process.provider.config.identifier);
         try {
+            process.provider.timeout.clearAll();
+
             await process.provider.device.stop();
         } catch (error) {
             this.logger.error('Error stopping package:', process.provider.dependency.definition.name, error);
