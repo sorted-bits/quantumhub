@@ -35,24 +35,27 @@ export class StateManager {
   };
 
   setAvailability = async (provider: PackageProvider, availability: boolean): Promise<void> => {
-    this.logger.trace('Setting availability:', provider.config.identifier, availability);
+    const previousAvailability = this.deviceAvailability[provider.config.identifier];
 
-    this.deviceAvailability[provider.config.identifier] = availability;
+    if (previousAvailability === undefined || previousAvailability !== availability) {
+      this.logger.trace('Setting availability:', provider.config.identifier, availability);
+      this.deviceAvailability[provider.config.identifier] = availability;
 
-    /* TODO: Unavailability handling needs to be fixed
-    if (!availability) {
-      for (const attribute of provider.definition.attributes) {
-        if (attribute.unavailability_value !== undefined && !attribute.availability) {
-          this.setAttributeState(provider, attribute, attribute.unavailability_value);
+      /* TODO: Unavailability handling needs to be fixed
+      if (!availability) {
+        for (const attribute of provider.definition.attributes) {
+          if (attribute.unavailability_value !== undefined && !attribute.availability) {
+            this.setAttributeState(provider, attribute, attribute.unavailability_value);
+          }
         }
       }
-    }
-    */
+      */
 
-    await this.publishDeviceAvailability(provider, availability);
-    const process = this.hub.processes.getProcess(provider.config.identifier);
-    if (process) {
-      await this.hub.server.sendProcessUpdate(process);
+      await this.publishDeviceAvailability(provider, availability);
+      const process = this.hub.processes.getProcess(provider.config.identifier);
+      if (process) {
+        await this.hub.server.sendProcessUpdate(process);
+      }
     }
   };
 
