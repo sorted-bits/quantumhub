@@ -16,7 +16,7 @@ export class QuantumState {
 
     constructor(hub: Hub, database: Database) {
         this.database = database;
-        this.logger = hub.createLogger('QuantumState');
+        this.logger = hub.createLogger('QuantumState', undefined, false);
     }
 
     getLastUpdated = async (provider: PackageProvider): Promise<State | undefined> => {

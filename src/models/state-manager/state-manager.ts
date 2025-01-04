@@ -13,7 +13,7 @@ export class StateManager {
 
   constructor(hub: Hub) {
     this.hub = hub;
-    this.logger = this.hub.createLogger('StateManager');
+    this.logger = this.hub.createLogger('StateManager', undefined, false);
   }
 
   initialize = async (): Promise<void> => {

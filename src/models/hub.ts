@@ -48,8 +48,8 @@ export class Hub {
     this.data = new QuantumData(this, this._config.storage);
   }
 
-  createLogger = (name: string, config: LogConfig = this.config.log): ILogger => {
-    return new Logger(name, this, config);
+  createLogger = (name: string, config: LogConfig = this.config.log, logToFile: boolean = true): ILogger => {
+    return new Logger(name, this, config, logToFile);
   };
 
   initialize = async (): Promise<boolean> => {

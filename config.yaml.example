@@ -4,6 +4,7 @@ web:
 instance_name: quantumhub
 
 log:
+  folder: logs/
   level: info
   # included_modules:
   #   - example-device

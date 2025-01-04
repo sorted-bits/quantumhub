@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { DateTime } from 'luxon';
 import path from 'path';
 import { Logger as ILogger } from 'quantumhub-sdk';
@@ -35,14 +36,26 @@ export class Logger implements ILogger {
   private config: LogConfig;
   private configLevel: number;
   private hub: Hub;
+
+  private fileHandle: fs.WriteStream | undefined;
+
   levels = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'];
 
-  constructor(name: string, hub: Hub, config: LogConfig) {
+  get logFilename(): string {
+    const folder = this.config.folder ?? '';
+    return path.join(folder, `${this.name.toLocaleLowerCase()}.log`);
+  }
+
+  constructor(name: string, hub: Hub, config: LogConfig, logToFile: boolean = true) {
     this.name = name;
     this.config = config;
     this.hub = hub;
 
     this.configLevel = getLevelIndex(this.config.level);
+
+    if (config.folder && logToFile) {
+      this.fileHandle = fs.createWriteStream(this.logFilename, { flags: 'a' });
+    }
   }
 
   private write = (color: RGB, callInformation: CallInformation | undefined, level: string, message?: any, ...messages: any[]) => {
@@ -79,8 +92,15 @@ export class Logger implements ILogger {
     const locationInformation = callInformation ? `[${path.basename(callInformation.filepath)}:${callInformation.line}] ` : '';
 
     if (shouldLog) {
-      //      console.log(`\x1b[${color}m[${level}]\x1b[0m`, `[${this.name}]`, ...[message, ...messages]);
-      console.log(`[${currentTime}] ${locationInformation}\u001b[38;2;${color.r};${color.g};${color.b}m[${level}]`, `[${this.name}]`, ...[message, ...messages], `\u001b[0m`);
+
+      const coloredLine = [`[${currentTime}] ${locationInformation}\u001b[38;2;${color.r};${color.g};${color.b}m[${level}] [${this.name}]`, ...[message, ...messages], `\u001b[0m`].join(' ');
+      const line = [`[${currentTime}] ${locationInformation}[${level}] [${this.name}]`, ...[message, ...messages]].join(' ');
+
+      if (this.fileHandle) {
+        this.fileHandle.write(line + '\n');
+      }
+
+      console.log(coloredLine);
     }
   };
 
