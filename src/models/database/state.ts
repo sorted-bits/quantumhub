@@ -64,7 +64,32 @@ export class QuantumState {
         });
     }
 
+    getRowByProvider = async (provider: PackageProvider, attribute: string): Promise<State> => {
+        this.logger.trace(`Getting state for ${provider.config.identifier}.${attribute}`);
+        return new Promise((resolve, reject) => {
+            try {
+                this.database.get(`SELECT identifier, attribute, value, created_at FROM states WHERE identifier = ? AND attribute = ?`, [provider.config.identifier, attribute], (err, row: State) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve({
+                            identifier: row.identifier,
+                            attribute: row.attribute,
+                            created_at: row.created_at,
+                            value: JSON.parse(row.value)
+                        });
+                    }
+                });
+            } catch (error) {
+                this.logger.error('Error getting state', error);
+                reject(error);
+            }
+        });
+    }
+
     getByRowId = async (rowId: number): Promise<State> => {
+        this.logger.trace(`Fetching row by ID: ${rowId}`);
+
         return new Promise((resolve, reject) => {
             try {
                 this.database.get('SELECT identifier, attribute, value, created_at FROM states WHERE rowid = ?', [rowId], (err, row: State) => {
@@ -82,8 +107,8 @@ export class QuantumState {
         this.logger.trace(`Setting state for ${provider.config.identifier}.${attribute}: ${JSON.stringify(value)}`);
 
         try {
-            const result = await this.execute(`INSERT OR REPLACE INTO states (identifier, attribute, value) VALUES (?, ?, ?)`, [provider.config.identifier, attribute, serializedValue]);
-            return await this.getByRowId(result);
+            await this.execute(`INSERT OR REPLACE INTO states (identifier, attribute, value) VALUES (?, ?, ?)`, [provider.config.identifier, attribute, serializedValue]);
+            return await this.getRowByProvider(provider, attribute);
         } catch (error) {
             this.logger.error('Error setting state', error);
             throw error;
@@ -94,10 +119,12 @@ export class QuantumState {
         return new Promise((resolve, reject) => {
             try {
                 this.database.run(sql, params, function (err: any) {
-                    if (err) {
+                    const last = this.lastID;
+
+                    if (err || last === undefined) {
                         reject(err);
                     } else {
-                        resolve(this.lastID);
+                        resolve(last);
                     }
                 });
             } catch (error) {
