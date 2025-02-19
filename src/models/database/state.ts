@@ -47,7 +47,6 @@ export class QuantumState {
     }
 
     get = async (provider: PackageProvider, attribute: string): Promise<any> => {
-        this.logger.trace(`Getting state for ${provider.config.identifier}.${attribute}`);
         return new Promise((resolve, reject) => {
             try {
                 this.database.get(`SELECT value FROM states WHERE identifier = ? AND attribute = ?`, [provider.config.identifier, attribute], (err, row: State) => {
@@ -65,7 +64,6 @@ export class QuantumState {
     }
 
     getRowByProvider = async (provider: PackageProvider, attribute: string): Promise<State> => {
-        this.logger.trace(`Getting state for ${provider.config.identifier}.${attribute}`);
         return new Promise((resolve, reject) => {
             try {
                 this.database.get(`SELECT identifier, attribute, value, created_at FROM states WHERE identifier = ? AND attribute = ?`, [provider.config.identifier, attribute], (err, row: State) => {
@@ -88,8 +86,6 @@ export class QuantumState {
     }
 
     getByRowId = async (rowId: number): Promise<State> => {
-        this.logger.trace(`Fetching row by ID: ${rowId}`);
-
         return new Promise((resolve, reject) => {
             try {
                 this.database.get('SELECT identifier, attribute, value, created_at FROM states WHERE rowid = ?', [rowId], (err, row: State) => {
@@ -104,8 +100,6 @@ export class QuantumState {
 
     set = async (provider: PackageProvider, attribute: string, value: any): Promise<State> => {
         const serializedValue = JSON.stringify(value);
-        this.logger.trace(`Setting state for ${provider.config.identifier}.${attribute}: ${JSON.stringify(value)}`);
-
         try {
             await this.execute(`INSERT OR REPLACE INTO states (identifier, attribute, value) VALUES (?, ?, ?)`, [provider.config.identifier, attribute, serializedValue]);
             return await this.getRowByProvider(provider, attribute);
