@@ -9,7 +9,7 @@
     "start": "ts-node src/app.ts --config=config.yaml",
     "lint": "eslint .",
     "update-version": "versi",
-    "publish-docker": "docker build -t sortedbit/quantumhub . && docker image push sortedbit/quantumhub"
+    "publish-docker": "docker build -t sortedbit/quantumhub --platform=linux/amd64 . && docker image push sortedbit/quantumhub"
   },
   "keywords": [],
   "author": "",
