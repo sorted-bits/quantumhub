@@ -67,16 +67,7 @@ export class QuantumState {
         return new Promise((resolve, reject) => {
             try {
                 this.database.get(`SELECT identifier, attribute, value, created_at FROM states WHERE identifier = ? AND attribute = ?`, [provider.config.identifier, attribute], (err, row: State) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve({
-                            identifier: row.identifier,
-                            attribute: row.attribute,
-                            created_at: row.created_at,
-                            value: JSON.parse(row.value)
-                        });
-                    }
+                    resolve(row);
                 });
             } catch (error) {
                 this.logger.error('Error getting state', error);
