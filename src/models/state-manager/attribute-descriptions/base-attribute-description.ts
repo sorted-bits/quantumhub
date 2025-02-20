@@ -30,12 +30,14 @@ export class BaseAttributeDescription {
     device_class?: string;
     unit_of_measurement?: string;
     state_class?: string;
+    icon?: string;
 
     constructor(protected hub: Hub, protected provider: PackageProvider, protected attribute: Attribute) {
         this.name = attribute.name;
         this.object_id = `${hub.config.instance_name}_${provider.config.identifier}_${attribute.key}`;
         this.unique_id = `${hub.config.instance_name}_${provider.config.identifier}_${attribute.key}`;
         this.enabled_by_default = attribute.enabled_by_default ?? true;
+        this.icon = attribute.icon;
 
         this.origin = this.originAttribute();
         this.device = this.deviceDetailsAttribute(provider);
